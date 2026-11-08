@@ -1,91 +1,350 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C0D12"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#090A0F"
+    android:fillViewport="true">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:layout_width="0dp"
+        <!-- Top Header Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Open GWM Cluster"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OPEN GWM CLUSTER"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDisplayList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Экран: Display 2 (Приборка)"
+                    android:textColor="#78909C"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvVersionChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#1E2330"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="v1.1.0"
+                android:textColor="#00E5FF"
+                android:fontFamily="monospace"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Live Cluster Interactive Preview -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="210dp"
+            android:layout_marginTop="14dp"
+            android:background="#050608">
+
+            <org.opengwm.split.ui.ClusterGaugeView
+                android:id="@+id/gaugePreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <!-- Telemetry Status Bar -->
         <TextView
-            android:id="@+id/tvDisplayList"
+            android:id="@+id/tvVehicleTelemetry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#11141D"
+            android:padding="10dp"
+            android:text="Шина VHAL: 0 км/ч | 0 RPM | P | ОЖ: 90°C"
+            android:textColor="#00E676"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <!-- SECTION 1: THEMES -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Displays: [Scan...]"
+            android:layout_marginTop="18dp"
+            android:text="СТИЛИ ПРИБОРКИ"
+            android:textColor="#90A4AE"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnThemeSport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="#D50000"
+                android:text="SPORT"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnThemeLuxury"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="#C5A059"
+                android:text="LUXURY"
+                android:textColor="#000000"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnThemeCyber"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="#00B0FF"
+                android:text="CYBER"
+                android:textColor="#000000"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnThemeOffroad"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="#FF6D00"
+                android:text="4X4"
+                android:textColor="#000000"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- SECTION 2: CLUSTER CONTROLS (DISPLAY 2) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="УПРАВЛЕНИЕ ВТОРИЧНЫМ ЭКРАНОМ"
+            android:textColor="#90A4AE"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnToggleCluster"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#1976D2"
+            android:text="ЗАПУСТИТЬ ТЕМУ НА ПРИБОРКЕ (DISPLAY 2)"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Switch
+                android:id="@+id/switchHolePunch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="Вырезы под лампы (HolePunch)"
+                android:textColor="#CFD8DC"
+                android:textSize="13sp" />
+
+            <Switch
+                android:id="@+id/switchSmoothing"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="Плавность 60 FPS"
+                android:textColor="#CFD8DC"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnGrantOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:backgroundTint="#263238"
+            android:text="@string/btn_grant_overlay"
+            android:textColor="#B0BEC5"
+            android:textSize="12sp" />
+
+        <!-- SECTION 3: DEMO SIMULATOR -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="#121620"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="СИМУЛЯТОР ТЕЛЕМЕТРИИ (ДЕМО)"
+                    android:textColor="#00E5FF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Switch
+                    android:id="@+id/switchDemoMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnAutoSweep"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#00C853"
+                android:text="АВТОМАТИЧЕСКИЙ РАЗГОН (0 ➔ 160 КМ/Ч)"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+
+            <!-- Speed Slider -->
+            <TextView
+                android:id="@+id/tvDemoSpeedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Скорость: 0 км/ч"
+                android:textColor="#ECEFF1"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/sbSpeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="240"
+                android:progress="0" />
+
+            <!-- RPM Slider -->
+            <TextView
+                android:id="@+id/tvDemoRpmLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Обороты: 0 RPM"
+                android:textColor="#ECEFF1"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/sbRpm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="8000"
+                android:progress="0" />
+
+            <!-- Gear Chips -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Передача АКПП Tank (9 передач):"
+                android:textColor="#90A4AE"
+                android:textSize="11sp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutGears"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button android:id="@+id/btnGearP" android:layout_width="50dp" android:layout_height="38dp" android:text="P" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearR" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="R" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearN" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="N" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD1" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D1" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD2" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D2" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD3" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D3" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD4" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D4" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD5" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D5" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD6" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D6" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD7" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D7" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD8" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D8" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnGearD9" android:layout_width="50dp" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="D9" android:textSize="11sp" android:backgroundTint="#37474F" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Drive Mode Quick Buttons -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Режим привода 4x4:"
+                android:textColor="#90A4AE"
+                android:textSize="11sp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button android:id="@+id/btnModeStandard" android:layout_width="wrap_content" android:layout_height="38dp" android:text="STANDARD 4H" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnModeSport" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="SPORT+ 4H" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnMode4L" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="4L ROCK CRAWL" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnModeEco" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="ECO HYBRID" android:textSize="11sp" android:backgroundTint="#37474F" />
+                    <Button android:id="@+id/btnModeMud" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginStart="4dp" android:text="MUD / SAND" android:textSize="11sp" android:backgroundTint="#37474F" />
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Готов к работе. Выберите тему для предпросмотра."
             android:textColor="#90A4AE"
             android:textSize="12sp" />
+
     </LinearLayout>
-
-    <!-- Real-time Cluster Preview (Dials & Telemetry) -->
-    <org.opengwm.split.ui.ClusterGaugeView
-        android:id="@+id/gaugePreview"
-        android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="12dp"
-        android:background="#050608" />
-
-    <!-- Status & Info -->
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Статус: Готов к запуску на Display 2"
-        android:textColor="#B0BEC5"
-        android:textSize="13sp" />
-
-    <TextView
-        android:id="@+id/tvVehicleTelemetry"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="#151922"
-        android:padding="8dp"
-        android:text="Telemetry: Speed: 0 km/h | RPM: 0 | Gear: P"
-        android:textColor="#00E676"
-        android:fontFamily="monospace"
-        android:textSize="12sp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="12dp"
-        android:background="#263238" />
-
-    <!-- Action Buttons -->
-    <Button
-        android:id="@+id/btnGrantOverlay"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_grant_overlay" />
-
-    <Button
-        android:id="@+id/btnToggleCluster"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Запустить тему на приборке (Display 2)" />
-
-    <Button
-        android:id="@+id/btnToggleControls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Плавающие кнопки на основном экране" />
-
-</LinearLayout>
+</ScrollView>

@@ -32,6 +32,16 @@ public class InstrumentClusterService extends Service {
     private boolean isRunning = false;
 
     public static volatile boolean isServiceRunning = false;
+    public static volatile ClusterGaugeView activeClusterView = null;
+
+    public static void applyConfig(Context context) {
+        if (activeClusterView != null) {
+            activeClusterView.setThemeStyle(org.opengwm.split.ui.ClusterConfig.getTheme(context));
+            activeClusterView.setHolePunch(org.opengwm.split.ui.ClusterConfig.isHolePunchEnabled(context));
+            activeClusterView.setSmoothing(org.opengwm.split.ui.ClusterConfig.isSmoothingEnabled(context));
+            activeClusterView.postInvalidate();
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -122,6 +132,7 @@ public class InstrumentClusterService extends Service {
             );
 
             clusterView = new ClusterGaugeView(displayContext);
+            activeClusterView = clusterView;
             clusterWindowManager.addView(clusterView, params);
 
             // Connect vehicle telemetry to gauges
@@ -150,6 +161,7 @@ public class InstrumentClusterService extends Service {
                 clusterWindowManager.removeView(clusterView);
             } catch (Exception ignored) {}
             clusterView = null;
+            activeClusterView = null;
         }
         isRunning = false;
         isServiceRunning = false;
