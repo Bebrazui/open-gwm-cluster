@@ -33,110 +33,134 @@
 19    <uses-permission android:name="android.car.permission.CAR_ENGINE_PROBING" />
 19-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:12:5-81
 19-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:12:22-78
-20    <uses-permission android:name="com.gwm.android.adapter.permission.GET_DATA" />
-20-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:13:5-83
-20-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:13:22-80
-21    <uses-permission android:name="com.gwm.android.adapter.permission.SET_DATA" />
-21-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:14:5-83
-21-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:14:22-80
-22
-23    <application
-23-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:16:5-67:19
-24        android:allowBackup="true"
-24-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:17:9-35
-25        android:debuggable="true"
-26        android:extractNativeLibs="false"
-27        android:icon="@android:drawable/sym_def_app_icon"
-27-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:18:9-58
-28        android:label="@string/app_name"
-28-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:19:9-41
-29        android:roundIcon="@android:drawable/sym_def_app_icon"
-29-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:20:9-63
-30        android:supportsRtl="true"
-30-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:21:9-35
-31        android:theme="@style/Theme.OpenGwmSplit" >
-31-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:22:9-50
-32        <activity
-32-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:24:9-32:20
-33            android:name="org.opengwm.split.MainActivity"
-33-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:25:13-41
-34            android:exported="true"
-34-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:26:13-36
-35            android:launchMode="singleTop" >
-35-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:27:13-43
-36            <intent-filter>
-36-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:28:13-31:29
-37                <action android:name="android.intent.action.MAIN" />
-37-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:29:17-69
-37-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:29:25-66
-38
-39                <category android:name="android.intent.category.LAUNCHER" />
-39-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:30:17-77
-39-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:30:27-74
-40            </intent-filter>
-41        </activity>
-42
-43        <service
-43-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:34:9-37:40
-44            android:name="org.opengwm.split.service.FloatingControlsService"
-44-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:35:13-60
-45            android:enabled="true"
-45-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:36:13-35
-46            android:exported="false" />
-46-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:37:13-37
-47        <service
-47-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:39:9-42:40
-48            android:name="org.opengwm.split.service.InstrumentClusterService"
-48-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:40:13-61
-49            android:enabled="true"
-49-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:41:13-35
-50            android:exported="false" />
-50-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:42:13-37
-51
-52        <receiver
-52-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:44:9-53:20
-53            android:name="org.opengwm.split.service.BootReceiver"
-53-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:45:13-49
-54            android:enabled="true"
-54-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:46:13-35
-55            android:exported="true" >
-55-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:47:13-36
-56            <intent-filter>
-56-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:48:13-52:29
-57                <action android:name="android.intent.action.BOOT_COMPLETED" />
-57-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:49:17-79
-57-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:49:25-76
-58                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-58-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:50:17-82
-58-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:50:25-79
-59                <action android:name="com.gwm.intent.action.ACC_ON" />
-59-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:51:17-71
-59-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:51:25-68
-60            </intent-filter>
-61        </receiver>
-62
-63        <service
-63-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:55:9-65:19
-64            android:name="org.opengwm.split.service.CarAccessibilityService"
-64-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:56:13-60
-65            android:exported="true"
-65-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:58:13-36
-66            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
-66-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:57:13-79
-67            <intent-filter>
-67-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:59:13-61:29
-68                <action android:name="android.accessibilityservice.AccessibilityService" />
-68-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:60:17-92
-68-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:60:25-89
-69            </intent-filter>
+20    <uses-permission android:name="android.car.permission.CAR_ENGINE_DETAILED" />
+20-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:13:5-82
+20-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:13:22-79
+21    <uses-permission android:name="android.car.permission.CAR_DYNAMICS_STATE" />
+21-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:14:5-81
+21-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:14:22-78
+22    <uses-permission android:name="android.car.permission.CAR_ENERGY" />
+22-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:15:5-73
+22-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:15:22-70
+23    <uses-permission android:name="android.car.permission.CAR_ENERGY_PORTS" />
+23-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:16:5-79
+23-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:16:22-76
+24    <uses-permission android:name="android.car.permission.CAR_EXTERIOR_ENVIRONMENT" />
+24-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:17:5-87
+24-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:17:22-84
+25    <uses-permission android:name="android.car.permission.CAR_TIRES" />
+25-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:18:5-72
+25-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:18:22-69
+26    <uses-permission android:name="android.car.permission.CAR_IDENTIFICATION" />
+26-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:19:5-81
+26-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:19:22-78
+27    <uses-permission android:name="android.car.permission.CAR_INSTRUMENT_CLUSTER_CONTROL" />
+27-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:20:5-93
+27-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:20:22-90
+28    <uses-permission android:name="com.gwm.android.adapter.permission.GET_DATA" />
+28-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:21:5-83
+28-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:21:22-80
+29    <uses-permission android:name="com.gwm.android.adapter.permission.SET_DATA" />
+29-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:22:5-83
+29-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:22:22-80
+30
+31    <application
+31-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:24:5-75:19
+32        android:allowBackup="true"
+32-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:25:9-35
+33        android:debuggable="true"
+34        android:extractNativeLibs="false"
+35        android:icon="@android:drawable/sym_def_app_icon"
+35-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:26:9-58
+36        android:label="@string/app_name"
+36-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:27:9-41
+37        android:roundIcon="@android:drawable/sym_def_app_icon"
+37-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:28:9-63
+38        android:supportsRtl="true"
+38-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:29:9-35
+39        android:theme="@style/Theme.OpenGwmSplit" >
+39-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:30:9-50
+40        <activity
+40-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:32:9-40:20
+41            android:name="org.opengwm.split.MainActivity"
+41-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:33:13-41
+42            android:exported="true"
+42-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:34:13-36
+43            android:launchMode="singleTop" >
+43-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:35:13-43
+44            <intent-filter>
+44-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:36:13-39:29
+45                <action android:name="android.intent.action.MAIN" />
+45-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:37:17-69
+45-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:37:25-66
+46
+47                <category android:name="android.intent.category.LAUNCHER" />
+47-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:38:17-77
+47-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:38:27-74
+48            </intent-filter>
+49        </activity>
+50
+51        <service
+51-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:42:9-45:40
+52            android:name="org.opengwm.split.service.FloatingControlsService"
+52-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:43:13-60
+53            android:enabled="true"
+53-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:44:13-35
+54            android:exported="false" />
+54-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:45:13-37
+55        <service
+55-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:47:9-50:40
+56            android:name="org.opengwm.split.service.InstrumentClusterService"
+56-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:48:13-61
+57            android:enabled="true"
+57-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:49:13-35
+58            android:exported="false" />
+58-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:50:13-37
+59
+60        <receiver
+60-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:52:9-61:20
+61            android:name="org.opengwm.split.service.BootReceiver"
+61-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:53:13-49
+62            android:enabled="true"
+62-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:54:13-35
+63            android:exported="true" >
+63-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:55:13-36
+64            <intent-filter>
+64-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:56:13-60:29
+65                <action android:name="android.intent.action.BOOT_COMPLETED" />
+65-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:57:17-79
+65-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:57:25-76
+66                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+66-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:58:17-82
+66-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:58:25-79
+67                <action android:name="com.gwm.intent.action.ACC_ON" />
+67-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:59:17-71
+67-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:59:25-68
+68            </intent-filter>
+69        </receiver>
 70
-71            <meta-data
-71-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:62:13-64:72
-72                android:name="android.accessibilityservice"
-72-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:63:17-60
-73                android:resource="@xml/accessibility_service_config" />
-73-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:64:17-69
-74        </service>
-75    </application>
-76
-77</manifest>
+71        <service
+71-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:63:9-73:19
+72            android:name="org.opengwm.split.service.CarAccessibilityService"
+72-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:64:13-60
+73            android:exported="true"
+73-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:66:13-36
+74            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+74-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:65:13-79
+75            <intent-filter>
+75-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:67:13-69:29
+76                <action android:name="android.accessibilityservice.AccessibilityService" />
+76-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:68:17-92
+76-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:68:25-89
+77            </intent-filter>
+78
+79            <meta-data
+79-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:70:13-72:72
+80                android:name="android.accessibilityservice"
+80-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:71:17-60
+81                android:resource="@xml/accessibility_service_config" />
+81-->C:\Users\ttt79\.gemini\antigravity\scratch\open-gwm-split\app\src\main\AndroidManifest.xml:72:17-69
+82        </service>
+83    </application>
+84
+85</manifest>

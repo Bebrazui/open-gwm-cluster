@@ -38,6 +38,7 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
     private boolean speedWarned = false;
     private boolean rpmWarned = false;
+    private int telemetryLogTick = 0;
 
     private int currentSpeed = 0;
     private int currentRpm = 0;
@@ -195,6 +196,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                             Log.w(TAG, "RPM read warning: " + (t.getCause() != null ? t.getCause() : t));
                             rpmWarned = true;
                         }
+                        // Fallback: estimate RPM from speed if OEM blocks CAR_ENGINE_DETAILED
+                        int estRpm = (currentSpeed > 0) ? (800 + currentSpeed * 28) : 750;
+                        if (estRpm != currentRpm) {
+                            currentRpm = estRpm;
+                            changed = true;
+                        }
                     }
 
                     // Read Current Gear
@@ -228,6 +235,10 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
                     if (changed) {
                         dispatchState();
+                    }
+
+                    if (++telemetryLogTick % 40 == 0) {
+                        Log.i(TAG, "Live Telemetry: Speed=" + currentSpeed + " km/h | RPM=" + currentRpm + " | Gear=" + currentGear);
                     }
                 }
 
