@@ -62,10 +62,11 @@ public class MainActivity extends Activity {
     private String simMode = "STANDARD 4H";
 
     private final String[] themeNames = {
-            "Спорт (Redline)",
-            "Классика (Luxury Gold)",
-            "Кибернетика (Cyber Neon)",
-            "Внедорожный (4x4 Amber)"
+            "Спорт (3D колодцы, лаунч-свет)",
+            "Люкс (Хронограф Tank 500, золото)",
+            "Кибернетика (Полигональный HUD)",
+            "Внедорожный 4x4 (Креномер, болты)",
+            "Минимализм (OLED, парящие арки)"
     };
 
     private final String[] gearOptions = {

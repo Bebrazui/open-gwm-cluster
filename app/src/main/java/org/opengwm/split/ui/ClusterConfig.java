@@ -14,17 +14,24 @@ public class ClusterConfig {
     public static final String KEY_CRUISE_SPEED = "pref_cruise_speed";
     public static final String KEY_DEMO_MODE = "pref_demo_mode";
 
-    public static final int THEME_SPORT_RED = 0;
-    public static final int THEME_LUXURY_GOLD = 1;
-    public static final int THEME_CYBER_NEON = 2;
-    public static final int THEME_OFFROAD_AMBER = 3;
+    public static final int THEME_SPORT_APEX = 0;       // Track / AMG / RS with 3D deep tube bezels & shift lights
+    public static final int THEME_LUXURY_CHRONO = 1;    // Bentley / Tank 500 Luxury Chronograph with sub-dials & guilloche
+    public static final int THEME_CYBER_HEX = 2;        // Futuristic polygonal HUD / EV Tron bars & perspective grid
+    public static final int THEME_TACTICAL_4X4 = 3;     // Baja / Expedition with 3D pitch-roll artificial horizon & bolted bezels
+    public static final int THEME_MINIMAL_OLED = 4;     // Scandinavian floating arc ribbons on deep obsidian black
+
+    // Legacy aliases for backward compatibility
+    public static final int THEME_SPORT_RED = THEME_SPORT_APEX;
+    public static final int THEME_LUXURY_GOLD = THEME_LUXURY_CHRONO;
+    public static final int THEME_CYBER_NEON = THEME_CYBER_HEX;
+    public static final int THEME_OFFROAD_AMBER = THEME_TACTICAL_4X4;
 
     private static SharedPreferences getPrefs(Context context) {
         return context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     public static int getTheme(Context context) {
-        return getPrefs(context).getInt(KEY_THEME, THEME_SPORT_RED);
+        return getPrefs(context).getInt(KEY_THEME, THEME_SPORT_APEX);
     }
 
     public static void setTheme(Context context, int theme) {

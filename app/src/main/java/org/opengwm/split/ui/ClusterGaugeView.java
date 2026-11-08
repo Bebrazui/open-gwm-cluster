@@ -3,22 +3,29 @@ package org.opengwm.split.ui;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.RadialGradient;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.util.AttributeSet;
 import android.view.View;
 import org.opengwm.split.vehicle.VehicleState;
 
 /**
- * Custom Instrument Cluster View ("Колодцы") for GWM Tank 500 / Haval.
- * Supports multiple high-end themes (Sport Red, Luxury Gold, Cyber Neon, Off-Road Amber),
- * smooth needle physics, cruise-control indicators, and HolePunch safety masks.
+ * High-End Custom Instrument Cluster View for GWM Tank 500 / Haval.
+ * Supports 5 distinct volumetric, 3D-shaded automotive themes:
+ * 1. SPORT_APEX: 3D deep tube bezels, F1-style shift lights, dynamic glowing arc trails
+ * 2. LUXURY_CHRONO: Bentley/Tank 500 luxury gold chronograph with sub-dials & guilloche
+ * 3. CYBER_HEX: Futuristic polygonal HUD with perspective grid & neon segmented bars
+ * 4. TACTICAL_4X4: Baja off-road with bolted steel bezels & 3D artificial horizon (inclinometer)
+ * 5. MINIMAL_OLED: Scandinavian floating ambient light ribbons on deep obsidian black
  */
 public class ClusterGaugeView extends View {
 
-    private int activeTheme = ClusterConfig.THEME_SPORT_RED;
+    private int activeTheme = ClusterConfig.THEME_SPORT_APEX;
     private boolean isHolePunchEnabled = true;
     private boolean isSmoothingEnabled = true;
 
@@ -30,36 +37,60 @@ public class ClusterGaugeView extends View {
     private int cruiseSpeed = 0;
     private String driveMode = "STANDARD 4H";
 
-    // Display smoothed values
+    // Smoothed values for 60 FPS animation
     private float displaySpeed = 0f;
     private float displayRpm = 0f;
 
-    // Paints (reused to prevent GC overhead at 60 FPS)
+    // Dimensions
+    private int viewWidth = 0;
+    private int viewHeight = 0;
+    private float gaugeRadius = 0f;
+    private float centerY = 0f;
+    private float leftCenterX = 0f;
+    private float rightCenterX = 0f;
+
+    // Reusable Paints (0 allocations during onDraw)
     private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint dialBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint ringOuterPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint ringInnerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint tubeBezelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint tubeInnerShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint dialPlatePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint dialTexturePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint tickMajorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint tickMinorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textNumberPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textValuePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textUnitPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint needleShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint needlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint needleGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint needleCapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint needlePinPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint activeArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint redlineArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint centerBoxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint centerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint centerBoxBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint centerBoxBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint modePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint tempPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint cruiseMarkerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint subTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint boltPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint horizonSkyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint horizonGroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint holePunchPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    // Reusable Geometry & Shapes
     private final RectF arcRect = new RectF();
     private final RectF centerBoxRect = new RectF();
+    private final RectF subDialRect = new RectF();
     private final Path needlePath = new Path();
-    private final Path cruiseMarkerPath = new Path();
+    private final Path needleShadowPath = new Path();
+    private final Path hexPath = new Path();
+    private final Path horizonClipPath = new Path();
+
+    // Shaders cached per view size
+    private RadialGradient dialPlateShader;
+    private LinearGradient sportBezelShader;
+    private LinearGradient luxuryBezelShader;
+    private LinearGradient tacticalBezelShader;
 
     public ClusterGaugeView(Context context) {
         super(context);
@@ -76,20 +107,19 @@ public class ClusterGaugeView extends View {
         holePunchPaint.setColor(Color.TRANSPARENT);
         holePunchPaint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR));
 
-        // Load saved preferences
         activeTheme = ClusterConfig.getTheme(getContext());
         isHolePunchEnabled = ClusterConfig.isHolePunchEnabled(getContext());
         isSmoothingEnabled = ClusterConfig.isSmoothingEnabled(getContext());
         driveMode = ClusterConfig.getDriveMode(getContext());
         cruiseSpeed = ClusterConfig.getCruiseSpeed(getContext());
 
-        applyTheme(activeTheme);
+        setupPaints();
     }
 
     public void setThemeStyle(int theme) {
         this.activeTheme = theme;
         ClusterConfig.setTheme(getContext(), theme);
-        applyTheme(theme);
+        rebuildShaders();
         invalidate();
     }
 
@@ -120,171 +150,6 @@ public class ClusterGaugeView extends View {
         invalidate();
     }
 
-    public void applyTheme(int theme) {
-        switch (theme) {
-            case ClusterConfig.THEME_LUXURY_GOLD:
-                // Tank 500 Luxury Chronograph
-                bgPaint.setColor(Color.parseColor("#07080A"));
-                dialBgPaint.setColor(Color.parseColor("#0C0E14"));
-                ringOuterPaint.setColor(Color.parseColor("#C5A059"));
-                ringOuterPaint.setStyle(Paint.Style.STROKE);
-                ringOuterPaint.setStrokeWidth(7f);
-                ringInnerPaint.setColor(Color.parseColor("#5A4725"));
-                ringInnerPaint.setStyle(Paint.Style.STROKE);
-                ringInnerPaint.setStrokeWidth(3f);
-                tickMajorPaint.setColor(Color.parseColor("#F5E6C8"));
-                tickMajorPaint.setStrokeWidth(4.5f);
-                tickMinorPaint.setColor(Color.parseColor("#7A6848"));
-                tickMinorPaint.setStrokeWidth(2f);
-                textNumberPaint.setColor(Color.parseColor("#DFC69A"));
-                textValuePaint.setColor(Color.parseColor("#FFF8E7"));
-                textUnitPaint.setColor(Color.parseColor("#A89575"));
-                needlePaint.setColor(Color.parseColor("#E5C158"));
-                needleCapPaint.setColor(Color.parseColor("#C5A059"));
-                needlePinPaint.setColor(Color.parseColor("#151821"));
-                redlineArcPaint.setColor(Color.parseColor("#C57B30"));
-                redlineArcPaint.setStyle(Paint.Style.STROKE);
-                redlineArcPaint.setStrokeWidth(7f);
-                centerBoxPaint.setColor(Color.parseColor("#0E1118"));
-                centerBorderPaint.setColor(Color.parseColor("#5A4725"));
-                centerBorderPaint.setStyle(Paint.Style.STROKE);
-                centerBorderPaint.setStrokeWidth(3f);
-                gearPaint.setColor(Color.parseColor("#E5C158"));
-                modePaint.setColor(Color.parseColor("#C5A059"));
-                tempPaint.setColor(Color.parseColor("#A89575"));
-                cruiseMarkerPaint.setColor(Color.parseColor("#FFD54F"));
-                break;
-
-            case ClusterConfig.THEME_CYBER_NEON:
-                // Futuristic Cyberpunk EV
-                bgPaint.setColor(Color.parseColor("#03060F"));
-                dialBgPaint.setColor(Color.parseColor("#070D1F"));
-                ringOuterPaint.setColor(Color.parseColor("#00E5FF"));
-                ringOuterPaint.setStyle(Paint.Style.STROKE);
-                ringOuterPaint.setStrokeWidth(6f);
-                ringInnerPaint.setColor(Color.parseColor("#FF007F"));
-                ringInnerPaint.setStyle(Paint.Style.STROKE);
-                ringInnerPaint.setStrokeWidth(3f);
-                tickMajorPaint.setColor(Color.parseColor("#00E5FF"));
-                tickMajorPaint.setStrokeWidth(4.5f);
-                tickMinorPaint.setColor(Color.parseColor("#007080"));
-                tickMinorPaint.setStrokeWidth(2f);
-                textNumberPaint.setColor(Color.parseColor("#80F0FF"));
-                textValuePaint.setColor(Color.parseColor("#00E5FF"));
-                textUnitPaint.setColor(Color.parseColor("#00ACC1"));
-                needlePaint.setColor(Color.parseColor("#00E5FF"));
-                needleCapPaint.setColor(Color.parseColor("#18FFFF"));
-                needlePinPaint.setColor(Color.parseColor("#FF007F"));
-                redlineArcPaint.setColor(Color.parseColor("#FF007F"));
-                redlineArcPaint.setStyle(Paint.Style.STROKE);
-                redlineArcPaint.setStrokeWidth(8f);
-                centerBoxPaint.setColor(Color.parseColor("#081024"));
-                centerBorderPaint.setColor(Color.parseColor("#00E5FF"));
-                centerBorderPaint.setStyle(Paint.Style.STROKE);
-                centerBorderPaint.setStrokeWidth(3f);
-                gearPaint.setColor(Color.parseColor("#FF007F"));
-                modePaint.setColor(Color.parseColor("#00E5FF"));
-                tempPaint.setColor(Color.parseColor("#80F0FF"));
-                cruiseMarkerPaint.setColor(Color.parseColor("#00E5FF"));
-                break;
-
-            case ClusterConfig.THEME_OFFROAD_AMBER:
-                // Tank 4x4 Desert Edition
-                bgPaint.setColor(Color.parseColor("#0F1114"));
-                dialBgPaint.setColor(Color.parseColor("#171A21"));
-                ringOuterPaint.setColor(Color.parseColor("#455A64"));
-                ringOuterPaint.setStyle(Paint.Style.STROKE);
-                ringOuterPaint.setStrokeWidth(8f);
-                ringInnerPaint.setColor(Color.parseColor("#FF8F00"));
-                ringInnerPaint.setStyle(Paint.Style.STROKE);
-                ringInnerPaint.setStrokeWidth(4f);
-                tickMajorPaint.setColor(Color.parseColor("#FFB300"));
-                tickMajorPaint.setStrokeWidth(5f);
-                tickMinorPaint.setColor(Color.parseColor("#785B22"));
-                tickMinorPaint.setStrokeWidth(2.5f);
-                textNumberPaint.setColor(Color.parseColor("#FFD54F"));
-                textValuePaint.setColor(Color.parseColor("#FFE082"));
-                textUnitPaint.setColor(Color.parseColor("#FFB300"));
-                needlePaint.setColor(Color.parseColor("#FF6D00"));
-                needleCapPaint.setColor(Color.parseColor("#37474F"));
-                needlePinPaint.setColor(Color.parseColor("#FF6D00"));
-                redlineArcPaint.setColor(Color.parseColor("#FF3D00"));
-                redlineArcPaint.setStyle(Paint.Style.STROKE);
-                redlineArcPaint.setStrokeWidth(9f);
-                centerBoxPaint.setColor(Color.parseColor("#1A1E26"));
-                centerBorderPaint.setColor(Color.parseColor("#FF8F00"));
-                centerBorderPaint.setStyle(Paint.Style.STROKE);
-                centerBorderPaint.setStrokeWidth(3.5f);
-                gearPaint.setColor(Color.parseColor("#FFA000"));
-                modePaint.setColor(Color.parseColor("#FFB300"));
-                tempPaint.setColor(Color.parseColor("#FFD54F"));
-                cruiseMarkerPaint.setColor(Color.parseColor("#FF6D00"));
-                break;
-
-            case ClusterConfig.THEME_SPORT_RED:
-            default:
-                // AMG / RS Track Redline
-                bgPaint.setColor(Color.parseColor("#08090C"));
-                dialBgPaint.setColor(Color.parseColor("#12141A"));
-                ringOuterPaint.setColor(Color.parseColor("#262D38"));
-                ringOuterPaint.setStyle(Paint.Style.STROKE);
-                ringOuterPaint.setStrokeWidth(7f);
-                ringInnerPaint.setColor(Color.parseColor("#D50000"));
-                ringInnerPaint.setStyle(Paint.Style.STROKE);
-                ringInnerPaint.setStrokeWidth(3.5f);
-                tickMajorPaint.setColor(Color.parseColor("#FFFFFF"));
-                tickMajorPaint.setStrokeWidth(4.5f);
-                tickMinorPaint.setColor(Color.parseColor("#546E7A"));
-                tickMinorPaint.setStrokeWidth(2f);
-                textNumberPaint.setColor(Color.parseColor("#ECEFF1"));
-                textValuePaint.setColor(Color.WHITE);
-                textUnitPaint.setColor(Color.parseColor("#90A4AE"));
-                needlePaint.setColor(Color.parseColor("#FF1744"));
-                needleCapPaint.setColor(Color.parseColor("#37474F"));
-                needlePinPaint.setColor(Color.parseColor("#FF1744"));
-                redlineArcPaint.setColor(Color.parseColor("#FF1744"));
-                redlineArcPaint.setStyle(Paint.Style.STROKE);
-                redlineArcPaint.setStrokeWidth(8f);
-                centerBoxPaint.setColor(Color.parseColor("#12151E"));
-                centerBorderPaint.setColor(Color.parseColor("#D50000"));
-                centerBorderPaint.setStyle(Paint.Style.STROKE);
-                centerBorderPaint.setStrokeWidth(3f);
-                gearPaint.setColor(Color.parseColor("#00E676"));
-                modePaint.setColor(Color.parseColor("#FF5252"));
-                tempPaint.setColor(Color.parseColor("#90CAF9"));
-                cruiseMarkerPaint.setColor(Color.parseColor("#00E5FF"));
-                break;
-        }
-
-        // Common text alignments and sizes
-        textNumberPaint.setTextAlign(Paint.Align.CENTER);
-        textNumberPaint.setTextSize(17f);
-        textNumberPaint.setFakeBoldText(true);
-
-        textValuePaint.setTextAlign(Paint.Align.CENTER);
-        textValuePaint.setTextSize(38f);
-        textValuePaint.setFakeBoldText(true);
-
-        textUnitPaint.setTextAlign(Paint.Align.CENTER);
-        textUnitPaint.setTextSize(14f);
-
-        gearPaint.setTextAlign(Paint.Align.CENTER);
-        gearPaint.setTextSize(58f);
-        gearPaint.setFakeBoldText(true);
-
-        modePaint.setTextAlign(Paint.Align.CENTER);
-        modePaint.setTextSize(16f);
-        modePaint.setFakeBoldText(true);
-
-        tempPaint.setTextAlign(Paint.Align.CENTER);
-        tempPaint.setTextSize(15f);
-
-        needlePaint.setStyle(Paint.Style.FILL);
-        needleCapPaint.setStyle(Paint.Style.FILL);
-        needlePinPaint.setStyle(Paint.Style.FILL);
-        cruiseMarkerPaint.setStyle(Paint.Style.FILL);
-    }
-
     public void updateTelemetry(VehicleState state) {
         this.targetSpeed = state.speedKmh;
         this.targetRpm = state.rpm;
@@ -311,15 +176,116 @@ public class ClusterGaugeView extends View {
         postInvalidateOnAnimation();
     }
 
+    private void setupPaints() {
+        tubeBezelPaint.setStyle(Paint.Style.STROKE);
+        tubeInnerShadowPaint.setStyle(Paint.Style.STROKE);
+        dialPlatePaint.setStyle(Paint.Style.FILL);
+        dialTexturePaint.setStyle(Paint.Style.STROKE);
+
+        tickMajorPaint.setStrokeCap(Paint.Cap.ROUND);
+        tickMinorPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        textNumberPaint.setTextAlign(Paint.Align.CENTER);
+        textNumberPaint.setFakeBoldText(true);
+
+        textValuePaint.setTextAlign(Paint.Align.CENTER);
+        textValuePaint.setFakeBoldText(true);
+
+        textUnitPaint.setTextAlign(Paint.Align.CENTER);
+
+        needlePaint.setStyle(Paint.Style.FILL);
+        needleShadowPaint.setStyle(Paint.Style.FILL);
+        needleShadowPaint.setColor(Color.parseColor("#80000000"));
+
+        needleGlowPaint.setStyle(Paint.Style.STROKE);
+        needleCapPaint.setStyle(Paint.Style.FILL);
+        needlePinPaint.setStyle(Paint.Style.FILL);
+
+        activeArcPaint.setStyle(Paint.Style.STROKE);
+        activeArcPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        redlineArcPaint.setStyle(Paint.Style.STROKE);
+        redlineArcPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        centerBoxBgPaint.setStyle(Paint.Style.FILL);
+        centerBoxBorderPaint.setStyle(Paint.Style.STROKE);
+
+        gearPaint.setTextAlign(Paint.Align.CENTER);
+        gearPaint.setFakeBoldText(true);
+
+        modePaint.setTextAlign(Paint.Align.CENTER);
+        modePaint.setFakeBoldText(true);
+
+        subTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        boltPaint.setStyle(Paint.Style.FILL);
+        boltPaint.setColor(Color.parseColor("#90A4AE"));
+
+        horizonSkyPaint.setStyle(Paint.Style.FILL);
+        horizonGroundPaint.setStyle(Paint.Style.FILL);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        this.viewWidth = w;
+        this.viewHeight = h;
+        if (w <= 0 || h <= 0) return;
+
+        this.gaugeRadius = Math.min(w * 0.225f, h * 0.43f);
+        this.centerY = h * 0.52f;
+        this.leftCenterX = w * 0.25f;
+        this.rightCenterX = w * 0.75f;
+
+        rebuildShaders();
+    }
+
+    private void rebuildShaders() {
+        if (gaugeRadius <= 0) return;
+
+        // Dial recessed radial shadow
+        dialPlateShader = new RadialGradient(
+                leftCenterX, centerY, gaugeRadius,
+                new int[]{Color.parseColor("#181B24"), Color.parseColor("#0E1017"), Color.parseColor("#06070A")},
+                new float[]{0.0f, 0.7f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+
+        // 3D Bezel metallic highlights (Light source at top-left, shadow at bottom-right)
+        sportBezelShader = new LinearGradient(
+                leftCenterX - gaugeRadius, centerY - gaugeRadius,
+                leftCenterX + gaugeRadius, centerY + gaugeRadius,
+                new int[]{Color.parseColor("#5A6577"), Color.parseColor("#252A33"), Color.parseColor("#121419"), Color.parseColor("#38404D")},
+                new float[]{0.0f, 0.4f, 0.8f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+
+        luxuryBezelShader = new LinearGradient(
+                leftCenterX - gaugeRadius, centerY - gaugeRadius,
+                leftCenterX + gaugeRadius, centerY + gaugeRadius,
+                new int[]{Color.parseColor("#F5E0A3"), Color.parseColor("#99793D"), Color.parseColor("#3D2B12"), Color.parseColor("#D4AF37")},
+                new float[]{0.0f, 0.35f, 0.75f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+
+        tacticalBezelShader = new LinearGradient(
+                leftCenterX - gaugeRadius, centerY - gaugeRadius,
+                leftCenterX + gaugeRadius, centerY + gaugeRadius,
+                new int[]{Color.parseColor("#78909C"), Color.parseColor("#37474F"), Color.parseColor("#212121"), Color.parseColor("#546E7A")},
+                new float[]{0.0f, 0.35f, 0.75f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int w = getWidth();
-        int h = getHeight();
+        int w = viewWidth;
+        int h = viewHeight;
         if (w <= 0 || h <= 0) return;
 
-        // Smooth needle animation physics (interpolates toward target values at 60 FPS)
+        // Smooth needle animation physics at 60 FPS
         boolean needsInvalidate = false;
         if (isSmoothingEnabled) {
             float speedDiff = targetSpeed - displaySpeed;
@@ -343,24 +309,27 @@ public class ClusterGaugeView extends View {
             displayRpm = targetRpm;
         }
 
-        // Draw solid background
-        canvas.drawRect(0, 0, w, h, bgPaint);
+        // Draw active theme
+        switch (activeTheme) {
+            case ClusterConfig.THEME_LUXURY_CHRONO:
+                drawLuxuryChronoTheme(canvas, w, h);
+                break;
+            case ClusterConfig.THEME_CYBER_HEX:
+                drawCyberHexTheme(canvas, w, h);
+                break;
+            case ClusterConfig.THEME_TACTICAL_4X4:
+                drawTactical4x4Theme(canvas, w, h);
+                break;
+            case ClusterConfig.THEME_MINIMAL_OLED:
+                drawMinimalOledTheme(canvas, w, h);
+                break;
+            case ClusterConfig.THEME_SPORT_APEX:
+            default:
+                drawSportApexTheme(canvas, w, h);
+                break;
+        }
 
-        float gaugeRadius = Math.min(w * 0.22f, h * 0.42f);
-        float centerY = h * 0.52f;
-        float leftCenterX = w * 0.25f;
-        float rightCenterX = w * 0.75f;
-
-        // 1. Draw Speedometer (Left Dial)
-        drawSpeedometer(canvas, leftCenterX, centerY, gaugeRadius);
-
-        // 2. Draw Tachometer (Right Dial)
-        drawTachometer(canvas, rightCenterX, centerY, gaugeRadius);
-
-        // 3. Draw Center Display (Gear, 4x4 Drive Mode, Temp)
-        drawCenterInfo(canvas, w * 0.5f, centerY, gaugeRadius);
-
-        // 4. Safe HolePunch Cutout Mask (Protects physical turn signals & icons)
+        // Safe HolePunch Cutout Mask (protects factory indicators & odometer)
         if (isHolePunchEnabled) {
             drawHolePunchMask(canvas, w, h);
         }
@@ -370,155 +339,651 @@ public class ClusterGaugeView extends View {
         }
     }
 
-    private void drawSpeedometer(Canvas canvas, float cx, float cy, float radius) {
-        // Dial body
-        canvas.drawCircle(cx, cy, radius, dialBgPaint);
-        canvas.drawCircle(cx, cy, radius, ringOuterPaint);
-        canvas.drawCircle(cx, cy, radius * 0.94f, ringInnerPaint);
+    // =========================================================================
+    // 1. THEME: SPORT APEX (Track Mode, 3D Deep Tubes, F1 Shift Lights)
+    // =========================================================================
+    private void drawSportApexTheme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#07080B"));
 
-        float startAngle = 135f;
-        float sweepAngle = 270f;
-        int maxSpeed = 240;
+        // Dials
+        draw3DTubeDial(canvas, leftCenterX, centerY, gaugeRadius, sportBezelShader, Color.parseColor("#FF1744"));
+        draw3DTubeDial(canvas, rightCenterX, centerY, gaugeRadius, sportBezelShader, Color.parseColor("#FF1744"));
 
-        // Ticks and scale numerals
-        for (int s = 0; s <= maxSpeed; s += 10) {
-            float angle = startAngle + ((float) s / maxSpeed) * sweepAngle;
-            double rad = Math.toRadians(angle);
-            boolean isMajor = (s % 20 == 0);
-            float innerRadius = isMajor ? radius * 0.77f : radius * 0.85f;
-            float outerRadius = radius * 0.91f;
+        // Speedometer Left
+        drawSpeedometerScale(canvas, leftCenterX, centerY, gaugeRadius, 240, Color.WHITE, Color.parseColor("#FF1744"), true);
 
-            float x1 = (float) (cx + innerRadius * Math.cos(rad));
-            float y1 = (float) (cy + innerRadius * Math.sin(rad));
-            float x2 = (float) (cx + outerRadius * Math.cos(rad));
-            float y2 = (float) (cy + outerRadius * Math.sin(rad));
+        // Tachometer Right
+        drawTachometerScale(canvas, rightCenterX, centerY, gaugeRadius, 8000, 5500, Color.WHITE, Color.parseColor("#FF1744"), true);
 
-            canvas.drawLine(x1, y1, x2, y2, isMajor ? tickMajorPaint : tickMinorPaint);
+        // Needles
+        drawSportNeedle(canvas, leftCenterX, centerY, gaugeRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.parseColor("#FF1744"));
+        drawSportNeedle(canvas, rightCenterX, centerY, gaugeRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.parseColor("#FF1744"));
 
-            if (isMajor && (s % 40 == 0 || s == 0)) {
-                float textRadius = radius * 0.63f;
-                float tx = (float) (cx + textRadius * Math.cos(rad));
-                float ty = (float) (cy + textRadius * Math.sin(rad) + 6f);
-                canvas.drawText(String.valueOf(s), tx, ty, textNumberPaint);
-            }
-        }
-
-        // Cruise speed indicator bug
-        if (cruiseSpeed > 0 && cruiseSpeed <= maxSpeed) {
-            float cAngle = startAngle + ((float) cruiseSpeed / maxSpeed) * sweepAngle;
-            drawCruiseMarker(canvas, cx, cy, radius * 0.94f, cAngle);
-        }
-
-        // Sweeping needle
-        float clampedSpeed = Math.min(Math.max(displaySpeed, 0), maxSpeed);
-        float needleAngle = startAngle + (clampedSpeed / maxSpeed) * sweepAngle;
-        drawNeedle(canvas, cx, cy, radius * 0.81f, needleAngle);
-
-        // Digital Speed in center of dial
-        canvas.drawText(String.valueOf(Math.round(displaySpeed)), cx, cy + radius * 0.38f, textValuePaint);
-        canvas.drawText("KM/H", cx, cy + radius * 0.54f, textUnitPaint);
+        // Center Box: Carbon card with F1 shift light bar
+        drawSportCenterCard(canvas, w * 0.5f, centerY, gaugeRadius);
     }
 
-    private void drawTachometer(Canvas canvas, float cx, float cy, float radius) {
-        // Dial body
-        canvas.drawCircle(cx, cy, radius, dialBgPaint);
-        canvas.drawCircle(cx, cy, radius, ringOuterPaint);
-        canvas.drawCircle(cx, cy, radius * 0.94f, ringInnerPaint);
+    private void draw3DTubeDial(Canvas canvas, float cx, float cy, float radius, Shader bezelShader, int accentColor) {
+        // 1. Recessed dial plate with inner shadow
+        dialPlatePaint.setShader(dialPlateShader);
+        canvas.drawCircle(cx, cy, radius, dialPlatePaint);
+        dialPlatePaint.setShader(null);
 
-        float startAngle = 135f;
-        float sweepAngle = 270f;
-        int maxRpm = 8000;
+        // 2. Concentric track texture lines
+        dialTexturePaint.setColor(Color.parseColor("#15FFFFFF"));
+        dialTexturePaint.setStrokeWidth(1.2f);
+        canvas.drawCircle(cx, cy, radius * 0.70f, dialTexturePaint);
+        canvas.drawCircle(cx, cy, radius * 0.45f, dialTexturePaint);
 
-        // Redline Arc (from 5500 to 8000 RPM)
-        arcRect.set(cx - radius * 0.89f, cy - radius * 0.89f, cx + radius * 0.89f, cy + radius * 0.89f);
-        float redlineStart = startAngle + (5500f / maxRpm) * sweepAngle;
-        float redlineSweep = (2500f / maxRpm) * sweepAngle;
-        canvas.drawArc(arcRect, redlineStart, redlineSweep, false, redlineArcPaint);
+        // 3. Inner shadow chamfer (simulates 3D tube depth)
+        tubeInnerShadowPaint.setColor(Color.parseColor("#B0000000"));
+        tubeInnerShadowPaint.setStrokeWidth(radius * 0.08f);
+        canvas.drawCircle(cx, cy, radius * 0.94f, tubeInnerShadowPaint);
 
-        // Ticks and scale numerals
-        for (int r = 0; r <= maxRpm; r += 250) {
-            float angle = startAngle + ((float) r / maxRpm) * sweepAngle;
-            double rad = Math.toRadians(angle);
-            boolean isMajor = (r % 1000 == 0);
-            float innerRadius = isMajor ? radius * 0.77f : radius * 0.85f;
-            float outerRadius = radius * 0.91f;
+        // 4. Volumetric metallic outer bezel ring
+        tubeBezelPaint.setShader(bezelShader);
+        tubeBezelPaint.setStrokeWidth(radius * 0.07f);
+        canvas.drawCircle(cx, cy, radius, tubeBezelPaint);
+        tubeBezelPaint.setShader(null);
 
-            float x1 = (float) (cx + innerRadius * Math.cos(rad));
-            float y1 = (float) (cy + innerRadius * Math.sin(rad));
-            float x2 = (float) (cx + outerRadius * Math.cos(rad));
-            float y2 = (float) (cy + outerRadius * Math.sin(rad));
-
-            canvas.drawLine(x1, y1, x2, y2, isMajor ? tickMajorPaint : tickMinorPaint);
-
-            if (isMajor) {
-                float textRadius = radius * 0.63f;
-                float tx = (float) (cx + textRadius * Math.cos(rad));
-                float ty = (float) (cy + textRadius * Math.sin(rad) + 6f);
-                canvas.drawText(String.valueOf(r / 1000), tx, ty, textNumberPaint);
-            }
-        }
-
-        // Sweeping needle
-        float clampedRpm = Math.min(Math.max(displayRpm, 0), maxRpm);
-        float needleAngle = startAngle + (clampedRpm / maxRpm) * sweepAngle;
-        drawNeedle(canvas, cx, cy, radius * 0.81f, needleAngle);
-
-        // Digital RPM readout in center of dial
-        canvas.drawText(String.valueOf(Math.round(displayRpm)), cx, cy + radius * 0.38f, textValuePaint);
-        canvas.drawText("RPM x1000", cx, cy + radius * 0.54f, textUnitPaint);
+        // 5. Razor thin accent lip
+        tubeBezelPaint.setColor(accentColor);
+        tubeBezelPaint.setStrokeWidth(2.5f);
+        canvas.drawCircle(cx, cy, radius * 0.90f, tubeBezelPaint);
     }
 
-    private void drawNeedle(Canvas canvas, float cx, float cy, float length, float angleDeg) {
+    private void drawSportNeedle(Canvas canvas, float cx, float cy, float length, float angleDeg, int needleColor) {
         canvas.save();
         canvas.rotate(angleDeg, cx, cy);
 
+        // Needle Drop Shadow (volume)
+        needleShadowPath.reset();
+        needleShadowPath.moveTo(cx - 16f, cy + 2f);
+        needleShadowPath.lineTo(cx + length, cy + 6f);
+        needleShadowPath.lineTo(cx - 16f, cy + 10f);
+        needleShadowPath.close();
+        canvas.drawPath(needleShadowPath, needleShadowPaint);
+
+        // Needle Blade
         needlePath.reset();
-        needlePath.moveTo(cx - 16f, cy - 3.5f);
+        needlePath.moveTo(cx - 18f, cy - 3.5f);
         needlePath.lineTo(cx + length, cy);
-        needlePath.lineTo(cx - 16f, cy + 3.5f);
+        needlePath.lineTo(cx - 18f, cy + 3.5f);
         needlePath.close();
 
+        needlePaint.setColor(needleColor);
         canvas.drawPath(needlePath, needlePaint);
+
+        // Luminous needle core line
+        needleGlowPaint.setColor(Color.WHITE);
+        needleGlowPaint.setStrokeWidth(2f);
+        canvas.drawLine(cx, cy, cx + length * 0.9f, cy, needleGlowPaint);
+
+        // 3D Center Cap (Chrome rim + anodized red center)
+        needleCapPaint.setColor(Color.parseColor("#37474F"));
+        canvas.drawCircle(cx, cy, 16f, needleCapPaint);
+        needleCapPaint.setColor(Color.parseColor("#546E7A"));
         canvas.drawCircle(cx, cy, 14f, needleCapPaint);
-        canvas.drawCircle(cx, cy, 6f, needlePinPaint);
+        needlePinPaint.setColor(needleColor);
+        canvas.drawCircle(cx, cy, 7f, needlePinPaint);
 
         canvas.restore();
     }
 
-    private void drawCruiseMarker(Canvas canvas, float cx, float cy, float markerRadius, float angleDeg) {
-        canvas.save();
-        canvas.rotate(angleDeg, cx, cy);
-
-        cruiseMarkerPath.reset();
-        cruiseMarkerPath.moveTo(cx + markerRadius, cy);
-        cruiseMarkerPath.lineTo(cx + markerRadius + 14f, cy - 8f);
-        cruiseMarkerPath.lineTo(cx + markerRadius + 14f, cy + 8f);
-        cruiseMarkerPath.close();
-
-        canvas.drawPath(cruiseMarkerPath, cruiseMarkerPaint);
-        canvas.restore();
-    }
-
-    private void drawCenterInfo(Canvas canvas, float cx, float cy, float radius) {
+    private void drawSportCenterCard(Canvas canvas, float cx, float cy, float radius) {
         float boxW = radius * 1.55f;
         float boxH = radius * 1.65f;
         centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
 
-        canvas.drawRoundRect(centerBoxRect, 20f, 20f, centerBoxPaint);
-        canvas.drawRoundRect(centerBoxRect, 20f, 20f, centerBorderPaint);
+        centerBoxBgPaint.setColor(Color.parseColor("#10131A"));
+        canvas.drawRoundRect(centerBoxRect, 18f, 18f, centerBoxBgPaint);
 
-        // Gear display (P, R, N, D, D1..D9)
-        canvas.drawText(gear, cx, cy - 22f, gearPaint);
+        centerBoxBorderPaint.setColor(Color.parseColor("#FF1744"));
+        centerBoxBorderPaint.setStrokeWidth(2.5f);
+        canvas.drawRoundRect(centerBoxRect, 18f, 18f, centerBoxBorderPaint);
+
+        // F1-style Shift Light Bar at top of card
+        float ledY = centerBoxRect.top + 22f;
+        float ledStartX = cx - 55f;
+        float rpmRatio = displayRpm / 8000f;
+        for (int i = 0; i < 7; i++) {
+            float ledX = ledStartX + i * 18f;
+            int ledColor;
+            boolean active = (rpmRatio >= (0.4f + i * 0.08f));
+            if (i < 3) {
+                ledColor = active ? Color.parseColor("#00E676") : Color.parseColor("#1B3E25");
+            } else if (i < 5) {
+                ledColor = active ? Color.parseColor("#FFEA00") : Color.parseColor("#3E3B1B");
+            } else {
+                ledColor = active ? Color.parseColor("#FF1744") : Color.parseColor("#3E1B1E");
+            }
+            boltPaint.setColor(ledColor);
+            canvas.drawCircle(ledX, ledY, 5f, boltPaint);
+        }
+
+        // Gear display
+        gearPaint.setColor(Color.parseColor("#FF1744"));
+        gearPaint.setTextSize(54f);
+        canvas.drawText(gear, cx, cy + 2f, gearPaint);
+
+        // Drive mode badge
+        modePaint.setColor(Color.parseColor("#ECEFF1"));
+        modePaint.setTextSize(spToPx(13));
+        canvas.drawText(driveMode, cx, cy + 34f, modePaint);
+
+        // Coolant Temp & Boost
+        subTextPaint.setColor(Color.parseColor("#90A4AE"));
+        subTextPaint.setTextSize(spToPx(11));
+        canvas.drawText("COOLANT " + Math.round(coolantTemp) + " °C", cx, cy + 62f, subTextPaint);
+    }
+
+    // =========================================================================
+    // 2. THEME: LUXURY CHRONO (Bentley / Tank 500 Gold Chronograph)
+    // =========================================================================
+    private void drawLuxuryChronoTheme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#060608"));
+
+        // 3D Brushed Gold Bezel
+        draw3DTubeDial(canvas, leftCenterX, centerY, gaugeRadius, luxuryBezelShader, Color.parseColor("#C5A059"));
+        draw3DTubeDial(canvas, rightCenterX, centerY, gaugeRadius, luxuryBezelShader, Color.parseColor("#C5A059"));
+
+        // Guilloche concentric fine texture
+        dialTexturePaint.setColor(Color.parseColor("#22C5A059"));
+        dialTexturePaint.setStrokeWidth(1f);
+        for (float r = gaugeRadius * 0.35f; r < gaugeRadius * 0.85f; r += 12f) {
+            canvas.drawCircle(leftCenterX, centerY, r, dialTexturePaint);
+            canvas.drawCircle(rightCenterX, centerY, r, dialTexturePaint);
+        }
+
+        // Sub-dial inside Speedometer (Mini Chrono)
+        drawChronoSubDial(canvas, leftCenterX, centerY - gaugeRadius * 0.28f, gaugeRadius * 0.28f, "OIL");
+
+        // Sub-dial inside Tachometer (Mini Voltage/Temp)
+        drawChronoSubDial(canvas, rightCenterX, centerY - gaugeRadius * 0.28f, gaugeRadius * 0.28f, "BAT");
+
+        // Scales
+        drawSpeedometerScale(canvas, leftCenterX, centerY, gaugeRadius, 240, Color.parseColor("#F5E6C8"), Color.parseColor("#C5A059"), false);
+        drawTachometerScale(canvas, rightCenterX, centerY, gaugeRadius, 8000, 6000, Color.parseColor("#F5E6C8"), Color.parseColor("#C5A059"), false);
+
+        // Classic Breguet Needles (Gold sword with circular counterweight)
+        drawLuxuryNeedle(canvas, leftCenterX, centerY, gaugeRadius * 0.80f, getSpeedAngle(displaySpeed, 240));
+        drawLuxuryNeedle(canvas, rightCenterX, centerY, gaugeRadius * 0.80f, getRpmAngle(displayRpm, 8000));
+
+        // Center Luxury Crest & Gear
+        drawLuxuryCenterCard(canvas, w * 0.5f, centerY, gaugeRadius);
+    }
+
+    private void drawChronoSubDial(Canvas canvas, float cx, float cy, float radius, String label) {
+        subDialRect.set(cx - radius, cy - radius, cx + radius, cy + radius);
+        tubeBezelPaint.setColor(Color.parseColor("#44C5A059"));
+        tubeBezelPaint.setStrokeWidth(1.5f);
+        canvas.drawCircle(cx, cy, radius, tubeBezelPaint);
+
+        subTextPaint.setColor(Color.parseColor("#88C5A059"));
+        subTextPaint.setTextSize(10f);
+        canvas.drawText(label, cx, cy + radius * 0.5f, subTextPaint);
+    }
+
+    private void drawLuxuryNeedle(Canvas canvas, float cx, float cy, float length, float angleDeg) {
+        canvas.save();
+        canvas.rotate(angleDeg, cx, cy);
+
+        // Needle Shadow
+        needleShadowPath.reset();
+        needleShadowPath.moveTo(cx - 18f, cy + 2f);
+        needleShadowPath.lineTo(cx + length, cy + 4f);
+        needleShadowPath.lineTo(cx - 18f, cy + 6f);
+        needleShadowPath.close();
+        canvas.drawPath(needleShadowPath, needleShadowPaint);
+
+        // Sword blade
+        needlePath.reset();
+        needlePath.moveTo(cx - 20f, cy - 2f);
+        needlePath.lineTo(cx + length * 0.7f, cy - 3.5f);
+        needlePath.lineTo(cx + length, cy);
+        needlePath.lineTo(cx + length * 0.7f, cy + 3.5f);
+        needlePath.lineTo(cx - 20f, cy + 2f);
+        needlePath.close();
+
+        needlePaint.setColor(Color.parseColor("#E5C158"));
+        canvas.drawPath(needlePath, needlePaint);
+
+        // Circular counterweight
+        canvas.drawCircle(cx - 14f, cy, 6f, needlePaint);
+        canvas.drawCircle(cx - 14f, cy, 3f, dialPlatePaint);
+
+        // Gold center cap
+        needleCapPaint.setColor(Color.parseColor("#C5A059"));
+        canvas.drawCircle(cx, cy, 14f, needleCapPaint);
+        needlePinPaint.setColor(Color.parseColor("#18140B"));
+        canvas.drawCircle(cx, cy, 5f, needlePinPaint);
+
+        canvas.restore();
+    }
+
+    private void drawLuxuryCenterCard(Canvas canvas, float cx, float cy, float radius) {
+        float boxW = radius * 1.55f;
+        float boxH = radius * 1.65f;
+        centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
+
+        centerBoxBgPaint.setColor(Color.parseColor("#0C0E13"));
+        canvas.drawRoundRect(centerBoxRect, 18f, 18f, centerBoxBgPaint);
+
+        centerBoxBorderPaint.setColor(Color.parseColor("#5A4725"));
+        centerBoxBorderPaint.setStrokeWidth(2f);
+        canvas.drawRoundRect(centerBoxRect, 18f, 18f, centerBoxBorderPaint);
+
+        // Tank 500 Crown / Luxury line
+        tubeBezelPaint.setColor(Color.parseColor("#C5A059"));
+        tubeBezelPaint.setStrokeWidth(1.5f);
+        canvas.drawLine(cx - 30f, centerBoxRect.top + 28f, cx + 30f, centerBoxRect.top + 28f, tubeBezelPaint);
+
+        // Gear display
+        gearPaint.setColor(Color.parseColor("#E5C158"));
+        gearPaint.setTextSize(54f);
+        canvas.drawText(gear, cx, cy + 6f, gearPaint);
 
         // Drive Mode
-        canvas.drawText(driveMode, cx, cy + 26f, modePaint);
+        modePaint.setColor(Color.parseColor("#C5A059"));
+        modePaint.setTextSize(spToPx(13));
+        canvas.drawText(driveMode, cx, cy + 38f, modePaint);
 
-        // Coolant Temp
-        canvas.drawText("TEMP: " + Math.round(coolantTemp) + " °C", cx, cy + 68f, tempPaint);
+        // Temperature
+        subTextPaint.setColor(Color.parseColor("#8C7853"));
+        subTextPaint.setTextSize(spToPx(11));
+        canvas.drawText(Math.round(coolantTemp) + " °C  |  TANK 500", cx, cy + 64f, subTextPaint);
+    }
+
+    // =========================================================================
+    // 3. THEME: CYBER HEX (Futuristic Polygonal EV HUD, Tron Horizon Grid)
+    // =========================================================================
+    private void drawCyberHexTheme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#03050C"));
+
+        // Cyberpunk perspective horizon floor in background
+        drawCyberFloorGrid(canvas, w, h);
+
+        // Hexagonal / Angular Chamfered Dials
+        drawHexGauge(canvas, leftCenterX, centerY, gaugeRadius, Color.parseColor("#00E5FF"));
+        drawHexGauge(canvas, rightCenterX, centerY, gaugeRadius, Color.parseColor("#FF007F"));
+
+        // Segmented LED Bar Scales
+        drawCyberScale(canvas, leftCenterX, centerY, gaugeRadius, displaySpeed, 240, Color.parseColor("#00E5FF"), "KM/H");
+        drawCyberScale(canvas, rightCenterX, centerY, gaugeRadius, displayRpm, 8000, Color.parseColor("#FF007F"), "RPM");
+
+        // Center Holographic HUD Card
+        drawCyberCenterCard(canvas, w * 0.5f, centerY, gaugeRadius);
+    }
+
+    private void drawCyberFloorGrid(Canvas canvas, int w, int h) {
+        dialTexturePaint.setColor(Color.parseColor("#1200E5FF"));
+        dialTexturePaint.setStrokeWidth(1.5f);
+
+        float horizonY = h * 0.65f;
+        // Horizontal grid lines
+        for (float y = horizonY; y < h; y += (y - horizonY + 8f) * 0.45f) {
+            canvas.drawLine(0, y, w, y, dialTexturePaint);
+        }
+        // Perspective rays
+        float vanX = w * 0.5f;
+        for (int i = -6; i <= 6; i++) {
+            canvas.drawLine(vanX, horizonY, vanX + i * (w * 0.12f), h, dialTexturePaint);
+        }
+    }
+
+    private void drawHexGauge(Canvas canvas, float cx, float cy, float radius, int glowColor) {
+        hexPath.reset();
+        int sides = 8; // Octagonal chamfer
+        for (int i = 0; i < sides; i++) {
+            double angle = Math.toRadians(i * 360f / sides + 22.5f);
+            float x = (float) (cx + radius * Math.cos(angle));
+            float y = (float) (cy + radius * Math.sin(angle));
+            if (i == 0) hexPath.moveTo(x, y);
+            else hexPath.lineTo(x, y);
+        }
+        hexPath.close();
+
+        // Dark back plate
+        dialPlatePaint.setColor(Color.parseColor("#0A0F1F"));
+        canvas.drawPath(hexPath, dialPlatePaint);
+
+        // Glowing outer frame
+        tubeBezelPaint.setColor(glowColor);
+        tubeBezelPaint.setStrokeWidth(3.5f);
+        canvas.drawPath(hexPath, tubeBezelPaint);
+    }
+
+    private void drawCyberScale(Canvas canvas, float cx, float cy, float radius, float currentVal, float maxVal, int activeColor, String unit) {
+        float startAngle = 135f;
+        float sweepAngle = 270f;
+        int segments = 28;
+        float currentRatio = Math.min(Math.max(currentVal / maxVal, 0f), 1f);
+
+        for (int i = 0; i <= segments; i++) {
+            float ratio = (float) i / segments;
+            float angle = startAngle + ratio * sweepAngle;
+            double rad = Math.toRadians(angle);
+            boolean isActive = ratio <= currentRatio;
+
+            float innerR = radius * 0.72f;
+            float outerR = radius * 0.88f;
+            float x1 = (float) (cx + innerR * Math.cos(rad));
+            float y1 = (float) (cy + innerR * Math.sin(rad));
+            float x2 = (float) (cx + outerR * Math.cos(rad));
+            float y2 = (float) (cy + outerR * Math.sin(rad));
+
+            tickMajorPaint.setColor(isActive ? activeColor : Color.parseColor("#1A253A"));
+            tickMajorPaint.setStrokeWidth(isActive ? 5.5f : 3f);
+            canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
+        }
+
+        // Bold Digital Center Readout
+        textValuePaint.setColor(activeColor);
+        textValuePaint.setTextSize(46f);
+        canvas.drawText(String.valueOf(Math.round(currentVal)), cx, cy + 12f, textValuePaint);
+
+        textUnitPaint.setColor(Color.parseColor("#80FFFFFF"));
+        textUnitPaint.setTextSize(14f);
+        canvas.drawText(unit, cx, cy + 38f, textUnitPaint);
+    }
+
+    private void drawCyberCenterCard(Canvas canvas, float cx, float cy, float radius) {
+        float boxW = radius * 1.55f;
+        float boxH = radius * 1.65f;
+        centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
+
+        centerBoxBgPaint.setColor(Color.parseColor("#080D1C"));
+        canvas.drawRoundRect(centerBoxRect, 14f, 14f, centerBoxBgPaint);
+
+        centerBoxBorderPaint.setColor(Color.parseColor("#00E5FF"));
+        centerBoxBorderPaint.setStrokeWidth(2f);
+        canvas.drawRoundRect(centerBoxRect, 14f, 14f, centerBoxBorderPaint);
+
+        // Neon HUD top label
+        subTextPaint.setColor(Color.parseColor("#00E5FF"));
+        subTextPaint.setTextSize(11f);
+        canvas.drawText("[ CYBER HYBRID VHAL ]", cx, centerBoxRect.top + 24f, subTextPaint);
+
+        // Gear display (Neon Magenta)
+        gearPaint.setColor(Color.parseColor("#FF007F"));
+        gearPaint.setTextSize(58f);
+        canvas.drawText(gear, cx, cy + 8f, gearPaint);
+
+        // Drive Mode
+        modePaint.setColor(Color.parseColor("#00E5FF"));
+        modePaint.setTextSize(spToPx(13));
+        canvas.drawText(driveMode, cx, cy + 40f, modePaint);
+
+        // Temp
+        subTextPaint.setColor(Color.parseColor("#80F0FF"));
+        canvas.drawText(Math.round(coolantTemp) + " °C  |  SYS ACTIVE", cx, cy + 64f, subTextPaint);
+    }
+
+    // =========================================================================
+    // 4. THEME: TACTICAL 4X4 (Baja Tank, Bolted Bezels, 3D Pitch/Roll Horizon)
+    // =========================================================================
+    private void drawTactical4x4Theme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#0B0C0E"));
+
+        // Bolted Industrial Steel Bezels
+        draw3DTubeDial(canvas, leftCenterX, centerY, gaugeRadius, tacticalBezelShader, Color.parseColor("#FF8F00"));
+        draw3DTubeDial(canvas, rightCenterX, centerY, gaugeRadius, tacticalBezelShader, Color.parseColor("#FF8F00"));
+
+        // 12 Industrial Allen Bolts around each bezel
+        drawBezelBolts(canvas, leftCenterX, centerY, gaugeRadius * 1.05f);
+        drawBezelBolts(canvas, rightCenterX, centerY, gaugeRadius * 1.05f);
+
+        // Military Stencil Scales
+        drawSpeedometerScale(canvas, leftCenterX, centerY, gaugeRadius, 240, Color.parseColor("#FFB300"), Color.parseColor("#FF6D00"), true);
+        drawTachometerScale(canvas, rightCenterX, centerY, gaugeRadius, 8000, 5000, Color.parseColor("#FFB300"), Color.parseColor("#FF3D00"), true);
+
+        // Aviation Orange Needles
+        drawSportNeedle(canvas, leftCenterX, centerY, gaugeRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.parseColor("#FF6D00"));
+        drawSportNeedle(canvas, rightCenterX, centerY, gaugeRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.parseColor("#FF6D00"));
+
+        // Center Console: 3D Off-Road Inclinometer / Artificial Horizon
+        drawTacticalInclinometerCard(canvas, w * 0.5f, centerY, gaugeRadius);
+    }
+
+    private void drawBezelBolts(Canvas canvas, float cx, float cy, float radius) {
+        boltPaint.setColor(Color.parseColor("#78909C"));
+        for (int i = 0; i < 12; i++) {
+            double rad = Math.toRadians(i * 30f);
+            float bx = (float) (cx + radius * Math.cos(rad));
+            float by = (float) (cy + radius * Math.sin(rad));
+            canvas.drawCircle(bx, by, 3.5f, boltPaint);
+        }
+    }
+
+    private void drawTacticalInclinometerCard(Canvas canvas, float cx, float cy, float radius) {
+        float boxW = radius * 1.55f;
+        float boxH = radius * 1.65f;
+        centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
+
+        centerBoxBgPaint.setColor(Color.parseColor("#12141A"));
+        canvas.drawRoundRect(centerBoxRect, 16f, 16f, centerBoxBgPaint);
+
+        centerBoxBorderPaint.setColor(Color.parseColor("#FF8F00"));
+        centerBoxBorderPaint.setStrokeWidth(2.5f);
+        canvas.drawRoundRect(centerBoxRect, 16f, 16f, centerBoxBorderPaint);
+
+        // Miniature 3D Artificial Horizon / Inclinometer (Креномер)
+        float horizonW = boxW * 0.82f;
+        float horizonH = 34f;
+        float hTop = centerBoxRect.top + 20f;
+        RectF horizonRect = new RectF(cx - horizonW / 2, hTop, cx + horizonW / 2, hTop + horizonH);
+
+        canvas.save();
+        horizonClipPath.reset();
+        horizonClipPath.addRoundRect(horizonRect, 8f, 8f, Path.Direction.CW);
+        canvas.clipPath(horizonClipPath);
+
+        // Sky & Ground
+        horizonSkyPaint.setColor(Color.parseColor("#1A3A5A"));
+        horizonGroundPaint.setColor(Color.parseColor("#3D2817"));
+        canvas.drawRect(horizonRect.left, horizonRect.top, horizonRect.right, horizonRect.top + horizonH / 2, horizonSkyPaint);
+        canvas.drawRect(horizonRect.left, horizonRect.top + horizonH / 2, horizonRect.right, horizonRect.bottom, horizonGroundPaint);
+
+        // Horizon line & level ticks
+        tubeBezelPaint.setColor(Color.parseColor("#FFB300"));
+        tubeBezelPaint.setStrokeWidth(2f);
+        canvas.drawLine(horizonRect.left, horizonRect.top + horizonH / 2, horizonRect.right, horizonRect.top + horizonH / 2, tubeBezelPaint);
+        canvas.drawCircle(cx, horizonRect.top + horizonH / 2, 4f, tubeBezelPaint);
+        canvas.restore();
+
+        // Gear display
+        gearPaint.setColor(Color.parseColor("#FF8F00"));
+        gearPaint.setTextSize(50f);
+        canvas.drawText(gear, cx, cy + 12f, gearPaint);
+
+        // Mode badge
+        modePaint.setColor(Color.parseColor("#FFA000"));
+        modePaint.setTextSize(spToPx(13));
+        canvas.drawText(driveMode, cx, cy + 42f, modePaint);
+
+        // 4x4 Differential Lock Status
+        subTextPaint.setColor(Color.parseColor("#90A4AE"));
+        subTextPaint.setTextSize(11f);
+        canvas.drawText("[ LOCK: F - C - R ]", cx, cy + 64f, subTextPaint);
+    }
+
+    // =========================================================================
+    // 5. THEME: MINIMAL OLED (Nordic Clean Floating Arc Ribbons)
+    // =========================================================================
+    private void drawMinimalOledTheme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.BLACK); // Pure 100% OLED true black
+
+        // Floating arc ribbons (no heavy outer rings, pure luminous arcs)
+        drawMinimalFloatingArc(canvas, leftCenterX, centerY, gaugeRadius, displaySpeed, 240, Color.parseColor("#4D88FF"), "km/h");
+        drawMinimalFloatingArc(canvas, rightCenterX, centerY, gaugeRadius, displayRpm, 8000, Color.parseColor("#E0E0E0"), "rpm");
+
+        // Clean Center Typography
+        gearPaint.setColor(Color.WHITE);
+        gearPaint.setTextSize(64f);
+        canvas.drawText(gear, w * 0.5f, centerY + 4f, gearPaint);
+
+        modePaint.setColor(Color.parseColor("#80FFFFFF"));
+        modePaint.setTextSize(spToPx(13));
+        canvas.drawText(driveMode, w * 0.5f, centerY + 38f, modePaint);
+
+        subTextPaint.setColor(Color.parseColor("#40FFFFFF"));
+        subTextPaint.setTextSize(spToPx(11));
+        canvas.drawText(Math.round(coolantTemp) + " °C", w * 0.5f, centerY + 62f, subTextPaint);
+    }
+
+    private void drawMinimalFloatingArc(Canvas canvas, float cx, float cy, float radius, float currentVal, float maxVal, int arcColor, String unit) {
+        arcRect.set(cx - radius * 0.85f, cy - radius * 0.85f, cx + radius * 0.85f, cy + radius * 0.85f);
+        float startAngle = 140f;
+        float sweepAngle = 260f;
+
+        // Background subtle track
+        activeArcPaint.setColor(Color.parseColor("#15FFFFFF"));
+        activeArcPaint.setStrokeWidth(6f);
+        canvas.drawArc(arcRect, startAngle, sweepAngle, false, activeArcPaint);
+
+        // Active luminous arc
+        float ratio = Math.min(Math.max(currentVal / maxVal, 0f), 1f);
+        activeArcPaint.setColor(arcColor);
+        activeArcPaint.setStrokeWidth(8f);
+        canvas.drawArc(arcRect, startAngle, ratio * sweepAngle, false, activeArcPaint);
+
+        // Minimalist digital numbers
+        textValuePaint.setColor(Color.WHITE);
+        textValuePaint.setTextSize(48f);
+        canvas.drawText(String.valueOf(Math.round(currentVal)), cx, cy + 14f, textValuePaint);
+
+        textUnitPaint.setColor(Color.parseColor("#80FFFFFF"));
+        textUnitPaint.setTextSize(14f);
+        canvas.drawText(unit, cx, cy + 42f, textUnitPaint);
+    }
+
+    // =========================================================================
+    // Scale Helpers
+    // =========================================================================
+    private void drawSpeedometerScale(Canvas canvas, float cx, float cy, float radius, int maxSpeed, int tickColor, int activeColor, boolean showGlowArc) {
+        float startAngle = 135f;
+        float sweepAngle = 270f;
+
+        // Active glowing arc following the needle
+        if (showGlowArc) {
+            arcRect.set(cx - radius * 0.86f, cy - radius * 0.86f, cx + radius * 0.86f, cy + radius * 0.86f);
+            float activeRatio = Math.min(Math.max(displaySpeed / maxSpeed, 0f), 1f);
+            activeArcPaint.setColor(activeColor);
+            activeArcPaint.setStrokeWidth(5f);
+            canvas.drawArc(arcRect, startAngle, activeRatio * sweepAngle, false, activeArcPaint);
+        }
+
+        // Ticks
+        for (int s = 0; s <= maxSpeed; s += 10) {
+            float angle = startAngle + ((float) s / maxSpeed) * sweepAngle;
+            double rad = Math.toRadians(angle);
+            boolean isMajor = (s % 20 == 0);
+            float innerR = isMajor ? radius * 0.76f : radius * 0.83f;
+            float outerR = radius * 0.89f;
+
+            float x1 = (float) (cx + innerR * Math.cos(rad));
+            float y1 = (float) (cy + innerR * Math.sin(rad));
+            float x2 = (float) (cx + outerR * Math.cos(rad));
+            float y2 = (float) (cy + outerR * Math.sin(rad));
+
+            tickMajorPaint.setColor(isMajor ? tickColor : Color.parseColor("#607D8B"));
+            tickMajorPaint.setStrokeWidth(isMajor ? 4f : 2f);
+            canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
+
+            if (isMajor && (s % 40 == 0 || s == 0)) {
+                float textR = radius * 0.62f;
+                float tx = (float) (cx + textR * Math.cos(rad));
+                float ty = (float) (cy + textR * Math.sin(rad) + 6f);
+                textNumberPaint.setColor(tickColor);
+                textNumberPaint.setTextSize(spToPx(13));
+                canvas.drawText(String.valueOf(s), tx, ty, textNumberPaint);
+            }
+        }
+
+        // Digital Speed in dial center
+        textValuePaint.setColor(Color.WHITE);
+        textValuePaint.setTextSize(spToPx(32));
+        canvas.drawText(String.valueOf(Math.round(displaySpeed)), cx, cy + radius * 0.40f, textValuePaint);
+
+        textUnitPaint.setColor(Color.parseColor("#90A4AE"));
+        textUnitPaint.setTextSize(spToPx(11));
+        canvas.drawText("KM/H", cx, cy + radius * 0.55f, textUnitPaint);
+    }
+
+    private void drawTachometerScale(Canvas canvas, float cx, float cy, float radius, int maxRpm, int redlineRpm, int tickColor, int redlineColor, boolean showGlowArc) {
+        float startAngle = 135f;
+        float sweepAngle = 270f;
+
+        // Redline Arc
+        arcRect.set(cx - radius * 0.86f, cy - radius * 0.86f, cx + radius * 0.86f, cy + radius * 0.86f);
+        float redlineStart = startAngle + ((float) redlineRpm / maxRpm) * sweepAngle;
+        float redlineSweep = ((float) (maxRpm - redlineRpm) / maxRpm) * sweepAngle;
+        redlineArcPaint.setColor(redlineColor);
+        redlineArcPaint.setStrokeWidth(7f);
+        canvas.drawArc(arcRect, redlineStart, redlineSweep, false, redlineArcPaint);
+
+        // Active sweep arc
+        if (showGlowArc) {
+            float activeRatio = Math.min(Math.max(displayRpm / maxRpm, 0f), 1f);
+            activeArcPaint.setColor(displayRpm >= redlineRpm ? redlineColor : Color.parseColor("#4D88FF"));
+            activeArcPaint.setStrokeWidth(5f);
+            canvas.drawArc(arcRect, startAngle, activeRatio * sweepAngle, false, activeArcPaint);
+        }
+
+        // Ticks
+        for (int r = 0; r <= maxRpm; r += 250) {
+            float angle = startAngle + ((float) r / maxRpm) * sweepAngle;
+            double rad = Math.toRadians(angle);
+            boolean isMajor = (r % 1000 == 0);
+            boolean isRedline = r >= redlineRpm;
+            float innerR = isMajor ? radius * 0.76f : radius * 0.83f;
+            float outerR = radius * 0.89f;
+
+            float x1 = (float) (cx + innerR * Math.cos(rad));
+            float y1 = (float) (cy + innerR * Math.sin(rad));
+            float x2 = (float) (cx + outerR * Math.cos(rad));
+            float y2 = (float) (cy + outerR * Math.sin(rad));
+
+            tickMajorPaint.setColor(isRedline ? redlineColor : (isMajor ? tickColor : Color.parseColor("#607D8B")));
+            tickMajorPaint.setStrokeWidth(isMajor ? 4f : 2f);
+            canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
+
+            if (isMajor) {
+                float textR = radius * 0.62f;
+                float tx = (float) (cx + textR * Math.cos(rad));
+                float ty = (float) (cy + textR * Math.sin(rad) + 6f);
+                textNumberPaint.setColor(isRedline ? redlineColor : tickColor);
+                textNumberPaint.setTextSize(spToPx(13));
+                canvas.drawText(String.valueOf(r / 1000), tx, ty, textNumberPaint);
+            }
+        }
+
+        // Digital RPM in dial center
+        textValuePaint.setColor(Color.WHITE);
+        textValuePaint.setTextSize(spToPx(32));
+        canvas.drawText(String.valueOf(Math.round(displayRpm)), cx, cy + radius * 0.40f, textValuePaint);
+
+        textUnitPaint.setColor(Color.parseColor("#90A4AE"));
+        textUnitPaint.setTextSize(spToPx(11));
+        canvas.drawText("RPM", cx, cy + radius * 0.55f, textUnitPaint);
+    }
+
+    private float getSpeedAngle(float speed, float maxSpeed) {
+        float clamped = Math.min(Math.max(speed, 0f), maxSpeed);
+        return 135f + (clamped / maxSpeed) * 270f;
+    }
+
+    private float getRpmAngle(float rpm, float maxRpm) {
+        float clamped = Math.min(Math.max(rpm, 0f), maxRpm);
+        return 135f + (clamped / maxRpm) * 270f;
+    }
+
+    private float spToPx(float sp) {
+        return sp * getResources().getDisplayMetrics().scaledDensity;
     }
 
     private void drawHolePunchMask(Canvas canvas, int w, int h) {
-        // Upper center window for factory turn signals, high-beam, and alert icons
+        // Upper center window for factory turn signals and alert lamps
         float maskW = w * 0.36f;
         float maskH = h * 0.17f;
         float left = (w - maskW) / 2f;
