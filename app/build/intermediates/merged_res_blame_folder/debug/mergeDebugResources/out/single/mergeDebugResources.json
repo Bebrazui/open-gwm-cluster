@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-debug-4:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-main-6:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "org.opengwm.split.app-debug-4:/layout_activity_main.xml.flat",
+        "source": "org.opengwm.split.app-main-6:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-debug-4:\\layout_layout_floating_panel.xml.flat",
+        "source": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-main-6:\\layout\\layout_floating_panel.xml"
+    },
+    {
+        "merged": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-debug-4:\\xml_accessibility_service_config.xml.flat",
+        "source": "C:\\Users\\ttt79\\.gradle\\daemon\\8.11.1\\org.opengwm.split.app-main-6:\\xml\\accessibility_service_config.xml"
+    }
+]

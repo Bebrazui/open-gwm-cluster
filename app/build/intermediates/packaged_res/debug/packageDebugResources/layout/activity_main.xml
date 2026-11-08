@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0C0D12"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Open GWM Cluster"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDisplayList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Displays: [Scan...]"
+            android:textColor="#90A4AE"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Real-time Cluster Preview (Dials & Telemetry) -->
+    <org.opengwm.split.ui.ClusterGaugeView
+        android:id="@+id/gaugePreview"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="12dp"
+        android:background="#050608" />
+
+    <!-- Status & Info -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Статус: Готов к запуску на Display 2"
+        android:textColor="#B0BEC5"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tvVehicleTelemetry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="#151922"
+        android:padding="8dp"
+        android:text="Telemetry: Speed: 0 km/h | RPM: 0 | Gear: P"
+        android:textColor="#00E676"
+        android:fontFamily="monospace"
+        android:textSize="12sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="12dp"
+        android:background="#263238" />
+
+    <!-- Action Buttons -->
+    <Button
+        android:id="@+id/btnGrantOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_grant_overlay" />
+
+    <Button
+        android:id="@+id/btnToggleCluster"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Запустить тему на приборке (Display 2)" />
+
+    <Button
+        android:id="@+id/btnToggleControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Плавающие кнопки на основном экране" />
+
+</LinearLayout>

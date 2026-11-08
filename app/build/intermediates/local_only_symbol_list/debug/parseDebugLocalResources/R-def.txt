@@ -1,0 +1,34 @@
+R_DEF: Internal format may change without notice
+local
+color accent
+color bg_panel
+color black
+color btn_normal
+color btn_pressed
+color text_secondary
+color white
+id btnBack
+id btnDragHandle
+id btnGrantOverlay
+id btnHome
+id btnSplit
+id btnToggleCluster
+id btnToggleControls
+id gaugePreview
+id panelRoot
+id tvDisplayList
+id tvMiniSpeed
+id tvStatus
+id tvVehicleTelemetry
+layout activity_main
+layout layout_floating_panel
+string accessibility_description
+string app_name
+string btn_grant_accessibility
+string btn_grant_overlay
+string btn_launch_split
+string btn_start_service
+string btn_stop_service
+string status_ready
+style Theme.OpenGwmSplit
+xml accessibility_service_config

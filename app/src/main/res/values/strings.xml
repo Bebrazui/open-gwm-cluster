@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Open GWM Split</string>
+    <string name="accessibility_description">Перехват жестов и управление разделением экрана в автомобиле</string>
+    <string name="btn_start_service">Запустить оверлей</string>
+    <string name="btn_stop_service">Остановить оверлей</string>
+    <string name="btn_grant_overlay">Разрешить поверх других окон</string>
+    <string name="btn_grant_accessibility">Включить службу доступности</string>
+    <string name="btn_launch_split">Запустить сплит (тест)</string>
+    <string name="status_ready">Готов к работе</string>
+</resources>

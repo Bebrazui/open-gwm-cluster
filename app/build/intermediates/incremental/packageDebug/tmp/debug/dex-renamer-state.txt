@@ -1,0 +1,13 @@
+#Sun Nov 08 12:35:17 YEKT 2026
+path.3=4/classes.dex
+path.2=2/classes.dex
+path.1=13/classes.dex
+path.0=0/classes.dex
+base.3=C\:\\Users\\ttt79\\.gemini\\antigravity\\scratch\\open-gwm-split\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\4\\classes.dex
+base.2=C\:\\Users\\ttt79\\.gemini\\antigravity\\scratch\\open-gwm-split\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\2\\classes.dex
+base.1=C\:\\Users\\ttt79\\.gemini\\antigravity\\scratch\\open-gwm-split\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\13\\classes.dex
+base.0=C\:\\Users\\ttt79\\.gemini\\antigravity\\scratch\\open-gwm-split\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+renamed.3=classes4.dex
+renamed.2=classes3.dex
+renamed.1=classes2.dex
+renamed.0=classes.dex
