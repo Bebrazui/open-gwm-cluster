@@ -28,10 +28,16 @@ public class InstrumentClusterService extends Service {
 
     private WindowManager clusterWindowManager;
     private ClusterGaugeView clusterView;
-    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider();
+    private VehicleDataProvider vehicleProvider;
     private boolean isRunning = false;
 
     public static volatile boolean isServiceRunning = false;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
+    }
 
     @Override
     public IBinder onBind(Intent intent) {

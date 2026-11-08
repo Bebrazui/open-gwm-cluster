@@ -21,7 +21,7 @@ import org.opengwm.split.vehicle.VehicleState;
 
 public class MainActivity extends Activity {
 
-    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider();
+    private VehicleDataProvider vehicleProvider;
     private ClusterGaugeView gaugePreview;
     private TextView tvStatus;
     private TextView tvDisplayList;
@@ -35,6 +35,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
 
         gaugePreview = findViewById(R.id.gaugePreview);
         tvStatus = findViewById(R.id.tvStatus);
