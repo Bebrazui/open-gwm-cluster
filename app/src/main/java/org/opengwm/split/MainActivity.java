@@ -21,7 +21,7 @@ import org.opengwm.split.vehicle.VehicleState;
 
 public class MainActivity extends Activity {
 
-    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.CanBusVehicleProvider();
+    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider();
     private ClusterGaugeView gaugePreview;
     private TextView tvStatus;
     private TextView tvDisplayList;

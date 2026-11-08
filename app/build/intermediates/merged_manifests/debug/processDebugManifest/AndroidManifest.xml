@@ -12,8 +12,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REORDER_TASKS" />
-    <!-- Optional: needed if interacting directly with vendor GWM adapter -->
+    <!-- Android Automotive OS VHAL Telemetry Permissions -->
+    <uses-permission android:name="android.car.permission.CAR_SPEED" />
+    <uses-permission android:name="android.car.permission.CAR_INFO" />
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+    <uses-permission android:name="android.car.permission.CAR_ENGINE_PROBING" />
     <uses-permission android:name="com.gwm.android.adapter.permission.GET_DATA" />
+    <uses-permission android:name="com.gwm.android.adapter.permission.SET_DATA" />
 
     <application
         android:allowBackup="true"

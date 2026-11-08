@@ -28,7 +28,7 @@ public class InstrumentClusterService extends Service {
 
     private WindowManager clusterWindowManager;
     private ClusterGaugeView clusterView;
-    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.CanBusVehicleProvider();
+    private final VehicleDataProvider vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider();
     private boolean isRunning = false;
 
     public static volatile boolean isServiceRunning = false;
