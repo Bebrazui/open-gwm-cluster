@@ -62,6 +62,7 @@ public class MainActivity extends Activity {
     private LinearLayout containerTabBus;
 
     private Switch switchHolePunch;
+    private Switch switchHolePunchMain;
     private Switch switchSmoothing;
     private Switch switchDemoMode;
     private LinearLayout layoutDemoControls;
@@ -76,15 +77,8 @@ public class MainActivity extends Activity {
     private String simGear = "P";
     private String simMode = "STANDARD 4H";
 
-    private final String[] themeNames = {
-            "Спорт (3D колодцы, лаунч-свет)",
-            "Люкс (Хронограф Tank 500, золото)",
-            "Кибернетика (Полигональный HUD)",
-            "Внедорожный 4x4 (Креномер, болты)",
-            "Минимализм (OLED, парящие арки)",
-            "Тайкан Arc (Theme 51, светящийся неон)",
-            "Пользовательская тема (/sdcard/gwm_split_user_themes/)"
-    };
+    private final java.util.List<String> themeDisplayNames = new java.util.ArrayList<>();
+    private final java.util.List<Integer> themeValues = new java.util.ArrayList<>();
 
     private final String[] gearOptions = {
             "P", "R", "N", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9"
@@ -143,14 +137,17 @@ public class MainActivity extends Activity {
         spinnerWidgetCenter = findViewById(R.id.spinnerWidgetCenter);
 
         switchHolePunch = findViewById(R.id.switchHolePunch);
+        switchHolePunchMain = findViewById(R.id.switchHolePunchMain);
         switchSmoothing = findViewById(R.id.switchSmoothing);
         switchDemoMode = findViewById(R.id.switchDemoMode);
         layoutDemoControls = findViewById(R.id.layoutDemoControls);
         sbSpeed = findViewById(R.id.sbSpeed);
         sbRpm = findViewById(R.id.sbRpm);
 
-        switchHolePunch.setChecked(ClusterConfig.isHolePunchEnabled(this));
-        switchSmoothing.setChecked(ClusterConfig.isSmoothingEnabled(this));
+        boolean holePunchActive = ClusterConfig.isHolePunchEnabled(this);
+        if (switchHolePunch != null) switchHolePunch.setChecked(holePunchActive);
+        if (switchHolePunchMain != null) switchHolePunchMain.setChecked(holePunchActive);
+        if (switchSmoothing != null) switchSmoothing.setChecked(ClusterConfig.isSmoothingEnabled(this));
     }
 
     private void setupTabNavigation() {
@@ -210,16 +207,58 @@ public class MainActivity extends Activity {
 
     private void setupSpinners() {
         // Theme Spinner
+        themeDisplayNames.clear();
+        themeValues.clear();
+
+        // 1. Modern 3D & Cyber Cockpit Themes
+        themeDisplayNames.add("Спорт (3D колодцы, лаунч-свет)");
+        themeValues.add(ClusterConfig.THEME_SPORT_APEX);
+
+        themeDisplayNames.add("Люкс (Хронограф Tank 500, золото)");
+        themeValues.add(ClusterConfig.THEME_LUXURY_CHRONO);
+
+        themeDisplayNames.add("Кибернетика (Полигональный HUD)");
+        themeValues.add(ClusterConfig.THEME_CYBER_HEX);
+
+        themeDisplayNames.add("Внедорожный 4x4 (Креномер, болты)");
+        themeValues.add(ClusterConfig.THEME_TACTICAL_4X4);
+
+        themeDisplayNames.add("Минимализм (OLED, парящие арки)");
+        themeValues.add(ClusterConfig.THEME_MINIMAL_OLED);
+
+        themeDisplayNames.add("Тайкан Arc (Theme 51, светящийся неон)");
+        themeValues.add(ClusterConfig.THEME_TAYCAN_ARC);
+
+        themeDisplayNames.add("Пользовательская тема (/sdcard/gwm_split_user_themes/)");
+        themeValues.add(ClusterConfig.THEME_USER_THEME);
+
+        // 2. All 38 Original GWM Split Native Themes from APK assets
+        for (int splitId : ClusterConfig.SPLIT_THEME_IDS) {
+            themeDisplayNames.add("Оригинал Split: Тема " + splitId);
+            themeValues.add(ClusterConfig.THEME_SPLIT_OFFSET + splitId);
+        }
+
         ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, themeNames);
+                android.R.layout.simple_spinner_item, themeDisplayNames);
         themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerTheme.setAdapter(themeAdapter);
-        spinnerTheme.setSelection(ClusterConfig.getTheme(this));
+
+        int currentTheme = ClusterConfig.getTheme(this);
+        int selectedIndex = 5; // Default Taycan
+        for (int i = 0; i < themeValues.size(); i++) {
+            if (themeValues.get(i) == currentTheme) {
+                selectedIndex = i;
+                break;
+            }
+        }
+        spinnerTheme.setSelection(selectedIndex);
 
         spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                gaugePreview.setThemeStyle(position);
+                int themeVal = themeValues.get(position);
+                gaugePreview.setThemeStyle(themeVal);
+                ClusterConfig.setTheme(MainActivity.this, themeVal);
                 InstrumentClusterService.applyConfig(MainActivity.this);
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
@@ -281,10 +320,24 @@ public class MainActivity extends Activity {
             }
         });
 
-        switchHolePunch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        android.widget.CompoundButton.OnCheckedChangeListener holePunchListener = (buttonView, isChecked) -> {
+            ClusterConfig.setHolePunchEnabled(MainActivity.this, isChecked);
             gaugePreview.setHolePunch(isChecked);
+            if (switchHolePunch != null && switchHolePunch.isChecked() != isChecked) {
+                switchHolePunch.setChecked(isChecked);
+            }
+            if (switchHolePunchMain != null && switchHolePunchMain.isChecked() != isChecked) {
+                switchHolePunchMain.setChecked(isChecked);
+            }
             InstrumentClusterService.applyConfig(MainActivity.this);
-        });
+        };
+
+        if (switchHolePunch != null) {
+            switchHolePunch.setOnCheckedChangeListener(holePunchListener);
+        }
+        if (switchHolePunchMain != null) {
+            switchHolePunchMain.setOnCheckedChangeListener(holePunchListener);
+        }
 
         switchSmoothing.setOnCheckedChangeListener((buttonView, isChecked) -> {
             gaugePreview.setSmoothing(isChecked);

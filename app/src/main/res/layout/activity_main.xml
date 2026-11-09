@@ -134,6 +134,46 @@
                         android:textColor="#A4E2B8"
                         android:textSize="12sp" />
                 </LinearLayout>
+
+                <!-- CARD: Quick HolePunch / Island Toggle -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Островок (Вырез HolePunch)"
+                            android:textColor="#E5EAE6"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Выключай для телефона/планшета. Включай только на авто под окно ADAS."
+                            android:textColor="#879C8F"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/switchHolePunchMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- ========================================================= -->
@@ -236,7 +276,7 @@
                             android:id="@+id/switchHolePunch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true" />
+                            android:checked="false" />
                     </LinearLayout>
 
                     <View

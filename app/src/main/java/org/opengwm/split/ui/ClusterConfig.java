@@ -45,6 +45,12 @@ public class ClusterConfig {
     public static final int THEME_MINIMAL_OLED = 4;     // Scandinavian floating arc ribbons on deep obsidian black
     public static final int THEME_TAYCAN_ARC = 5;       // Porsche Taycan / Theme 51 dual glowing neon sweep arcs
     public static final int THEME_USER_THEME = 6;       // Custom community theme pack from /sdcard/gwm_split_user_themes/
+    public static final int THEME_SPLIT_OFFSET = 100;   // Base offset for original Split themes (100 + id)
+
+    public static final int[] SPLIT_THEME_IDS = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 40, 41
+    };
 
     // Legacy aliases for backward compatibility
     public static final int THEME_SPORT_RED = THEME_SPORT_APEX;

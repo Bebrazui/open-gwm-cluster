@@ -2,6 +2,7 @@ package org.opengwm.split.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -13,6 +14,7 @@ import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.util.AttributeSet;
 import android.view.View;
+import org.opengwm.split.theme.ThemeAssetLoader;
 import org.opengwm.split.vehicle.VehicleState;
 
 /**
@@ -27,7 +29,7 @@ import org.opengwm.split.vehicle.VehicleState;
 public class ClusterGaugeView extends View {
 
     private int activeTheme = ClusterConfig.THEME_SPORT_APEX;
-    private boolean isHolePunchEnabled = true;
+    private boolean isHolePunchEnabled = false;
     private boolean isSmoothingEnabled = true;
 
     // Target telemetry
@@ -491,29 +493,33 @@ public class ClusterGaugeView extends View {
         }
 
         // Draw active theme
-        switch (activeTheme) {
-            case ClusterConfig.THEME_LUXURY_CHRONO:
-                drawLuxuryChronoTheme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_CYBER_HEX:
-                drawCyberHexTheme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_TACTICAL_4X4:
-                drawTactical4x4Theme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_MINIMAL_OLED:
-                drawMinimalOledTheme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_TAYCAN_ARC:
-                drawTaycanArcTheme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_USER_THEME:
-                drawUserTheme(canvas, w, h);
-                break;
-            case ClusterConfig.THEME_SPORT_APEX:
-            default:
-                drawSportApexTheme(canvas, w, h);
-                break;
+        if (activeTheme >= ClusterConfig.THEME_SPLIT_OFFSET) {
+            drawSplitBitmapTheme(canvas, w, h, activeTheme - ClusterConfig.THEME_SPLIT_OFFSET);
+        } else {
+            switch (activeTheme) {
+                case ClusterConfig.THEME_LUXURY_CHRONO:
+                    drawLuxuryChronoTheme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_CYBER_HEX:
+                    drawCyberHexTheme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_TACTICAL_4X4:
+                    drawTactical4x4Theme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_MINIMAL_OLED:
+                    drawMinimalOledTheme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_TAYCAN_ARC:
+                    drawTaycanArcTheme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_USER_THEME:
+                    drawUserTheme(canvas, w, h);
+                    break;
+                case ClusterConfig.THEME_SPORT_APEX:
+                default:
+                    drawSportApexTheme(canvas, w, h);
+                    break;
+            }
         }
 
         // Draw Configurable Telemetry Mini-Widgets
@@ -1367,30 +1373,120 @@ public class ClusterGaugeView extends View {
         canvas.drawText("⏭", mediaCardRect.right - 18f, cardY + 5f, subTextPaint);
     }
 
+    private final RectF splitDstRect = new RectF();
+    private final Paint splitBmpPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+
+    private void drawSplitBitmapTheme(Canvas canvas, int w, int h, int splitId) {
+        canvas.drawColor(Color.parseColor("#07090E"));
+
+        float dialSize = gaugeRadius * 2.15f;
+        float half = dialSize / 2f;
+
+        // 1. Speedometer Dial (Left)
+        Bitmap spdBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "spd");
+        if (spdBmp != null) {
+            splitDstRect.set(leftCenterX - half, centerY - half, leftCenterX + half, centerY + half);
+            canvas.drawBitmap(spdBmp, null, splitDstRect, splitBmpPaint);
+        }
+
+        // 2. Tachometer Dial (Right)
+        Bitmap rpmBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "rpm");
+        if (rpmBmp != null) {
+            splitDstRect.set(rightCenterX - half, centerY - half, rightCenterX + half, centerY + half);
+            canvas.drawBitmap(rpmBmp, null, splitDstRect, splitBmpPaint);
+        }
+
+        // 3. Needles (Theme needle PNGs default to 12 o'clock, rotation zero = top)
+        Bitmap needleBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle");
+        if (needleBmp != null) {
+            // Speedometer needle (-135 to +135 deg sweep)
+            canvas.save();
+            float spdAngle = -135f + (Math.min(Math.max(displaySpeed, 0f), 240f) / 240f) * 270f;
+            canvas.rotate(spdAngle, leftCenterX, centerY);
+            splitDstRect.set(leftCenterX - half, centerY - half, leftCenterX + half, centerY + half);
+            canvas.drawBitmap(needleBmp, null, splitDstRect, splitBmpPaint);
+            canvas.restore();
+
+            // Tachometer needle (-135 to +135 deg sweep)
+            canvas.save();
+            float rpmAngle = -135f + (Math.min(Math.max(displayRpm, 0f), 8000f) / 8000f) * 270f;
+            canvas.rotate(rpmAngle, rightCenterX, centerY);
+            splitDstRect.set(rightCenterX - half, centerY - half, rightCenterX + half, centerY + half);
+            canvas.drawBitmap(needleBmp, null, splitDstRect, splitBmpPaint);
+            canvas.restore();
+        }
+
+        // 4. Center Area Telemetry (Digital Speed / Mode / Gear)
+        gearPaint.setColor(Color.WHITE);
+        gearPaint.setTextSize(spToPx(52));
+        canvas.drawText(gear, w * 0.5f, centerY - 8f, gearPaint);
+
+        modePaint.setColor(Color.parseColor("#80FFFFFF"));
+        modePaint.setTextSize(spToPx(13.5f));
+        canvas.drawText(driveMode, w * 0.5f, centerY + 32f, modePaint);
+
+        // Digital Speed under Left Dial
+        textValuePaint.setColor(Color.WHITE);
+        textValuePaint.setTextSize(spToPx(34));
+        canvas.drawText(String.valueOf(Math.round(displaySpeed)), leftCenterX, centerY + gaugeRadius * 0.44f, textValuePaint);
+        textUnitPaint.setColor(Color.parseColor("#90A4AE"));
+        textUnitPaint.setTextSize(spToPx(11.5f));
+        canvas.drawText("KM/H", leftCenterX, centerY + gaugeRadius * 0.58f, textUnitPaint);
+
+        // Digital RPM under Right Dial
+        canvas.drawText(String.valueOf(Math.round(displayRpm)), rightCenterX, centerY + gaugeRadius * 0.44f, textValuePaint);
+        canvas.drawText("RPM", rightCenterX, centerY + gaugeRadius * 0.58f, textUnitPaint);
+    }
+
+    private long lastTapTime = 0;
+
     @Override
     public boolean onTouchEvent(android.view.MotionEvent event) {
         if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
             float x = event.getX();
             float y = event.getY();
+            long now = System.currentTimeMillis();
+
+            // 1. Floating Music Card Controls (Taycan theme)
             if (activeTheme == ClusterConfig.THEME_TAYCAN_ARC && mediaCardRect.contains(x, y)) {
-                toggleMediaPlayback();
+                if (x > mediaCardRect.right - 35f) {
+                    dispatchMediaKey(android.view.KeyEvent.KEYCODE_MEDIA_NEXT);
+                } else {
+                    toggleMediaPlayback();
+                }
                 return true;
             }
+
+            // 2. Double-tap in center region toggles HolePunch on the fly!
+            if (now - lastTapTime < 350 && Math.abs(x - viewWidth * 0.5f) < viewWidth * 0.22f) {
+                isHolePunchEnabled = !isHolePunchEnabled;
+                ClusterConfig.setHolePunchEnabled(getContext(), isHolePunchEnabled);
+                android.widget.Toast.makeText(getContext(),
+                        "Островок (HolePunch): " + (isHolePunchEnabled ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН"),
+                        android.widget.Toast.LENGTH_SHORT).show();
+                invalidate();
+                return true;
+            }
+            lastTapTime = now;
         }
         return super.onTouchEvent(event);
     }
 
-    private void toggleMediaPlayback() {
+    private void dispatchMediaKey(int keyCode) {
         try {
             android.media.AudioManager am = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 long eventTime = android.os.SystemClock.uptimeMillis();
-                android.view.KeyEvent down = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-                android.view.KeyEvent up = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+                android.view.KeyEvent down = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_DOWN, keyCode, 0);
+                android.view.KeyEvent up = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_UP, keyCode, 0);
                 am.dispatchMediaKeyEvent(down);
                 am.dispatchMediaKeyEvent(up);
             }
         } catch (Throwable ignored) {}
+    }
+
+    private void toggleMediaPlayback() {
+        dispatchMediaKey(android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
     }
 
     private void drawTaycanSpeedoArc(Canvas canvas, float cx, float cy, float radius, int w, int h) {

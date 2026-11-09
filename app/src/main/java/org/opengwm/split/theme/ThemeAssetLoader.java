@@ -19,6 +19,24 @@ public class ThemeAssetLoader {
     private static final String TAG = "ThemeAssetLoader";
     private static final Map<String, Bitmap> BITMAP_CACHE = new HashMap<>();
 
+    public static Bitmap loadSplitThemeBitmap(Context context, int themeId, String component) {
+        String assetPath = "split_themes/theme_" + themeId + "_" + component + ".png";
+        if (BITMAP_CACHE.containsKey(assetPath)) {
+            return BITMAP_CACHE.get(assetPath);
+        }
+        try {
+            InputStream is = context.getAssets().open(assetPath);
+            Bitmap bmp = BitmapFactory.decodeStream(is);
+            is.close();
+            if (bmp != null) {
+                BITMAP_CACHE.put(assetPath, bmp);
+                return bmp;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
     public static Context getSpoofedContext(Context base) {
         return new ContextWrapper(base.getApplicationContext()) {
             @Override
