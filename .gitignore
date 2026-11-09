@@ -4,6 +4,8 @@
 /.idea
 .DS_Store
 /build
+app/build/
+open-gwm-cluster.apk
 /captures
 .externalNativeBuild
 .cxx

@@ -39,6 +39,11 @@ public class InstrumentClusterService extends Service {
             activeClusterView.setThemeStyle(org.opengwm.split.ui.ClusterConfig.getTheme(context));
             activeClusterView.setHolePunch(org.opengwm.split.ui.ClusterConfig.isHolePunchEnabled(context));
             activeClusterView.setSmoothing(org.opengwm.split.ui.ClusterConfig.isSmoothingEnabled(context));
+            activeClusterView.setWidgets(
+                    org.opengwm.split.ui.ClusterConfig.getWidgetLeft(context),
+                    org.opengwm.split.ui.ClusterConfig.getWidgetRight(context),
+                    org.opengwm.split.ui.ClusterConfig.getWidgetCenter(context)
+            );
             activeClusterView.postInvalidate();
         }
     }

@@ -4,6 +4,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.os.Build;
@@ -45,6 +46,20 @@ public class MainActivity extends Activity {
     private Spinner spinnerTheme;
     private Spinner spinnerGear;
     private Spinner spinnerMode;
+    private Spinner spinnerWidgetLeft;
+    private Spinner spinnerWidgetRight;
+    private Spinner spinnerWidgetCenter;
+
+    private TextView tabMain;
+    private TextView tabThemes;
+    private TextView tabWidgets;
+    private TextView tabBus;
+    private TextView tvLiveSensorStats;
+
+    private LinearLayout containerTabMain;
+    private LinearLayout containerTabThemes;
+    private LinearLayout containerTabWidgets;
+    private LinearLayout containerTabBus;
 
     private Switch switchHolePunch;
     private Switch switchSmoothing;
@@ -66,7 +81,9 @@ public class MainActivity extends Activity {
             "Люкс (Хронограф Tank 500, золото)",
             "Кибернетика (Полигональный HUD)",
             "Внедорожный 4x4 (Креномер, болты)",
-            "Минимализм (OLED, парящие арки)"
+            "Минимализм (OLED, парящие арки)",
+            "Тайкан Arc (Theme 51, светящийся неон)",
+            "Пользовательская тема (/sdcard/gwm_split_user_themes/)"
     };
 
     private final String[] gearOptions = {
@@ -82,8 +99,14 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        org.opengwm.split.theme.ThemeAssetLoader.dumpAllDecrypted(this);
+        android.graphics.Bitmap testBmp = org.opengwm.split.theme.ThemeAssetLoader.loadDecryptedBitmap(this, "themes/47/theme_47_spd.bin");
+        android.util.Log.i("MainActivity", "Test direct decode: " + (testBmp != null ? (testBmp.getWidth() + "x" + testBmp.getHeight()) : "NULL"));
+
         initViews();
+        setupTabNavigation();
         setupSpinners();
+        setupWidgetSpinners();
         setupControls();
         setupVehicleTelemetry();
     }
@@ -96,6 +119,17 @@ public class MainActivity extends Activity {
         tvVehicleTelemetry = findViewById(R.id.tvVehicleTelemetry);
         tvDemoSpeedLabel = findViewById(R.id.tvDemoSpeedLabel);
         tvDemoRpmLabel = findViewById(R.id.tvDemoRpmLabel);
+        tvLiveSensorStats = findViewById(R.id.tvLiveSensorStats);
+
+        tabMain = findViewById(R.id.tabMain);
+        tabThemes = findViewById(R.id.tabThemes);
+        tabWidgets = findViewById(R.id.tabWidgets);
+        tabBus = findViewById(R.id.tabBus);
+
+        containerTabMain = findViewById(R.id.containerTabMain);
+        containerTabThemes = findViewById(R.id.containerTabThemes);
+        containerTabWidgets = findViewById(R.id.containerTabWidgets);
+        containerTabBus = findViewById(R.id.containerTabBus);
 
         btnToggleCluster = findViewById(R.id.btnToggleCluster);
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay);
@@ -104,6 +138,9 @@ public class MainActivity extends Activity {
         spinnerTheme = findViewById(R.id.spinnerTheme);
         spinnerGear = findViewById(R.id.spinnerGear);
         spinnerMode = findViewById(R.id.spinnerMode);
+        spinnerWidgetLeft = findViewById(R.id.spinnerWidgetLeft);
+        spinnerWidgetRight = findViewById(R.id.spinnerWidgetRight);
+        spinnerWidgetCenter = findViewById(R.id.spinnerWidgetCenter);
 
         switchHolePunch = findViewById(R.id.switchHolePunch);
         switchSmoothing = findViewById(R.id.switchSmoothing);
@@ -114,6 +151,61 @@ public class MainActivity extends Activity {
 
         switchHolePunch.setChecked(ClusterConfig.isHolePunchEnabled(this));
         switchSmoothing.setChecked(ClusterConfig.isSmoothingEnabled(this));
+    }
+
+    private void setupTabNavigation() {
+        tabMain.setOnClickListener(v -> selectTab(0));
+        tabThemes.setOnClickListener(v -> selectTab(1));
+        tabWidgets.setOnClickListener(v -> selectTab(2));
+        tabBus.setOnClickListener(v -> selectTab(3));
+        selectTab(0);
+    }
+
+    private void selectTab(int index) {
+        TextView[] tabs = {tabMain, tabThemes, tabWidgets, tabBus};
+        LinearLayout[] containers = {containerTabMain, containerTabThemes, containerTabWidgets, containerTabBus};
+
+        for (int i = 0; i < tabs.length; i++) {
+            boolean active = (i == index);
+            if (tabs[i] != null) {
+                tabs[i].setBackgroundResource(active ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
+                tabs[i].setTextColor(Color.parseColor(active ? "#A8E6BD" : "#8FA395"));
+            }
+            if (containers[i] != null) {
+                containers[i].setVisibility(active ? View.VISIBLE : View.GONE);
+            }
+        }
+    }
+
+    private void setupWidgetSpinners() {
+        ArrayAdapter<String> widgetAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, ClusterConfig.WIDGET_TITLES);
+        widgetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        spinnerWidgetLeft.setAdapter(widgetAdapter);
+        spinnerWidgetRight.setAdapter(widgetAdapter);
+        spinnerWidgetCenter.setAdapter(widgetAdapter);
+
+        spinnerWidgetLeft.setSelection(ClusterConfig.getWidgetLeft(this));
+        spinnerWidgetRight.setSelection(ClusterConfig.getWidgetRight(this));
+        spinnerWidgetCenter.setSelection(ClusterConfig.getWidgetCenter(this));
+
+        AdapterView.OnItemSelectedListener widgetListener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int left = spinnerWidgetLeft.getSelectedItemPosition();
+                int right = spinnerWidgetRight.getSelectedItemPosition();
+                int center = spinnerWidgetCenter.getSelectedItemPosition();
+
+                gaugePreview.setWidgets(left, right, center);
+                InstrumentClusterService.applyConfig(MainActivity.this);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        };
+
+        spinnerWidgetLeft.setOnItemSelectedListener(widgetListener);
+        spinnerWidgetRight.setOnItemSelectedListener(widgetListener);
+        spinnerWidgetCenter.setOnItemSelectedListener(widgetListener);
     }
 
     private void setupSpinners() {
@@ -302,6 +394,13 @@ public class MainActivity extends Activity {
                         gaugePreview.updateTelemetry(state);
                         tvVehicleTelemetry.setText("Шина: " + state.speedKmh + " км/ч | " + state.rpm +
                                 " об/мин | " + state.gear + " | ОЖ: " + Math.round(state.targetTempC) + " °C");
+                        if (tvLiveSensorStats != null) {
+                            tvLiveSensorStats.setText(
+                                    "⛽ Топливо: " + Math.round(state.fuelLiters) + "L (" + state.fuelPercent + "%) | 🏁 Запас: " + state.rangeKm + " км\n" +
+                                    "⚡ АКБ: " + String.format(java.util.Locale.US, "%.1f В", state.batteryVoltage) + " | 🛣️ Одометр: " + state.odometerKm + " км\n" +
+                                    "🌡️ ОЖ: " + Math.round(state.targetTempC) + " °C | ❄️ За бортом: " + (state.outsideTempC >= 0 ? "+" : "") + Math.round(state.outsideTempC) + " °C | 🛞 Шины: " + String.format(java.util.Locale.US, "%.1f бар", state.tirePressureBar)
+                            );
+                        }
                     }
                 });
             }

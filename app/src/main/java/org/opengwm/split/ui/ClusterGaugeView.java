@@ -41,6 +41,17 @@ public class ClusterGaugeView extends View {
     private float displaySpeed = 0f;
     private float displayRpm = 0f;
 
+    // Mini-Widgets configuration
+    private int widgetLeft = ClusterConfig.WIDGET_FUEL;
+    private int widgetRight = ClusterConfig.WIDGET_RANGE;
+    private int widgetCenter = ClusterConfig.WIDGET_COOLANT;
+    private VehicleState latestState = null;
+    private final RectF widgetLeftRect = new RectF();
+    private final RectF widgetRightRect = new RectF();
+    private final Paint widgetBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint widgetBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint widgetTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     // Dimensions
     private int viewWidth = 0;
     private int viewHeight = 0;
@@ -112,8 +123,21 @@ public class ClusterGaugeView extends View {
         isSmoothingEnabled = ClusterConfig.isSmoothingEnabled(getContext());
         driveMode = ClusterConfig.getDriveMode(getContext());
         cruiseSpeed = ClusterConfig.getCruiseSpeed(getContext());
+        widgetLeft = ClusterConfig.getWidgetLeft(getContext());
+        widgetRight = ClusterConfig.getWidgetRight(getContext());
+        widgetCenter = ClusterConfig.getWidgetCenter(getContext());
 
         setupPaints();
+    }
+
+    public void setWidgets(int left, int right, int center) {
+        this.widgetLeft = left;
+        this.widgetRight = right;
+        this.widgetCenter = center;
+        ClusterConfig.setWidgetLeft(getContext(), left);
+        ClusterConfig.setWidgetRight(getContext(), right);
+        ClusterConfig.setWidgetCenter(getContext(), center);
+        invalidate();
     }
 
     public void setThemeStyle(int theme) {
@@ -155,6 +179,7 @@ public class ClusterGaugeView extends View {
         this.targetRpm = state.rpm;
         this.gear = state.gear;
         this.coolantTemp = state.targetTempC;
+        this.latestState = state;
 
         if (!isSmoothingEnabled) {
             this.displaySpeed = this.targetSpeed;
@@ -223,6 +248,15 @@ public class ClusterGaugeView extends View {
 
         horizonSkyPaint.setStyle(Paint.Style.FILL);
         horizonGroundPaint.setStyle(Paint.Style.FILL);
+
+        widgetBgPaint.setStyle(Paint.Style.FILL);
+        widgetBgPaint.setColor(Color.parseColor("#D90D1310"));
+        widgetBorderPaint.setStyle(Paint.Style.STROKE);
+        widgetBorderPaint.setStrokeWidth(1.2f);
+        widgetBorderPaint.setColor(Color.parseColor("#4080D89D"));
+        widgetTextPaint.setTextAlign(Paint.Align.CENTER);
+        widgetTextPaint.setColor(Color.parseColor("#A8E6BD"));
+        widgetTextPaint.setFakeBoldText(true);
     }
 
     @Override
@@ -232,10 +266,12 @@ public class ClusterGaugeView extends View {
         this.viewHeight = h;
         if (w <= 0 || h <= 0) return;
 
-        this.gaugeRadius = Math.min(w * 0.225f, h * 0.43f);
-        this.centerY = h * 0.52f;
-        this.leftCenterX = w * 0.25f;
-        this.rightCenterX = w * 0.75f;
+        // Native 1920x720 instrument cluster geometry:
+        // Left dial cx=305 (~0.16w), right dial cx=1615 (~0.84w), cy=360 (0.50h), radius=270
+        this.leftCenterX = w * 0.16f;
+        this.rightCenterX = w * 0.84f;
+        this.centerY = h * 0.50f;
+        this.gaugeRadius = Math.min(w * 0.142f, h * 0.375f);
 
         rebuildShaders();
     }
@@ -323,11 +359,20 @@ public class ClusterGaugeView extends View {
             case ClusterConfig.THEME_MINIMAL_OLED:
                 drawMinimalOledTheme(canvas, w, h);
                 break;
+            case ClusterConfig.THEME_TAYCAN_ARC:
+                drawTaycanArcTheme(canvas, w, h);
+                break;
+            case ClusterConfig.THEME_USER_THEME:
+                drawUserTheme(canvas, w, h);
+                break;
             case ClusterConfig.THEME_SPORT_APEX:
             default:
                 drawSportApexTheme(canvas, w, h);
                 break;
         }
+
+        // Draw Configurable Telemetry Mini-Widgets
+        drawMiniWidgets(canvas);
 
         // Safe HolePunch Cutout Mask (protects factory indicators & odometer)
         if (isHolePunchEnabled) {
@@ -431,8 +476,9 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawSportCenterCard(Canvas canvas, float cx, float cy, float radius) {
-        float boxW = radius * 1.55f;
-        float boxH = radius * 1.65f;
+        if (isHolePunchEnabled) return;
+        float boxW = Math.min(viewWidth * 0.14f, 260f);
+        float boxH = radius * 1.25f;
         centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
 
         centerBoxBgPaint.setColor(Color.parseColor("#10131A"));
@@ -562,8 +608,9 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawLuxuryCenterCard(Canvas canvas, float cx, float cy, float radius) {
-        float boxW = radius * 1.55f;
-        float boxH = radius * 1.65f;
+        if (isHolePunchEnabled) return;
+        float boxW = Math.min(viewWidth * 0.14f, 260f);
+        float boxH = radius * 1.25f;
         centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
 
         centerBoxBgPaint.setColor(Color.parseColor("#0C0E13"));
@@ -688,8 +735,9 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawCyberCenterCard(Canvas canvas, float cx, float cy, float radius) {
-        float boxW = radius * 1.55f;
-        float boxH = radius * 1.65f;
+        if (isHolePunchEnabled) return;
+        float boxW = Math.min(viewWidth * 0.14f, 260f);
+        float boxH = radius * 1.25f;
         centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
 
         centerBoxBgPaint.setColor(Color.parseColor("#080D1C"));
@@ -756,8 +804,9 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawTacticalInclinometerCard(Canvas canvas, float cx, float cy, float radius) {
-        float boxW = radius * 1.55f;
-        float boxH = radius * 1.65f;
+        if (isHolePunchEnabled) return;
+        float boxW = Math.min(viewWidth * 0.14f, 260f);
+        float boxH = radius * 1.25f;
         centerBoxRect.set(cx - boxW / 2, cy - boxH / 2, cx + boxW / 2, cy + boxH / 2);
 
         centerBoxBgPaint.setColor(Color.parseColor("#12141A"));
@@ -817,18 +866,20 @@ public class ClusterGaugeView extends View {
         drawMinimalFloatingArc(canvas, leftCenterX, centerY, gaugeRadius, displaySpeed, 240, Color.parseColor("#4D88FF"), "km/h");
         drawMinimalFloatingArc(canvas, rightCenterX, centerY, gaugeRadius, displayRpm, 8000, Color.parseColor("#E0E0E0"), "rpm");
 
-        // Clean Center Typography
-        gearPaint.setColor(Color.WHITE);
-        gearPaint.setTextSize(64f);
-        canvas.drawText(gear, w * 0.5f, centerY + 4f, gearPaint);
+        // Clean Center Typography (only when HolePunch is disabled)
+        if (!isHolePunchEnabled) {
+            gearPaint.setColor(Color.WHITE);
+            gearPaint.setTextSize(64f);
+            canvas.drawText(gear, w * 0.5f, centerY + 4f, gearPaint);
 
-        modePaint.setColor(Color.parseColor("#80FFFFFF"));
-        modePaint.setTextSize(spToPx(13));
-        canvas.drawText(driveMode, w * 0.5f, centerY + 38f, modePaint);
+            modePaint.setColor(Color.parseColor("#80FFFFFF"));
+            modePaint.setTextSize(spToPx(13));
+            canvas.drawText(driveMode, w * 0.5f, centerY + 38f, modePaint);
 
-        subTextPaint.setColor(Color.parseColor("#40FFFFFF"));
-        subTextPaint.setTextSize(spToPx(11));
-        canvas.drawText(Math.round(coolantTemp) + " °C", w * 0.5f, centerY + 62f, subTextPaint);
+            subTextPaint.setColor(Color.parseColor("#40FFFFFF"));
+            subTextPaint.setTextSize(spToPx(11));
+            canvas.drawText(Math.round(coolantTemp) + " °C", w * 0.5f, centerY + 62f, subTextPaint);
+        }
     }
 
     private void drawMinimalFloatingArc(Canvas canvas, float cx, float cy, float radius, float currentVal, float maxVal, int arcColor, String unit) {
@@ -983,16 +1034,331 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawHolePunchMask(Canvas canvas, int w, int h) {
-        // Upper center window for factory turn signals and alert lamps
-        float maskW = w * 0.36f;
-        float maskH = h * 0.17f;
-        float left = (w - maskW) / 2f;
-        RectF topAperture = new RectF(left, 0f, left + maskW, maskH);
-        canvas.drawRoundRect(topAperture, 20f, 20f, holePunchPaint);
+        // 1. Center QNX ADAS / Vehicle Visualizer aperture
+        // OEM coordinates: x = 610..1310 (w * 0.318f to w * 0.682f), y = 100..665
+        float centerLeft = w * 0.318f;
+        float centerRight = w * 0.682f;
+        float centerTop = h * 0.14f;
+        float centerBottom = h * 0.92f;
+        RectF centerAperture = new RectF(centerLeft, centerTop, centerRight, centerBottom);
+        canvas.drawRoundRect(centerAperture, 18f, 18f, holePunchPaint);
 
-        // Bottom status line cutout (factory total mileage / odometer)
-        float bottomH = h * 0.10f;
-        RectF bottomAperture = new RectF(w * 0.34f, h - bottomH, w * 0.66f, h);
+        // 2. Upper telltales & turn signal lamps bar (y: 0..95)
+        float topApertureLeft = w * 0.34f;
+        float topApertureRight = w * 0.66f;
+        RectF topAperture = new RectF(topApertureLeft, 0f, topApertureRight, h * 0.13f);
+        canvas.drawRoundRect(topAperture, 12f, 12f, holePunchPaint);
+
+        // 3. Lower factory odometer & status bar (y: 665..720)
+        RectF bottomAperture = new RectF(w * 0.34f, h * 0.93f, w * 0.66f, h);
         canvas.drawRect(bottomAperture, holePunchPaint);
+    }
+
+    // =========================================================================
+    // 6. THEME: TAYCAN ARC (Theme 51 Vector Neon Sweeps, Electric Pulse)
+    // =========================================================================
+    private void drawTaycanArcTheme(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#05070C"));
+
+        // Speedometer Arc Left (cx = leftCenterX, cy = centerY)
+        drawTaycanSpeedoArc(canvas, leftCenterX, centerY, gaugeRadius * 0.92f);
+
+        // Tachometer / Power Arc Right (cx = rightCenterX, cy = centerY)
+        drawTaycanTachoArc(canvas, rightCenterX, centerY, gaugeRadius * 0.92f);
+
+        // Center HUD when HolePunch is disabled
+        if (!isHolePunchEnabled) {
+            float boxW = Math.min(viewWidth * 0.14f, 260f);
+            float boxH = gaugeRadius * 1.25f;
+            centerBoxRect.set(w * 0.5f - boxW / 2, centerY - boxH / 2, w * 0.5f + boxW / 2, centerY + boxH / 2);
+
+            centerBoxBgPaint.setColor(Color.parseColor("#090E18"));
+            canvas.drawRoundRect(centerBoxRect, 14f, 14f, centerBoxBgPaint);
+
+            centerBoxBorderPaint.setColor(Color.parseColor("#00E5FF"));
+            centerBoxBorderPaint.setStrokeWidth(2f);
+            canvas.drawRoundRect(centerBoxRect, 14f, 14f, centerBoxBorderPaint);
+
+            subTextPaint.setColor(Color.parseColor("#00E5FF"));
+            subTextPaint.setTextSize(spToPx(11));
+            canvas.drawText("PORSCHE TAYCAN ARC", w * 0.5f, centerBoxRect.top + 24f, subTextPaint);
+
+            gearPaint.setColor(Color.parseColor("#00E5FF"));
+            gearPaint.setTextSize(54f);
+            canvas.drawText(gear, w * 0.5f, centerY + 10f, gearPaint);
+
+            modePaint.setColor(Color.WHITE);
+            modePaint.setTextSize(spToPx(13));
+            canvas.drawText(driveMode, w * 0.5f, centerY + 42f, modePaint);
+
+            subTextPaint.setColor(Color.parseColor("#78909C"));
+            canvas.drawText(Math.round(coolantTemp) + " °C", w * 0.5f, centerY + 66f, subTextPaint);
+        }
+    }
+
+    private void drawTaycanSpeedoArc(Canvas canvas, float cx, float cy, float radius) {
+        float startAngle = 135f;
+        float sweepAngle = 270f;
+        float arcR = radius * 0.82f;
+        arcRect.set(cx - arcR, cy - arcR, cx + arcR, cy + arcR);
+
+        // 1. Inactive background track
+        activeArcPaint.setColor(Color.parseColor("#121929"));
+        activeArcPaint.setStrokeWidth(14f);
+        canvas.drawArc(arcRect, startAngle, sweepAngle, false, activeArcPaint);
+
+        // 2. Active luminous sweep arc
+        float speedRatio = Math.min(Math.max(displaySpeed / 240f, 0f), 1f);
+        float activeSweep = speedRatio * sweepAngle;
+
+        if (activeSweep > 0.5f) {
+            // Neon Glow Layer
+            activeArcPaint.setColor(Color.parseColor("#3300E5FF"));
+            activeArcPaint.setStrokeWidth(24f);
+            canvas.drawArc(arcRect, startAngle, activeSweep, false, activeArcPaint);
+
+            // Core Neon Gradient Arc
+            activeArcPaint.setColor(Color.parseColor("#00E5FF"));
+            activeArcPaint.setStrokeWidth(14f);
+            canvas.drawArc(arcRect, startAngle, activeSweep, false, activeArcPaint);
+
+            // Bright Tip
+            float tipAngle = startAngle + activeSweep;
+            double tipRad = Math.toRadians(tipAngle);
+            float tipX = (float) (cx + arcR * Math.cos(tipRad));
+            float tipY = (float) (cy + arcR * Math.sin(tipRad));
+            boltPaint.setColor(Color.WHITE);
+            canvas.drawCircle(tipX, tipY, 7f, boltPaint);
+        }
+
+        // 3. Ticks and Numbers (drawn OUTSIDE the arc to prevent center clutter)
+        for (int s = 0; s <= 240; s += 10) {
+            float angle = startAngle + ((float) s / 240f) * sweepAngle;
+            double rad = Math.toRadians(angle);
+            boolean isMajor = (s % 20 == 0);
+            boolean isLabel = (s % 40 == 0 || s == 0);
+
+            float innerR = isMajor ? arcR + 8f : arcR + 12f;
+            float outerR = arcR + 18f;
+            float x1 = (float) (cx + innerR * Math.cos(rad));
+            float y1 = (float) (cy + innerR * Math.sin(rad));
+            float x2 = (float) (cx + outerR * Math.cos(rad));
+            float y2 = (float) (cy + outerR * Math.sin(rad));
+
+            tickMajorPaint.setColor(s <= displaySpeed ? Color.parseColor("#00E5FF") : Color.parseColor("#263238"));
+            tickMajorPaint.setStrokeWidth(isMajor ? 2.5f : 1.2f);
+            canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
+
+            if (isLabel) {
+                float textR = arcR + 34f;
+                float tx = (float) (cx + textR * Math.cos(rad));
+                float ty = (float) (cy + textR * Math.sin(rad) + 4f);
+                textNumberPaint.setColor(s <= displaySpeed ? Color.WHITE : Color.parseColor("#546E7A"));
+                textNumberPaint.setTextSize(spToPx(10));
+                canvas.drawText(String.valueOf(s), tx, ty, textNumberPaint);
+            }
+        }
+
+        // 4. Large Digital Speed Readout in Center (clean open space)
+        textValuePaint.setColor(Color.WHITE);
+        textValuePaint.setTextSize(spToPx(50));
+        canvas.drawText(String.valueOf(Math.round(displaySpeed)), cx, cy + 2f, textValuePaint);
+
+        textUnitPaint.setColor(Color.parseColor("#00E5FF"));
+        textUnitPaint.setTextSize(spToPx(12));
+        canvas.drawText("KM/H", cx, cy + 28f, textUnitPaint);
+    }
+
+    private void drawTaycanTachoArc(Canvas canvas, float cx, float cy, float radius) {
+        float startAngle = 135f;
+        float sweepAngle = 270f;
+        float arcR = radius * 0.82f;
+        arcRect.set(cx - arcR, cy - arcR, cx + arcR, cy + arcR);
+
+        // 1. Inactive background track
+        activeArcPaint.setColor(Color.parseColor("#121929"));
+        activeArcPaint.setStrokeWidth(14f);
+        canvas.drawArc(arcRect, startAngle, sweepAngle, false, activeArcPaint);
+
+        // 2. Redline segment (5500..8000 RPM)
+        float redlineStart = startAngle + (5500f / 8000f) * sweepAngle;
+        float redlineSweep = (2500f / 8000f) * sweepAngle;
+        redlineArcPaint.setColor(Color.parseColor("#33FF1744"));
+        redlineArcPaint.setStrokeWidth(14f);
+        canvas.drawArc(arcRect, redlineStart, redlineSweep, false, redlineArcPaint);
+
+        // 3. Active RPM Arc
+        float rpmRatio = Math.min(Math.max(displayRpm / 8000f, 0f), 1f);
+        float activeSweep = rpmRatio * sweepAngle;
+
+        if (activeSweep > 0.5f) {
+            int glowColor = displayRpm >= 5500 ? Color.parseColor("#44FF1744") : Color.parseColor("#3300E5FF");
+            int coreColor = displayRpm >= 5500 ? Color.parseColor("#FF1744") : Color.parseColor("#00E5FF");
+
+            activeArcPaint.setColor(glowColor);
+            activeArcPaint.setStrokeWidth(24f);
+            canvas.drawArc(arcRect, startAngle, activeSweep, false, activeArcPaint);
+
+            activeArcPaint.setColor(coreColor);
+            activeArcPaint.setStrokeWidth(14f);
+            canvas.drawArc(arcRect, startAngle, activeSweep, false, activeArcPaint);
+
+            float tipAngle = startAngle + activeSweep;
+            double tipRad = Math.toRadians(tipAngle);
+            float tipX = (float) (cx + arcR * Math.cos(tipRad));
+            float tipY = (float) (cy + arcR * Math.sin(tipRad));
+            boltPaint.setColor(Color.WHITE);
+            canvas.drawCircle(tipX, tipY, 7f, boltPaint);
+        }
+
+        // 4. Ticks and Numbers (drawn OUTSIDE the arc to prevent center clutter)
+        for (int r = 0; r <= 8000; r += 250) {
+            float angle = startAngle + ((float) r / 8000f) * sweepAngle;
+            double rad = Math.toRadians(angle);
+            boolean isMajor = (r % 1000 == 0);
+            boolean isRedline = r >= 5500;
+
+            float innerR = isMajor ? arcR + 8f : arcR + 12f;
+            float outerR = arcR + 18f;
+            float x1 = (float) (cx + innerR * Math.cos(rad));
+            float y1 = (float) (cy + innerR * Math.sin(rad));
+            float x2 = (float) (cx + outerR * Math.cos(rad));
+            float y2 = (float) (cy + outerR * Math.sin(rad));
+
+            int tickCol = isRedline ? Color.parseColor("#FF1744") : (r <= displayRpm ? Color.parseColor("#00E5FF") : Color.parseColor("#263238"));
+            tickMajorPaint.setColor(tickCol);
+            tickMajorPaint.setStrokeWidth(isMajor ? 2.5f : 1.2f);
+            canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
+
+            if (isMajor) {
+                float textR = arcR + 34f;
+                float tx = (float) (cx + textR * Math.cos(rad));
+                float ty = (float) (cy + textR * Math.sin(rad) + 4f);
+                textNumberPaint.setColor(isRedline ? Color.parseColor("#FF5252") : (r <= displayRpm ? Color.WHITE : Color.parseColor("#546E7A")));
+                textNumberPaint.setTextSize(spToPx(11));
+                canvas.drawText(String.valueOf(r / 1000), tx, ty, textNumberPaint);
+            }
+        }
+
+        // 5. Gear Readout in Center (clean open space)
+        int gearColor = "P".equals(gear) ? Color.parseColor("#FFB300") : ("R".equals(gear) ? Color.parseColor("#FF1744") : Color.parseColor("#00E5FF"));
+        gearPaint.setColor(gearColor);
+        gearPaint.setTextSize(spToPx(46));
+        canvas.drawText(gear, cx, cy - 2f, gearPaint);
+
+        textUnitPaint.setColor(Color.parseColor("#90A4AE"));
+        textUnitPaint.setTextSize(spToPx(12));
+        canvas.drawText(Math.round(displayRpm) + " RPM", cx, cy + 26f, textUnitPaint);
+    }
+
+    // =========================================================================
+    // 7. THEME: USER PACK (/sdcard/gwm_split_user_themes/theme1/)
+    // =========================================================================
+    private android.graphics.Bitmap userSpeedoBmp = null;
+    private android.graphics.Bitmap userTachoBmp = null;
+    private android.graphics.Bitmap userNeedleBmp = null;
+    private android.graphics.Bitmap userBgBmp = null;
+    private boolean userThemeLoaded = false;
+
+    private void loadUserThemeBitmaps() {
+        if (userThemeLoaded) return;
+        userThemeLoaded = true;
+        try {
+            java.io.File dir = new java.io.File("/storage/emulated/0/gwm_split_user_themes/theme1");
+            if (!dir.exists()) {
+                dir = new java.io.File("/sdcard/gwm_split_user_themes/theme1");
+            }
+            if (dir.exists()) {
+                java.io.File fSpeedo = new java.io.File(dir, "speedo.png");
+                if (fSpeedo.exists()) userSpeedoBmp = android.graphics.BitmapFactory.decodeFile(fSpeedo.getAbsolutePath());
+                java.io.File fTacho = new java.io.File(dir, "tacho.png");
+                if (fTacho.exists()) userTachoBmp = android.graphics.BitmapFactory.decodeFile(fTacho.getAbsolutePath());
+                java.io.File fNeedle = new java.io.File(dir, "needle.png");
+                if (fNeedle.exists()) userNeedleBmp = android.graphics.BitmapFactory.decodeFile(fNeedle.getAbsolutePath());
+                java.io.File fBg = new java.io.File(dir, "bg.png");
+                if (fBg.exists()) userBgBmp = android.graphics.BitmapFactory.decodeFile(fBg.getAbsolutePath());
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    private void drawUserTheme(Canvas canvas, int w, int h) {
+        loadUserThemeBitmaps();
+        if (userSpeedoBmp != null || userTachoBmp != null) {
+            if (userBgBmp != null) {
+                canvas.drawBitmap(userBgBmp, null, new RectF(0, 0, w, h), null);
+            } else {
+                canvas.drawColor(Color.BLACK);
+            }
+            if (userSpeedoBmp != null) {
+                float halfW = gaugeRadius;
+                RectF dst = new RectF(leftCenterX - halfW, centerY - halfW, leftCenterX + halfW, centerY + halfW);
+                canvas.drawBitmap(userSpeedoBmp, null, dst, null);
+            }
+            if (userTachoBmp != null) {
+                float halfW = gaugeRadius;
+                RectF dst = new RectF(rightCenterX - halfW, centerY - halfW, rightCenterX + halfW, centerY + halfW);
+                canvas.drawBitmap(userTachoBmp, null, dst, null);
+            }
+            if (userNeedleBmp != null) {
+                float spdAngle = getSpeedAngle(displaySpeed, 240);
+                canvas.save();
+                canvas.rotate(spdAngle, leftCenterX, centerY);
+                canvas.drawBitmap(userNeedleBmp, leftCenterX - userNeedleBmp.getWidth() / 2f, centerY - userNeedleBmp.getHeight() / 2f, null);
+                canvas.restore();
+
+                float rpmAngle = getRpmAngle(displayRpm, 8000);
+                canvas.save();
+                canvas.rotate(rpmAngle, rightCenterX, centerY);
+                canvas.drawBitmap(userNeedleBmp, rightCenterX - userNeedleBmp.getWidth() / 2f, centerY - userNeedleBmp.getHeight() / 2f, null);
+                canvas.restore();
+            } else {
+                drawSportNeedle(canvas, leftCenterX, centerY, gaugeRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.RED);
+                drawSportNeedle(canvas, rightCenterX, centerY, gaugeRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.RED);
+            }
+        } else {
+            // Placeholder when user theme is empty
+            drawTaycanArcTheme(canvas, w, h);
+            subTextPaint.setColor(Color.parseColor("#FFD600"));
+            subTextPaint.setTextSize(spToPx(12));
+            canvas.drawText("ПОЛЬЗОВАТЕЛЬСКАЯ ТЕМА: положите speedo.png, tacho.png в /sdcard/gwm_split_user_themes/theme1/", w * 0.5f, h - 35f, subTextPaint);
+        }
+    }
+
+    private void drawMiniWidgets(Canvas canvas) {
+        if (latestState == null) {
+            latestState = new VehicleState((int) displaySpeed, gear, (int) displayRpm, true, coolantTemp);
+        }
+
+        widgetTextPaint.setTextSize(spToPx(11));
+
+        // 1. Left Mini-Widget (Under Left Dial / Speedometer)
+        if (widgetLeft != ClusterConfig.WIDGET_NONE) {
+            String text = latestState.formatWidget(widgetLeft);
+            if (!text.isEmpty()) {
+                float textW = widgetTextPaint.measureText(text);
+                float pillW = Math.max(130f, textW + 32f);
+                float pillH = 28f;
+                float cy = centerY + gaugeRadius * 0.74f;
+                widgetLeftRect.set(leftCenterX - pillW / 2f, cy - pillH / 2f, leftCenterX + pillW / 2f, cy + pillH / 2f);
+                canvas.drawRoundRect(widgetLeftRect, pillH / 2f, pillH / 2f, widgetBgPaint);
+                canvas.drawRoundRect(widgetLeftRect, pillH / 2f, pillH / 2f, widgetBorderPaint);
+                canvas.drawText(text, leftCenterX, cy + 4f, widgetTextPaint);
+            }
+        }
+
+        // 2. Right Mini-Widget (Under Right Dial / Tachometer)
+        if (widgetRight != ClusterConfig.WIDGET_NONE) {
+            String text = latestState.formatWidget(widgetRight);
+            if (!text.isEmpty()) {
+                float textW = widgetTextPaint.measureText(text);
+                float pillW = Math.max(130f, textW + 32f);
+                float pillH = 28f;
+                float cy = centerY + gaugeRadius * 0.74f;
+                widgetRightRect.set(rightCenterX - pillW / 2f, cy - pillH / 2f, rightCenterX + pillW / 2f, cy + pillH / 2f);
+                canvas.drawRoundRect(widgetRightRect, pillH / 2f, pillH / 2f, widgetBgPaint);
+                canvas.drawRoundRect(widgetRightRect, pillH / 2f, pillH / 2f, widgetBorderPaint);
+                canvas.drawText(text, rightCenterX, cy + 4f, widgetTextPaint);
+            }
+        }
     }
 }

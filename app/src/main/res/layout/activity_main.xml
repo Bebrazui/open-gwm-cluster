@@ -1,424 +1,715 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F1116"
-    android:fillViewport="true">
+    android:background="#0C100E">
 
-    <LinearLayout
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:id="@+id/scrollViewContent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <!-- Top Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="88dp">
 
+            <!-- Top Header -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Панель приборов GWM"
+                        android:textColor="#E5EAE6"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDisplayList"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Экран: поиск вторичного дисплея..."
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <TextView
+                    android:id="@+id/tvStatusChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Панель приборов GWM"
-                    android:textColor="#E6E8ED"
-                    android:textSize="20sp"
+                    android:background="@drawable/m3_chip_bg"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="Готов к работе"
+                    android:textColor="#A4E2B8"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvDisplayList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Экран: поиск вторичного дисплея..."
-                    android:textColor="#8A909D"
-                    android:textSize="12sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tvStatusChip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/m3_chip_bg"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="5dp"
-                android:text="Готов к работе"
-                android:textColor="#A4B3D4"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <!-- Live Gauge Preview Container -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/m3_preview_bg"
-            android:padding="4dp">
-
-            <org.opengwm.split.ui.ClusterGaugeView
-                android:id="@+id/gaugePreview"
+            <!-- Live Gauge Preview Container -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </FrameLayout>
+                android:layout_height="200dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/m3_preview_bg"
+                android:padding="4dp">
 
-        <!-- CARD 1: Service Control -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/m3_card_bg"
-            android:orientation="vertical"
-            android:padding="16dp">
+                <org.opengwm.split.ui.ClusterGaugeView
+                    android:id="@+id/gaugePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Управление выводом"
-                android:textColor="#E6E8ED"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Трансляция шкал на экран приборной панели (Display ID 2)"
-                android:textColor="#8A909D"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnToggleCluster"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:text="Запустить на приборной панели"
-                android:textSize="14sp" />
-
-            <Button
-                android:id="@+id/btnGrantOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="38dp"
-                android:layout_marginTop="8dp"
-                android:text="Выдать разрешение поверх окон"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <!-- CARD 2: Appearance & Preferences (List Style) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/m3_card_bg"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Внешний вид"
-                android:textColor="#E6E8ED"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <!-- Row 1: Theme Selector -->
+            <!-- ========================================================= -->
+            <!-- TAB 0: ГЛАВНАЯ (Управление выводом и экранами)             -->
+            <!-- ========================================================= -->
             <LinearLayout
+                android:id="@+id/containerTabMain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:visibility="visible">
 
+                <!-- CARD: Service Control -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Тема оформления"
-                        android:textColor="#D5D9E2"
-                        android:textSize="13sp" />
+                        android:text="Управление выводом"
+                        android:textColor="#E5EAE6"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Стиль колодцев и цветовая палитра"
-                        android:textColor="#7E8594"
-                        android:textSize="11sp" />
-                </LinearLayout>
+                        android:layout_marginTop="4dp"
+                        android:text="Трансляция шкал на экран приборной панели (Display ID 2)"
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
 
-                <Spinner
-                    android:id="@+id/spinnerTheme"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minWidth="140dp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="12dp"
-                android:background="#222733" />
-
-            <!-- Row 2: HolePunch Mask -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Защитные вырезы (HolePunch)"
-                        android:textColor="#D5D9E2"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Окна для заводских ламп поворотников и пробега"
-                        android:textColor="#7E8594"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <Switch
-                    android:id="@+id/switchHolePunch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="12dp"
-                android:background="#222733" />
-
-            <!-- Row 3: Needle Smoothing -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Плавность движения стрелок"
-                        android:textColor="#D5D9E2"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Аппаратное сглаживание на 60 кадров/с"
-                        android:textColor="#7E8594"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <Switch
-                    android:id="@+id/switchSmoothing"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- CARD 3: Telemetry Monitor -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/m3_card_bg"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Поток данных шины"
-                android:textColor="#E6E8ED"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvVehicleTelemetry"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#0E1015"
-                android:padding="10dp"
-                android:text="Скорость: 0 км/ч | Обороты: 0 | Передача: P | ОЖ: 90 °C"
-                android:textColor="#66BB6A"
-                android:fontFamily="monospace"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <!-- CARD 4: Simulator & Debug (Clean foldable/toggle card) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/m3_card_bg"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Режим симуляции"
-                        android:textColor="#E6E8ED"
+                    <Button
+                        android:id="@+id/btnToggleCluster"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@drawable/m3_button_primary"
+                        android:text="Запустить на приборной панели"
+                        android:textColor="#0C2013"
                         android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnGrantOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/m3_button_secondary"
+                        android:text="Выдать разрешение поверх окон"
+                        android:textColor="#A4E2B8"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ========================================================= -->
+            <!-- TAB 1: ТЕМЫ (Стиль шкал, вырезы, сглаживание)              -->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/containerTabThemes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Оформление и темы"
+                        android:textColor="#E5EAE6"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <!-- Row 1: Theme Selector -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Тема оформления"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Стиль колодцев и графика"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerTheme"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="140dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#233227" />
+
+                    <!-- Row 2: HolePunch Mask -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Защитные вырезы (HolePunch)"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Окна для заводских ламп и поворотников"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/switchHolePunch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#233227" />
+
+                    <!-- Row 3: Needle Smoothing -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Плавность движения стрелок"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Аппаратное сглаживание на 60 FPS"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/switchSmoothing"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ========================================================= -->
+            <!-- TAB 2: ВИДЖЕТЫ (Выбор мини-виджетов телеметрии)           -->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/containerTabWidgets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- CARD: Configurable Slots -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Телеметрические мини-виджеты"
+                        android:textColor="#E5EAE6"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Ручная проверка шкал без подключения к авто"
-                        android:textColor="#7E8594"
-                        android:textSize="11sp" />
+                        android:layout_marginTop="4dp"
+                        android:text="Выберите данные шины для отображения под шкалами"
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
+
+                    <!-- Slot 1: Left Widget -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Левый виджет"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Под шкалой спидометра"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerWidgetLeft"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="140dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#233227" />
+
+                    <!-- Slot 2: Right Widget -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Правый виджет"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Под шкалой тахометра"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerWidgetRight"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="140dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#233227" />
+
+                    <!-- Slot 3: Center Widget -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Центральный виджет"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="В центральной карточке"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerWidgetCenter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="140dp" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <Switch
-                    android:id="@+id/switchDemoMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Simulator Controls (Visible only when switch is on) -->
-            <LinearLayout
-                android:id="@+id/layoutDemoControls"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/tvDemoSpeedLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Скорость: 0 км/ч"
-                    android:textColor="#D5D9E2"
-                    android:textSize="12sp" />
-
-                <SeekBar
-                    android:id="@+id/sbSpeed"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:max="240"
-                    android:progress="0" />
-
-                <TextView
-                    android:id="@+id/tvDemoRpmLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Обороты: 0 об/мин"
-                    android:textColor="#D5D9E2"
-                    android:textSize="12sp" />
-
-                <SeekBar
-                    android:id="@+id/sbRpm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:max="8000"
-                    android:progress="0" />
-
+                <!-- CARD: Live Sensor Values -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="Текущие показания датчиков"
+                        android:textColor="#E5EAE6"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Передача:"
-                            android:textColor="#7E8594"
-                            android:textSize="11sp" />
-
-                        <Spinner
-                            android:id="@+id/spinnerGear"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tvLiveSensorStats"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:orientation="vertical">
+                        android:layout_marginTop="10dp"
+                        android:background="#0A0E0C"
+                        android:padding="12dp"
+                        android:text="⛽ Топливо: 62.5L (75%) | 🏁 Запас: 540 км\n⚡ АКБ: 14.1 В | 🛣️ Одометр: 18 450 км\n🌡️ ОЖ: 90 °C | ❄️ За бортом: +18 °C | 🛞 Шины: 2.3 бар"
+                        android:textColor="#8CE4A8"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="4dp"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Режим привода:"
-                            android:textColor="#7E8594"
-                            android:textSize="11sp" />
+            <!-- ========================================================= -->
+            <!-- TAB 3: ШИНА CAN (Поток данных, диагностика, симулятор)    -->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/containerTabBus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                        <Spinner
-                            android:id="@+id/spinnerMode"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp" />
-                    </LinearLayout>
+                <!-- CARD: Telemetry Stream -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Поток данных шины VHAL / CAN"
+                        android:textColor="#E5EAE6"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvVehicleTelemetry"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="#0A0E0C"
+                        android:padding="12dp"
+                        android:text="Скорость: 0 км/ч | Обороты: 0 | Передача: P | ОЖ: 90 °C"
+                        android:textColor="#8CE4A8"
+                        android:fontFamily="monospace"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/btnAutoSweep"
+                <!-- CARD: Simulator & Controls -->
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Тест разгона (0 – 160 км/ч)"
-                    android:textSize="12sp" />
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Режим симуляции (Демо)"
+                                android:textColor="#E5EAE6"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ручное управление стрелками для проверки тем"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/switchDemoMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutDemoControls"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginBottom="12dp"
+                            android:background="#233227" />
+
+                        <TextView
+                            android:id="@+id/tvDemoSpeedLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Скорость: 0 км/ч"
+                            android:textColor="#A4E2B8"
+                            android:textSize="12sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbSpeed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:max="240" />
+
+                        <TextView
+                            android:id="@+id/tvDemoRpmLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Обороты: 0 об/мин"
+                            android:textColor="#A4E2B8"
+                            android:textSize="12sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbRpm"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:max="8000" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Передача:"
+                                android:textColor="#879C8F"
+                                android:textSize="12sp" />
+
+                            <Spinner
+                                android:id="@+id/spinnerGear"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="14dp"
+                                android:text="Режим:"
+                                android:textColor="#879C8F"
+                                android:textSize="12sp" />
+
+                            <Spinner
+                                android:id="@+id/spinnerMode"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btnAutoSweep"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="Запустить тест стрелок (Sweep)"
+                            android:textColor="#A4E2B8"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
+    </ScrollView>
 
+    <!-- ============================================================= -->
+    <!-- M3 EXPRESSIVE FLOATING PILL DOCK (Matching User's Mockup)     -->
+    <!-- ============================================================= -->
+    <LinearLayout
+        android:id="@+id/layoutDock"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/m3_dock_bg"
+        android:elevation="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/tabMain"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:background="@drawable/m3_pill_active"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="Главная"
+            android:textColor="#A8E6BD"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tabThemes"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:background="@drawable/m3_pill_inactive"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="Темы"
+            android:textColor="#8FA395"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tabWidgets"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:background="@drawable/m3_pill_inactive"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="Виджеты"
+            android:textColor="#8FA395"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tabBus"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:background="@drawable/m3_pill_inactive"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="Шина CAN"
+            android:textColor="#8FA395"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </LinearLayout>
-</ScrollView>
+
+</RelativeLayout>
