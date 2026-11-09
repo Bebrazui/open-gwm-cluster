@@ -150,6 +150,7 @@ public class ClusterGaugeView extends View {
         widgetCenter = ClusterConfig.getWidgetCenter(getContext());
 
         setupPaints();
+        initAudioMonitoring();
     }
 
     public void setWidgets(int left, int right, int center) {
@@ -223,18 +224,46 @@ public class ClusterGaugeView extends View {
         postInvalidateOnAnimation();
     }
 
-    public boolean checkIsMusicPlaying() {
+    public void initAudioMonitoring() {
         if (audioManager == null) {
             try {
                 audioManager = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
             } catch (Throwable ignored) {}
         }
+        if (audioManager != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try {
+                audioManager.registerAudioPlaybackCallback(new android.media.AudioManager.AudioPlaybackCallback() {
+                    @Override
+                    public void onPlaybackConfigChanged(java.util.List<android.media.AudioPlaybackConfiguration> configs) {
+                        boolean active = false;
+                        if (configs != null) {
+                            for (android.media.AudioPlaybackConfiguration cfg : configs) {
+                                if (cfg.getAudioAttributes().getUsage() == android.media.AudioAttributes.USAGE_MEDIA) {
+                                    active = true;
+                                    break;
+                                }
+                            }
+                        }
+                        isMusicActive = active;
+                        postInvalidate();
+                    }
+                }, new android.os.Handler(android.os.Looper.getMainLooper()));
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    public boolean checkIsMusicPlaying() {
+        if (audioManager == null) {
+            initAudioMonitoring();
+        }
         if (audioManager != null) {
             long now = System.currentTimeMillis();
-            if (now - lastMusicCheckTime > 800) {
+            if (now - lastMusicCheckTime > 400) {
                 lastMusicCheckTime = now;
                 try {
-                    isMusicActive = audioManager.isMusicActive();
+                    if (audioManager.isMusicActive()) {
+                        isMusicActive = true;
+                    }
                 } catch (Throwable ignored) {}
             }
         }
@@ -251,6 +280,7 @@ public class ClusterGaugeView extends View {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        initAudioMonitoring();
         registerMediaReceiver();
     }
 
@@ -289,7 +319,14 @@ public class ClusterGaugeView extends View {
             filter.addAction("com.spotify.music.metadatachanged");
             filter.addAction("com.spotify.music.playbackstatechanged");
             filter.addAction("yandex.music.action.track_changed");
-            getContext().registerReceiver(mediaReceiver, filter);
+            filter.addAction("com.yandex.music.action.PLAY");
+            filter.addAction("com.yandex.music.action.PAUSE");
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                getContext().registerReceiver(mediaReceiver, filter, Context.RECEIVER_EXPORTED);
+            } else {
+                getContext().registerReceiver(mediaReceiver, filter);
+            }
         } catch (Throwable ignored) {}
     }
 
@@ -482,8 +519,8 @@ public class ClusterGaugeView extends View {
         // Draw Configurable Telemetry Mini-Widgets
         drawMiniWidgets(canvas);
 
-        // Safe HolePunch Cutout Mask (protects factory indicators & odometer)
-        if (isHolePunchEnabled) {
+        // Safe HolePunch Cutout Mask (only on overlay themes, NEVER on full cockpit themes like Taycan)
+        if (isHolePunchEnabled && activeTheme != ClusterConfig.THEME_TAYCAN_ARC) {
             drawHolePunchMask(canvas, w, h);
         }
 
@@ -1174,10 +1211,8 @@ public class ClusterGaugeView extends View {
         // 2. Top center status bar: ( D ), ECO, Battery [⚡], WiFi, BT
         drawTopStatusBar(canvas, w, h);
 
-        // 3. Center Screen: Topo map placeholder when HolePunch disabled
-        if (!isHolePunchEnabled) {
-            drawCenterNavPlaceholder(canvas, w, h);
-        }
+        // 3. Center Screen: Topo map placeholder
+        drawCenterNavPlaceholder(canvas, w, h);
 
         // 4. Speedometer Pod Left (cx = leftCenterX, cy = centerY)
         drawTaycanSpeedoArc(canvas, leftCenterX, centerY, gaugeRadius * 0.94f, w, h);
@@ -1185,10 +1220,8 @@ public class ClusterGaugeView extends View {
         // 5. Tachometer / Power Pod Right (cx = rightCenterX, cy = centerY)
         drawTaycanTachoArc(canvas, rightCenterX, centerY, gaugeRadius * 0.94f, w, h);
 
-        // 6. Floating M3 Glassmorphic Music Player card (appears ONLY when music is playing!)
-        if (checkIsMusicPlaying()) {
-            drawFloatingMusicCard(canvas, w, h);
-        }
+        // 6. Floating M3 Glassmorphic Music Player card
+        drawFloatingMusicCard(canvas, w, h);
     }
 
     private void drawCockpitBezel(Canvas canvas, int w, int h) {
@@ -1289,30 +1322,37 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawFloatingMusicCard(Canvas canvas, int w, int h) {
-        // Floating M3 Glassmorphic Music Player card (appears dynamically when music is streaming)
+        boolean playing = checkIsMusicPlaying() || isMusicActive;
+
+        // Floating M3 Glassmorphic Music Player card
         float cardW = Math.min(360f, w * 0.28f);
         float cardH = 56f;
         float cardX = w * 0.5f;
         float cardY = h * 0.82f;
         mediaCardRect.set(cardX - cardW / 2, cardY - cardH / 2, cardX + cardW / 2, cardY + cardH / 2);
 
-        statusPillBgPaint.setColor(Color.parseColor("#E6121B26"));
+        statusPillBgPaint.setColor(playing ? Color.parseColor("#E6121B26") : Color.parseColor("#CC0A1017"));
         canvas.drawRoundRect(mediaCardRect, 14f, 14f, statusPillBgPaint);
-        statusPillBorderPaint.setColor(Color.parseColor("#25374C"));
-        statusPillBorderPaint.setStrokeWidth(1.2f);
+        statusPillBorderPaint.setColor(playing ? Color.parseColor("#00E5FF") : Color.parseColor("#25374C"));
+        statusPillBorderPaint.setStrokeWidth(playing ? 1.5f : 1.0f);
         canvas.drawRoundRect(mediaCardRect, 14f, 14f, statusPillBorderPaint);
 
-        // Album Art thumbnail (synthwave sunset purple gradient)
+        // Album Art thumbnail (gradient purple / dark slate)
         RectF artRect = new RectF(mediaCardRect.left + 8f, cardY - 20f, mediaCardRect.left + 48f, cardY + 20f);
-        statusPillBgPaint.setColor(Color.parseColor("#7B1FA2"));
+        statusPillBgPaint.setColor(playing ? Color.parseColor("#7B1FA2") : Color.parseColor("#37474F"));
         canvas.drawRoundRect(artRect, 8f, 8f, statusPillBgPaint);
+
+        subTextPaint.setColor(Color.WHITE);
+        subTextPaint.setTextSize(spToPx(13));
+        subTextPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(playing ? "♪" : "♫", artRect.centerX(), artRect.centerY() + 5f, subTextPaint);
 
         // Track title & artist
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(spToPx(11.5f));
         subTextPaint.setTextAlign(Paint.Align.LEFT);
-        String title = (trackTitle != null && !trackTitle.isEmpty()) ? trackTitle : "Музыка играет";
-        String artist = (trackArtist != null && !trackArtist.isEmpty()) ? trackArtist : "GWM Audio";
+        String title = (trackTitle != null && !trackTitle.isEmpty()) ? trackTitle : (playing ? "Воспроизведение..." : "Synthwave Drive");
+        String artist = (trackArtist != null && !trackArtist.isEmpty()) ? trackArtist : (playing ? "Подключено" : "Night Rider");
         canvas.drawText(title, mediaCardRect.left + 56f, cardY - 4f, subTextPaint);
 
         subTextPaint.setColor(Color.parseColor("#78909C"));
@@ -1323,8 +1363,34 @@ public class ClusterGaugeView extends View {
         // Play/Pause & Next icons
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(spToPx(13));
-        canvas.drawText("❚❚", mediaCardRect.right - 44f, cardY + 5f, subTextPaint);
+        canvas.drawText(playing ? "❚❚" : "▶", mediaCardRect.right - 44f, cardY + 5f, subTextPaint);
         canvas.drawText("⏭", mediaCardRect.right - 18f, cardY + 5f, subTextPaint);
+    }
+
+    @Override
+    public boolean onTouchEvent(android.view.MotionEvent event) {
+        if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+            float x = event.getX();
+            float y = event.getY();
+            if (activeTheme == ClusterConfig.THEME_TAYCAN_ARC && mediaCardRect.contains(x, y)) {
+                toggleMediaPlayback();
+                return true;
+            }
+        }
+        return super.onTouchEvent(event);
+    }
+
+    private void toggleMediaPlayback() {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                long eventTime = android.os.SystemClock.uptimeMillis();
+                android.view.KeyEvent down = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+                android.view.KeyEvent up = new android.view.KeyEvent(eventTime, eventTime, android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+                am.dispatchMediaKeyEvent(down);
+                am.dispatchMediaKeyEvent(up);
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void drawTaycanSpeedoArc(Canvas canvas, float cx, float cy, float radius, int w, int h) {

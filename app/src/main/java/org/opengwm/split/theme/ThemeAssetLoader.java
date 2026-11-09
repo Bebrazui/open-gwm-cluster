@@ -50,7 +50,27 @@ public class ThemeAssetLoader {
             byte[] encryptedData = baos.toByteArray();
             byte[] decrypted = null;
 
-            if (ThemeCrypt.isLoaded()) {
+            if (com.altaysoft.t500_split.NativeLib.isLoaded()) {
+                Context spoofed = getSpoofedContext(context);
+                try {
+                    com.altaysoft.t500_split.NativeLib.nativeSetContext(spoofed);
+                    com.altaysoft.t500_split.NativeLib.nativeInitStrings(spoofed);
+                } catch (Throwable t) {
+                    Log.w(TAG, "NativeLib init error: " + t.getMessage());
+                }
+                try {
+                    decrypted = com.altaysoft.t500_split.NativeLib.decryptThemeImage(spoofed, encryptedData);
+                } catch (Throwable t) {
+                    Log.w(TAG, "NativeLib decryptThemeImage (spoofed) error: " + t.getMessage());
+                }
+                if (decrypted == null) {
+                    try {
+                        decrypted = com.altaysoft.t500_split.NativeLib.decryptThemeImage(context, encryptedData);
+                    } catch (Throwable t) {
+                        Log.w(TAG, "NativeLib decryptThemeImage (direct) error: " + t.getMessage());
+                    }
+                }
+            } else if (ThemeCrypt.isLoaded()) {
                 Context spoofed = getSpoofedContext(context);
                 decrypted = ThemeCrypt.decrypt(spoofed, encryptedData);
             }

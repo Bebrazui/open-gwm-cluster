@@ -65,7 +65,7 @@ public class ClusterConfig {
     }
 
     public static boolean isHolePunchEnabled(Context context) {
-        return getPrefs(context).getBoolean(KEY_HOLE_PUNCH, true);
+        return getPrefs(context).getBoolean(KEY_HOLE_PUNCH, false);
     }
 
     public static void setHolePunchEnabled(Context context, boolean enabled) {
