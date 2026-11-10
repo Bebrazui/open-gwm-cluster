@@ -36,8 +36,9 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
     public static final int PROP_ENV_OUTSIDE_TEMP      = 0x11600703; // 291505923 (float deg C)
 
     // GWM / Nobo Vendor VHAL Property IDs (Vendor group 0x20000000 bypasses Google signature restrictions)
-    public static final int PROP_GWM_ACTOR_SPEED       = 0x216116e4; // 559994600 (GwmVehicleActor real speed Float[] on sa8155)
-    public static final int PROP_GWM_ACTOR_RPM         = 0x216116e5; // 559994601 (GwmVehicleActor RPM vector)
+    public static final int PROP_GWM_ACTOR_SPEED       = 0x216116e4; // 560010980 (GWM_VehSpd Float[] on sa8155)
+    public static final int PROP_GWM_ACTOR_RPM         = 0x2161169f; // 560010911 (GWM_EngSpd 0..8191.875 RPM Float[] on sa8155)
+    public static final int PROP_GWM_ACCEL_PEDAL       = 0x216116b2; // 560010930 (GWM_AccelPedalPosn 0..100% on sa8155)
     public static final int PROP_GWM_CURRENT_GEAR      = 0x214016c9; // 557848265 (GWM 9AT sub-gears 1..9)
     public static final int PROP_GWM_VENDOR_RPM        = 0x21600305; // 559940357 (Vendor mirrored RPM)
     public static final int PROP_GWM_VENDOR_SPEED      = 0x21600207; // 559940103 (Vendor mirrored Speed)
@@ -293,10 +294,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         } catch (Throwable ignored) {}
                     }
 
-                    if (newSpeed >= 0 && newSpeed != currentSpeed) {
-                        currentSpeed = newSpeed;
-                        speedSource = (newSpeedSource != null) ? newSpeedSource : speedSource;
-                        changed = true;
+                    if (newSpeed >= 0) {
+                        if (newSpeed != currentSpeed || "INIT".equals(speedSource)) {
+                            currentSpeed = newSpeed;
+                            speedSource = (newSpeedSource != null) ? newSpeedSource : speedSource;
+                            changed = true;
+                        }
                     }
 
                     // =========================================================
@@ -305,8 +308,20 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                     int newRpm = -1;
                     String newRpmSource = null;
 
+                    // Tier 0: GWM Live Engine Speed (0x2161169f - GWM_EngSpd confirmed in dumpsys car_service)
+                    if (iCarProperty != null && getPropertyMethod != null) {
+                        try {
+                            Object vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_ACTOR_RPM, 0);
+                            Object val = extractValue(vendorRpmProp);
+                            if (val instanceof Number && ((Number) val).floatValue() >= 0) {
+                                newRpm = Math.round(((Number) val).floatValue());
+                                newRpmSource = "GWM_0x2161169f";
+                            }
+                        } catch (Throwable ignored) {}
+                    }
+
                     // Tier 1: CarSensorManager (Native Android 9 Pie - checks CAR_SPEED/CAR_ENGINE_PROBING, NOT signature CAR_ENGINE_DETAILED)
-                    if (iCarSensor != null && getLatestSensorEventMethod != null) {
+                    if (newRpm < 0 && iCarSensor != null && getLatestSensorEventMethod != null) {
                         try {
                             Object rpmEvent = getLatestSensorEventMethod.invoke(iCarSensor, SENSOR_TYPE_RPM);
                             float rawRpm = extractSensorFloat(rpmEvent);
@@ -322,13 +337,10 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         }
                     }
 
-                    // Tier 2: GWM Vendor Properties (0x216116e5 & 0x21600305 - VENDOR group bypasses signature checks)
+                    // Tier 2: Additional GWM Vendor Properties (0x21600305 - VENDOR group bypasses signature checks)
                     if (newRpm < 0 && iCarProperty != null && getPropertyMethod != null) {
                         try {
-                            Object vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_ACTOR_RPM, 0);
-                            if (vendorRpmProp == null) {
-                                vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_VENDOR_RPM, 0);
-                            }
+                            Object vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_VENDOR_RPM, 0);
                             Object val = extractValue(vendorRpmProp);
                             if (val instanceof Number && ((Number) val).floatValue() > 0) {
                                 newRpm = Math.round(((Number) val).floatValue());
@@ -360,10 +372,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         newRpmSource = "9AT_Model";
                     }
 
-                    if (newRpm != currentRpm) {
-                        currentRpm = newRpm;
-                        rpmSource = (newRpmSource != null) ? newRpmSource : rpmSource;
-                        changed = true;
+                    if (newRpm >= 0) {
+                        if (newRpm != currentRpm || "INIT".equals(rpmSource)) {
+                            currentRpm = newRpm;
+                            rpmSource = (newRpmSource != null) ? newRpmSource : rpmSource;
+                            changed = true;
+                        }
                     }
 
                     // =========================================================
