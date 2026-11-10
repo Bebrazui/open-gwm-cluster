@@ -39,7 +39,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
     public static final int PROP_GWM_ACTOR_SPEED       = 0x216116e4; // 560010980 (GWM_VehSpd Float[] on sa8155)
     public static final int PROP_GWM_ACTOR_RPM         = 0x2161169f; // 560010911 (GWM_EngSpd 0..8191.875 RPM Float[] on sa8155)
     public static final int PROP_GWM_ACCEL_PEDAL       = 0x216116b2; // 560010930 (GWM_AccelPedalPosn 0..100% on sa8155)
-    public static final int PROP_GWM_CURRENT_GEAR      = 0x214016c9; // 557848265 (GWM 9AT sub-gears 1..9)
+    public static final int PROP_GWM_CURRENT_GEAR      = 0x214016c9; // 557848265 (GWM_CURRENT_GEAR)
+    public static final int PROP_GWM_DRV_GEAR_DISP     = 0x214016d7; // 557848279 (GWM_DrvAutoGearDisp cluster gear)
+    public static final int PROP_GWM_ENG_COOLANT_TEMP  = 0x216016b3; // 559945395 (GWM_EngCoolantTemp -48..143.25 C)
+    public static final int PROP_GWM_OUTSIDE_TEMP      = 0x21601786; // 559945606 (GWM_ACAmbTemp -40..86.5 C)
+    public static final int PROP_GWM_FUEL_LEVEL        = 0x21401391; // 557847441 (GWM_IP_FuelLvlInfo 0..200)
+    public static final int PROP_GWM_FUEL_CONSUMPTION  = 0x214016ab; // 557848235 (GWM_FuelConsumption)
     public static final int PROP_GWM_VENDOR_RPM        = 0x21600305; // 559940357 (Vendor mirrored RPM)
     public static final int PROP_GWM_VENDOR_SPEED      = 0x21600207; // 559940103 (Vendor mirrored Speed)
 
@@ -412,9 +417,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                             }
                         } catch (Throwable ignored) {}
 
-                        // Read Coolant Temp
+                        // Read Coolant Temp (Tier 0: GWM_EngCoolantTemp, Tier 1: Standard PROP_ENGINE_COOLANT_TEMP)
                         try {
-                            Object tempProp = getPropertyMethod.invoke(iCarProperty, PROP_ENGINE_COOLANT_TEMP, 0);
+                            Object tempProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_ENG_COOLANT_TEMP, 0);
+                            if (tempProp == null) {
+                                tempProp = getPropertyMethod.invoke(iCarProperty, PROP_ENGINE_COOLANT_TEMP, 0);
+                            }
                             Object tempVal = extractValue(tempProp);
                             if (tempVal instanceof Number) {
                                 currentTemp = ((Number) tempVal).floatValue();
@@ -422,9 +430,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                             }
                         } catch (Throwable ignored) {}
 
-                        // Read Fuel Level
+                        // Read Fuel Level (Tier 0: GWM_IP_FuelLvlInfo, Tier 1: Standard PROP_FUEL_LEVEL)
                         try {
-                            Object fuelProp = getPropertyMethod.invoke(iCarProperty, PROP_FUEL_LEVEL, 0);
+                            Object fuelProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_FUEL_LEVEL, 0);
+                            if (fuelProp == null) {
+                                fuelProp = getPropertyMethod.invoke(iCarProperty, PROP_FUEL_LEVEL, 0);
+                            }
                             Object fuelVal = extractValue(fuelProp);
                             if (fuelVal instanceof Number) {
                                 currentFuel = ((Number) fuelVal).floatValue();
@@ -450,9 +461,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                             }
                         } catch (Throwable ignored) {}
 
-                        // Read Outside Temp
+                        // Read Outside Temp (Tier 0: GWM_ACAmbTemp, Tier 1: Standard PROP_ENV_OUTSIDE_TEMP)
                         try {
-                            Object outTempProp = getPropertyMethod.invoke(iCarProperty, PROP_ENV_OUTSIDE_TEMP, 0);
+                            Object outTempProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_OUTSIDE_TEMP, 0);
+                            if (outTempProp == null) {
+                                outTempProp = getPropertyMethod.invoke(iCarProperty, PROP_ENV_OUTSIDE_TEMP, 0);
+                            }
                             Object outTempVal = extractValue(outTempProp);
                             if (outTempVal instanceof Number) {
                                 currentOutsideTemp = ((Number) outTempVal).floatValue();
