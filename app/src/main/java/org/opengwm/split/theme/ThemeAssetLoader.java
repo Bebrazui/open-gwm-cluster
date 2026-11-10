@@ -37,6 +37,24 @@ public class ThemeAssetLoader {
         return null;
     }
 
+    public static Bitmap loadSplitAsset(Context context, String fileName) {
+        String assetPath = "split_themes/" + fileName;
+        if (BITMAP_CACHE.containsKey(assetPath)) {
+            return BITMAP_CACHE.get(assetPath);
+        }
+        try {
+            InputStream is = context.getAssets().open(assetPath);
+            Bitmap bmp = BitmapFactory.decodeStream(is);
+            is.close();
+            if (bmp != null) {
+                BITMAP_CACHE.put(assetPath, bmp);
+                return bmp;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
     public static Context getSpoofedContext(Context base) {
         return new ContextWrapper(base.getApplicationContext()) {
             @Override

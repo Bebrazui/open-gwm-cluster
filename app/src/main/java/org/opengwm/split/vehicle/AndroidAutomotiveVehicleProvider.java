@@ -36,6 +36,8 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
     public static final int PROP_ENV_OUTSIDE_TEMP      = 0x11600703; // 291505923 (float deg C)
 
     // GWM / Nobo Vendor VHAL Property IDs (Vendor group 0x20000000 bypasses Google signature restrictions)
+    public static final int PROP_GWM_ACTOR_SPEED       = 0x216116e4; // 559994600 (GwmVehicleActor real speed Float[] on sa8155)
+    public static final int PROP_GWM_ACTOR_RPM         = 0x216116e5; // 559994601 (GwmVehicleActor RPM vector)
     public static final int PROP_GWM_CURRENT_GEAR      = 0x214016c9; // 557848265 (GWM 9AT sub-gears 1..9)
     public static final int PROP_GWM_VENDOR_RPM        = 0x21600305; // 559940357 (Vendor mirrored RPM)
     public static final int PROP_GWM_VENDOR_SPEED      = 0x21600207; // 559940103 (Vendor mirrored Speed)
@@ -235,8 +237,21 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                     int newSpeed = -1;
                     String newSpeedSource = null;
 
-                    // Tier 1: Standard AAOS Property (0x11600207)
+                    // Tier 0: GWM Live Actor Speed (0x216116e4 - confirmed on sa8155 GwmDyn / GwmVehicleActor)
                     if (iCarProperty != null && getPropertyMethod != null) {
+                        try {
+                            Object actorSpeedProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_ACTOR_SPEED, 0);
+                            Object val = extractValue(actorSpeedProp);
+                            if (val instanceof Number) {
+                                float speedVal = ((Number) val).floatValue();
+                                newSpeed = Math.max(0, Math.round(speedVal));
+                                newSpeedSource = "GWM_0x216116e4";
+                            }
+                        } catch (Throwable ignored) {}
+                    }
+
+                    // Tier 1: Standard AAOS Property (0x11600207)
+                    if (newSpeed < 0 && iCarProperty != null && getPropertyMethod != null) {
                         try {
                             Object speedProp = getPropertyMethod.invoke(iCarProperty, PROP_PERF_VEHICLE_SPEED, 0);
                             Object speedVal = extractValue(speedProp);
@@ -307,10 +322,13 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         }
                     }
 
-                    // Tier 2: GWM Vendor Property (0x21600305 - VENDOR group bypasses Google CAR_ENGINE_DETAILED check)
+                    // Tier 2: GWM Vendor Properties (0x216116e5 & 0x21600305 - VENDOR group bypasses signature checks)
                     if (newRpm < 0 && iCarProperty != null && getPropertyMethod != null) {
                         try {
-                            Object vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_VENDOR_RPM, 0);
+                            Object vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_ACTOR_RPM, 0);
+                            if (vendorRpmProp == null) {
+                                vendorRpmProp = getPropertyMethod.invoke(iCarProperty, PROP_GWM_VENDOR_RPM, 0);
+                            }
                             Object val = extractValue(vendorRpmProp);
                             if (val instanceof Number && ((Number) val).floatValue() > 0) {
                                 newRpm = Math.round(((Number) val).floatValue());
@@ -469,19 +487,31 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
     private Object extractValue(Object carPropVal) {
         if (carPropVal == null) return null;
+        Object val = null;
         try {
             if (getValueMethod == null) {
                 getValueMethod = carPropVal.getClass().getMethod("getValue");
             }
-            return getValueMethod.invoke(carPropVal);
+            val = getValueMethod.invoke(carPropVal);
         } catch (Throwable t) {
             try {
                 Field f = carPropVal.getClass().getDeclaredField("mValue");
                 f.setAccessible(true);
-                return f.get(carPropVal);
+                val = f.get(carPropVal);
             } catch (Throwable ignored) {}
         }
-        return null;
+        if (val == null) return null;
+        if (val instanceof Object[]) {
+            Object[] arr = (Object[]) val;
+            if (arr.length > 0) return arr[0];
+        } else if (val instanceof float[]) {
+            float[] arr = (float[]) val;
+            if (arr.length > 0) return arr[0];
+        } else if (val instanceof int[]) {
+            int[] arr = (int[]) val;
+            if (arr.length > 0) return arr[0];
+        }
+        return val;
     }
 
     private String decodeCombinedGear(int stdGear, int gwmSubGear) {
