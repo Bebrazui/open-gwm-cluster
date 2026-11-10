@@ -9,8 +9,8 @@ android {
 
     defaultConfig {
         applicationId = "org.opengwm.split"
-        minSdk = 28
-        targetSdk = 30
+        minSdk = 21
+        targetSdk = 28
         versionCode = 3
         versionName = "1.4.2"
     }
