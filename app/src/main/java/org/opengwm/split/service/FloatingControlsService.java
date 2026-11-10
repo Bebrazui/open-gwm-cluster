@@ -23,7 +23,7 @@ public class FloatingControlsService extends Service {
     private WindowManager windowManager;
     private View floatingView;
     private WindowManager.LayoutParams params;
-    private final VehicleDataProvider vehicleProvider = new MockVehicleProvider();
+    private VehicleDataProvider vehicleProvider;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -33,6 +33,7 @@ public class FloatingControlsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         initOverlay();
         startTelemetry();

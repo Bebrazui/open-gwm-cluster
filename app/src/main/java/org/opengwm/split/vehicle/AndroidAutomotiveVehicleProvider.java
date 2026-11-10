@@ -76,19 +76,19 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
     private int currentSpeed = 0;
     private int currentRpm = 0;
-    private String currentGear = "P";
-    private float currentTemp = 90.0f;
+    private String currentGear = "--";
+    private float currentTemp = -999f;
     private String speedSource = "INIT";
     private String rpmSource = "INIT";
 
-    // Telemetry mini-widgets data
-    private float currentFuel = 62.5f;
-    private int currentFuelPercent = 75;
-    private int currentRange = 540;
-    private float currentBatteryVoltage = 14.1f;
-    private int currentOdometer = 18450;
-    private float currentOutsideTemp = 18.0f;
-    private float currentTirePressure = 2.3f;
+    // Telemetry mini-widgets data (-1 / -999 indicates no real sensor data yet)
+    private float currentFuel = -1f;
+    private int currentFuelPercent = -1;
+    private int currentRange = -1;
+    private float currentBatteryVoltage = -1f;
+    private int currentOdometer = -1;
+    private float currentOutsideTemp = -999f;
+    private float currentTirePressure = -1f;
 
     public AndroidAutomotiveVehicleProvider() {
         this(null);
@@ -371,10 +371,10 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         }
                     }
 
-                    // Tier 4: Realistic Tank 500 9AT Physical Model (V6 3.0T E30Z / 2.0T)
+                    // No fake simulation: if hardware / VHAL provided no RPM data, keep 0
                     if (newRpm < 0) {
-                        newRpm = computeTank500ModelRpm(currentSpeed, currentGear, telemetryLogTick);
-                        newRpmSource = "9AT_Model";
+                        newRpm = 0;
+                        newRpmSource = "NONE";
                     }
 
                     if (newRpm >= 0) {
@@ -555,42 +555,7 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
         if (gwmSubGear >= 1 && gwmSubGear <= 9) {
             return "D" + gwmSubGear;
         }
-        return "P";
-    }
-
-    /**
-     * Realistic Tank 500 9AT mathematical physics model (V6 3.0T E30Z).
-     * Calculates RPM from speed and 9-speed transmission gear ratios when hardware sensor is restricted.
-     */
-    private int computeTank500ModelRpm(int speedKmh, String gear, int tick) {
-        if ("P".equals(gear) || "N".equals(gear)) {
-            return 750 + (int) (Math.sin(tick * 0.15f) * 18);
-        }
-        if ("R".equals(gear)) {
-            return Math.max(780, Math.min(3500, 800 + speedKmh * 42));
-        }
-
-        int g = 1;
-        if (gear.length() >= 2 && Character.isDigit(gear.charAt(1))) {
-            g = gear.charAt(1) - '0';
-        } else {
-            // Estimate gear from speed if only generic "D" is reported
-            if (speedKmh <= 16) g = 1;
-            else if (speedKmh <= 28) g = 2;
-            else if (speedKmh <= 42) g = 3;
-            else if (speedKmh <= 58) g = 4;
-            else if (speedKmh <= 75) g = 5;
-            else if (speedKmh <= 95) g = 6;
-            else if (speedKmh <= 115) g = 7;
-            else if (speedKmh <= 135) g = 8;
-            else g = 9;
-        }
-
-        // Exact gear factors (RPM per km/h) for Tank 500 9AT
-        float[] factors = {0, 48.0f, 32.5f, 23.8f, 18.2f, 15.0f, 12.2f, 10.0f, 8.4f, 7.1f};
-        float factor = (g >= 1 && g <= 9) ? factors[g] : 16.0f;
-        int target = Math.max(750, Math.round(speedKmh * factor));
-        return Math.min(target, 6500);
+        return "--";
     }
 
     private void dispatchState() {

@@ -445,13 +445,18 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     if (!isDemoActive) {
                         gaugePreview.updateTelemetry(state);
-                        tvVehicleTelemetry.setText("Шина: " + state.speedKmh + " км/ч | " + state.rpm +
-                                " об/мин | " + state.gear + " | ОЖ: " + Math.round(state.targetTempC) + " °C");
+                        tvVehicleTelemetry.setText("Шина: " + state.speedKmh + " км/ч | " + (state.rpm > 0 ? state.rpm + " об/мин" : "--") +
+                                " | " + (state.gear != null ? state.gear : "--") +
+                                " | ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--"));
                         if (tvLiveSensorStats != null) {
                             tvLiveSensorStats.setText(
-                                    "⛽ Топливо: " + Math.round(state.fuelLiters) + "L (" + state.fuelPercent + "%) | 🏁 Запас: " + state.rangeKm + " км\n" +
-                                    "⚡ АКБ: " + String.format(java.util.Locale.US, "%.1f В", state.batteryVoltage) + " | 🛣️ Одометр: " + state.odometerKm + " км\n" +
-                                    "🌡️ ОЖ: " + Math.round(state.targetTempC) + " °C | ❄️ За бортом: " + (state.outsideTempC >= 0 ? "+" : "") + Math.round(state.outsideTempC) + " °C | 🛞 Шины: " + String.format(java.util.Locale.US, "%.1f бар", state.tirePressureBar)
+                                    "⛽ Топливо: " + (state.fuelPercent >= 0 ? state.fuelPercent + "%" : (state.fuelLiters >= 0 ? Math.round(state.fuelLiters) + "L" : "--")) +
+                                    " | 🏁 Запас: " + (state.rangeKm >= 0 ? state.rangeKm + " км" : "--") + "\n" +
+                                    "⚡ АКБ: " + (state.batteryVoltage > 0 ? String.format(java.util.Locale.US, "%.1f В", state.batteryVoltage) : "--") +
+                                    " | 🛣️ Одометр: " + (state.odometerKm >= 0 ? state.odometerKm + " км" : "--") + "\n" +
+                                    "🌡️ ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--") +
+                                    " | ❄️ За бортом: " + (state.outsideTempC > -50f ? ((state.outsideTempC >= 0 ? "+" : "") + Math.round(state.outsideTempC) + " °C") : "--") +
+                                    " | 🛞 Шины: " + (state.tirePressureBar > 0 ? String.format(java.util.Locale.US, "%.1f бар", state.tirePressureBar) : "--")
                             );
                         }
                     }

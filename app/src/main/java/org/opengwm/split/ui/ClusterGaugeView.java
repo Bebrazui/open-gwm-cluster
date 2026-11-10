@@ -35,8 +35,8 @@ public class ClusterGaugeView extends View {
     // Target telemetry
     private float targetSpeed = 0f;
     private float targetRpm = 0f;
-    private String gear = "P";
-    private float coolantTemp = 90.0f;
+    private String gear = "--";
+    private float coolantTemp = -999f;
     private int cruiseSpeed = 0;
     private String driveMode = "STANDARD 4H";
 
