@@ -843,6 +843,45 @@
                                 android:textColor="#8FA395"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemMediaPlayer"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🎵 Плеер музыки"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemTopHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🔝 Верхняя строка"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemBottomFooter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🔻 Нижняя строка"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
                     </HorizontalScrollView>
                 </LinearLayout>
@@ -1037,6 +1076,66 @@
 
                         <Button
                             android:id="@+id/btnIncScale"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="+"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <!-- Поворот / Угол -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Поворот / Угол (вращение 2 пальцами)"
+                            android:textColor="#D1DDD4"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvEditorValRot"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0°"
+                            android:textColor="#A4E2B8"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnDecRot"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="−"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbEditorRot"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="360"
+                            android:progress="180" />
+
+                        <Button
+                            android:id="@+id/btnIncRot"
                             android:layout_width="44dp"
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"

@@ -34,6 +34,17 @@ public class ThemeAssetLoader {
             }
         } catch (Throwable ignored) {
         }
+
+        // Automatic fallback resolution for needles (e.g., theme_24_needle_spd vs theme_X_needle)
+        if ("needle_spd".equals(component) || "needle_rpm".equals(component)) {
+            return loadSplitThemeBitmap(context, themeId, "needle");
+        } else if ("needle".equals(component)) {
+            Bitmap spd = loadSplitThemeBitmap(context, themeId, "needle_spd");
+            if (spd != null) return spd;
+        } else if ("needle_small_fuel".equals(component) || "needle_small_temp".equals(component)) {
+            return loadSplitThemeBitmap(context, themeId, "needle_small");
+        }
+
         return null;
     }
 

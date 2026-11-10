@@ -71,17 +71,23 @@ public class MainActivity extends Activity {
     private TextView chipElemWidgetLeft;
     private TextView chipElemWidgetRight;
     private TextView chipElemWidgetCenter;
+    private TextView chipElemMediaPlayer;
+    private TextView chipElemTopHeader;
+    private TextView chipElemBottomFooter;
     private TextView tvEditorActiveElementTitle;
 
     private TextView tvEditorValX;
     private TextView tvEditorValY;
     private TextView tvEditorValScale;
+    private TextView tvEditorValRot;
     private SeekBar sbEditorX;
     private SeekBar sbEditorY;
     private SeekBar sbEditorScale;
+    private SeekBar sbEditorRot;
     private Button btnDecX, btnIncX;
     private Button btnDecY, btnIncY;
     private Button btnDecScale, btnIncScale;
+    private Button btnDecRot, btnIncRot;
 
     private Button btnSaveLayout;
     private Button btnResetElement;
@@ -561,14 +567,19 @@ public class MainActivity extends Activity {
         chipElemWidgetLeft = findViewById(R.id.chipElemWidgetLeft);
         chipElemWidgetRight = findViewById(R.id.chipElemWidgetRight);
         chipElemWidgetCenter = findViewById(R.id.chipElemWidgetCenter);
+        chipElemMediaPlayer = findViewById(R.id.chipElemMediaPlayer);
+        chipElemTopHeader = findViewById(R.id.chipElemTopHeader);
+        chipElemBottomFooter = findViewById(R.id.chipElemBottomFooter);
         tvEditorActiveElementTitle = findViewById(R.id.tvEditorActiveElementTitle);
 
         tvEditorValX = findViewById(R.id.tvEditorValX);
         tvEditorValY = findViewById(R.id.tvEditorValY);
         tvEditorValScale = findViewById(R.id.tvEditorValScale);
+        tvEditorValRot = findViewById(R.id.tvEditorValRot);
         sbEditorX = findViewById(R.id.sbEditorX);
         sbEditorY = findViewById(R.id.sbEditorY);
         sbEditorScale = findViewById(R.id.sbEditorScale);
+        sbEditorRot = findViewById(R.id.sbEditorRot);
 
         btnDecX = findViewById(R.id.btnDecX);
         btnIncX = findViewById(R.id.btnIncX);
@@ -576,6 +587,8 @@ public class MainActivity extends Activity {
         btnIncY = findViewById(R.id.btnIncY);
         btnDecScale = findViewById(R.id.btnDecScale);
         btnIncScale = findViewById(R.id.btnIncScale);
+        btnDecRot = findViewById(R.id.btnDecRot);
+        btnIncRot = findViewById(R.id.btnIncRot);
 
         btnSaveLayout = findViewById(R.id.btnSaveLayout);
         btnResetElement = findViewById(R.id.btnResetElement);
@@ -588,7 +601,10 @@ public class MainActivity extends Activity {
                 chipElemCenterBlock,
                 chipElemWidgetLeft,
                 chipElemWidgetRight,
-                chipElemWidgetCenter
+                chipElemWidgetCenter,
+                chipElemMediaPlayer,
+                chipElemTopHeader,
+                chipElemBottomFooter
         };
 
         for (int i = 0; i < chips.length; i++) {
@@ -605,6 +621,8 @@ public class MainActivity extends Activity {
         if (btnIncY != null && sbEditorY != null) btnIncY.setOnClickListener(v -> sbEditorY.setProgress(sbEditorY.getProgress() + 10));
         if (btnDecScale != null && sbEditorScale != null) btnDecScale.setOnClickListener(v -> sbEditorScale.setProgress(sbEditorScale.getProgress() - 5));
         if (btnIncScale != null && sbEditorScale != null) btnIncScale.setOnClickListener(v -> sbEditorScale.setProgress(sbEditorScale.getProgress() + 5));
+        if (btnDecRot != null && sbEditorRot != null) btnDecRot.setOnClickListener(v -> sbEditorRot.setProgress(sbEditorRot.getProgress() - 5));
+        if (btnIncRot != null && sbEditorRot != null) btnIncRot.setOnClickListener(v -> sbEditorRot.setProgress(sbEditorRot.getProgress() + 5));
 
         SeekBar.OnSeekBarChangeListener sliderListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -623,9 +641,17 @@ public class MainActivity extends Activity {
         if (sbEditorX != null) sbEditorX.setOnSeekBarChangeListener(sliderListener);
         if (sbEditorY != null) sbEditorY.setOnSeekBarChangeListener(sliderListener);
         if (sbEditorScale != null) sbEditorScale.setOnSeekBarChangeListener(sliderListener);
+        if (sbEditorRot != null) sbEditorRot.setOnSeekBarChangeListener(sliderListener);
 
-        // Sync touch drag/pinch from gaugePreview to sliders
+        // Sync touch drag/pinch/rotate from gaugePreview to sliders
         if (gaugePreview != null) {
+            gaugePreview.setOnTouchListener((v, event) -> {
+                if (gaugePreview.isEditMode()) {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                return false;
+            });
+
             gaugePreview.setOnLayoutChangeListener(new ClusterGaugeView.OnLayoutChangeListener() {
                 @Override
                 public void onElementSelected(int elementId) {
@@ -633,8 +659,8 @@ public class MainActivity extends Activity {
                 }
 
                 @Override
-                public void onElementLayoutChanged(int elementId, float dx, float dy, float scale) {
-                    runOnUiThread(() -> updateSlidersForElement(dx, dy, scale));
+                public void onElementLayoutChanged(int elementId, float dx, float dy, float scale, float rot) {
+                    runOnUiThread(() -> updateSlidersForElement(dx, dy, scale, rot));
                 }
             });
         }
@@ -649,7 +675,7 @@ public class MainActivity extends Activity {
             btnResetElement.setOnClickListener(v -> {
                 ClusterConfig.resetElementLayout(this, currentEditElement);
                 if (gaugePreview != null) {
-                    gaugePreview.setElementLayout(currentEditElement, 0f, 0f, 1.0f);
+                    gaugePreview.setElementLayout(currentEditElement, 0f, 0f, 1.0f, 0f);
                 }
                 selectEditorElement(currentEditElement);
                 android.widget.Toast.makeText(this, "Элемент сброшен в заводские координаты", android.widget.Toast.LENGTH_SHORT).show();
@@ -684,7 +710,10 @@ public class MainActivity extends Activity {
                 chipElemCenterBlock,
                 chipElemWidgetLeft,
                 chipElemWidgetRight,
-                chipElemWidgetCenter
+                chipElemWidgetCenter,
+                chipElemMediaPlayer,
+                chipElemTopHeader,
+                chipElemBottomFooter
         };
 
         for (int i = 0; i < chips.length; i++) {
@@ -702,20 +731,22 @@ public class MainActivity extends Activity {
         if (gaugePreview != null) {
             gaugePreview.setSelectedElement(elementId);
             ClusterGaugeView.ElementLayout layout = gaugePreview.getElementLayout(elementId);
-            updateSlidersForElement(layout.dx, layout.dy, layout.scale);
+            updateSlidersForElement(layout.dx, layout.dy, layout.scale, layout.rotation);
         }
     }
 
-    private void updateSlidersForElement(float dx, float dy, float scale) {
+    private void updateSlidersForElement(float dx, float dy, float scale, float rot) {
         isUpdatingSlidersFromTouch = true;
         try {
             int progX = Math.round(dx * 1000f) + 300;
             int progY = Math.round(dy * 1000f) + 300;
             int progScale = Math.round((scale - 0.40f) * 100f);
+            int progRot = Math.round(rot) + 180;
 
             if (sbEditorX != null) sbEditorX.setProgress(Math.max(0, Math.min(600, progX)));
             if (sbEditorY != null) sbEditorY.setProgress(Math.max(0, Math.min(600, progY)));
             if (sbEditorScale != null) sbEditorScale.setProgress(Math.max(0, Math.min(200, progScale)));
+            if (sbEditorRot != null) sbEditorRot.setProgress(Math.max(0, Math.min(360, progRot)));
 
             int dxPx = Math.round(dx * 1920f);
             int dyPx = Math.round(dy * 720f);
@@ -724,6 +755,7 @@ public class MainActivity extends Activity {
             if (tvEditorValX != null) tvEditorValX.setText((dxPx >= 0 ? "+" : "") + dxPx + " px (" + Math.round(dx * 100f) + "%)");
             if (tvEditorValY != null) tvEditorValY.setText((dyPx >= 0 ? "+" : "") + dyPx + " px (" + Math.round(dy * 100f) + "%)");
             if (tvEditorValScale != null) tvEditorValScale.setText(scalePct + "%");
+            if (tvEditorValRot != null) tvEditorValRot.setText(Math.round(rot) + "°");
         } finally {
             isUpdatingSlidersFromTouch = false;
         }
@@ -734,6 +766,7 @@ public class MainActivity extends Activity {
         float dx = (sbEditorX.getProgress() - 300) / 1000f;
         float dy = (sbEditorY.getProgress() - 300) / 1000f;
         float scale = 0.40f + (sbEditorScale.getProgress() / 100f);
+        float rot = (sbEditorRot != null) ? (sbEditorRot.getProgress() - 180f) : 0f;
 
         int dxPx = Math.round(dx * 1920f);
         int dyPx = Math.round(dy * 720f);
@@ -742,9 +775,10 @@ public class MainActivity extends Activity {
         if (tvEditorValX != null) tvEditorValX.setText((dxPx >= 0 ? "+" : "") + dxPx + " px (" + Math.round(dx * 100f) + "%)");
         if (tvEditorValY != null) tvEditorValY.setText((dyPx >= 0 ? "+" : "") + dyPx + " px (" + Math.round(dy * 100f) + "%)");
         if (tvEditorValScale != null) tvEditorValScale.setText(scalePct + "%");
+        if (tvEditorValRot != null) tvEditorValRot.setText(Math.round(rot) + "°");
 
         if (gaugePreview != null) {
-            gaugePreview.setElementLayout(currentEditElement, dx, dy, scale);
+            gaugePreview.setElementLayout(currentEditElement, dx, dy, scale, rot);
         }
     }
 
@@ -752,7 +786,7 @@ public class MainActivity extends Activity {
         if (gaugePreview != null) {
             for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
                 ClusterGaugeView.ElementLayout layout = gaugePreview.getElementLayout(i);
-                ClusterConfig.setElementLayout(this, i, layout.dx, layout.dy, layout.scale);
+                ClusterConfig.setElementLayout(this, i, layout.dx, layout.dy, layout.scale, layout.rotation);
             }
         }
         InstrumentClusterService.applyConfig(this);
@@ -780,7 +814,7 @@ public class MainActivity extends Activity {
         bar.setBackgroundColor(Color.parseColor("#0E131A"));
 
         TextView hint = new TextView(this);
-        hint.setText("Перетаскивайте пальцем | Щипок для масштаба");
+        hint.setText("1 палец: переместить | 2 пальца: масштаб и вращение");
         hint.setTextColor(Color.parseColor("#A8E6BD"));
         hint.setTextSize(12f);
         LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
@@ -794,7 +828,7 @@ public class MainActivity extends Activity {
         btnSaveFs.setOnClickListener(v -> {
             for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
                 ClusterGaugeView.ElementLayout l = fsView.getElementLayout(i);
-                ClusterConfig.setElementLayout(this, i, l.dx, l.dy, l.scale);
+                ClusterConfig.setElementLayout(this, i, l.dx, l.dy, l.scale, l.rotation);
             }
             if (gaugePreview != null) gaugePreview.loadLayoutConfig();
             InstrumentClusterService.applyConfig(this);

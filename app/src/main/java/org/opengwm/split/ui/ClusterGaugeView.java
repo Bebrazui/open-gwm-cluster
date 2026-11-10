@@ -61,13 +61,19 @@ public class ClusterGaugeView extends View {
         public float dx = 0.0f;
         public float dy = 0.0f;
         public float scale = 1.0f;
+        public float rotation = 0.0f;
 
         public ElementLayout() {}
 
-        public ElementLayout(float dx, float dy, float scale) {
+        public ElementLayout(float dx, float dy, float scale, float rotation) {
             this.dx = dx;
             this.dy = dy;
             this.scale = scale;
+            this.rotation = rotation;
+        }
+
+        public ElementLayout(float dx, float dy, float scale) {
+            this(dx, dy, scale, 0.0f);
         }
     }
 
@@ -81,10 +87,12 @@ public class ClusterGaugeView extends View {
     private float initialElemDy = 0f;
     private boolean isDraggingElement = false;
     private android.view.ScaleGestureDetector scaleDetector;
+    private float lastTwoFingerAngle = 0f;
+    private boolean isTwoFingerGesture = false;
 
     public interface OnLayoutChangeListener {
         void onElementSelected(int elementId);
-        void onElementLayoutChanged(int elementId, float dx, float dy, float scale);
+        void onElementLayoutChanged(int elementId, float dx, float dy, float scale, float rotation);
     }
     private OnLayoutChangeListener onLayoutChangeListener;
 
@@ -211,14 +219,15 @@ public class ClusterGaugeView extends View {
             public boolean onScale(android.view.ScaleGestureDetector detector) {
                 if (!isEditMode) return false;
                 float factor = detector.getScaleFactor();
-                float newScale = Math.max(0.4f, Math.min(2.5f, elementLayouts[selectedElement].scale * factor));
-                elementLayouts[selectedElement].scale = newScale;
+                float newScale = Math.max(0.3f, Math.min(3.0f, elementLayouts[selectedElement].scale * factor));
+                elementLayouts[selectedElement].scale = Math.round(newScale * 100f) / 100f;
                 if (onLayoutChangeListener != null) {
                     onLayoutChangeListener.onElementLayoutChanged(
                             selectedElement,
                             elementLayouts[selectedElement].dx,
                             elementLayouts[selectedElement].dy,
-                            newScale
+                            elementLayouts[selectedElement].scale,
+                            elementLayouts[selectedElement].rotation
                     );
                 }
                 postInvalidate();
@@ -265,11 +274,12 @@ public class ClusterGaugeView extends View {
             elementLayouts[i].dx = ClusterConfig.getElementDx(getContext(), i);
             elementLayouts[i].dy = ClusterConfig.getElementDy(getContext(), i);
             elementLayouts[i].scale = ClusterConfig.getElementScale(getContext(), i);
+            elementLayouts[i].rotation = ClusterConfig.getElementRotation(getContext(), i);
         }
         postInvalidate();
     }
 
-    public void setElementLayout(int elementId, float dx, float dy, float scale) {
+    public void setElementLayout(int elementId, float dx, float dy, float scale, float rot) {
         if (elementId >= 0 && elementId < ClusterConfig.ELEM_COUNT) {
             if (elementLayouts[elementId] == null) {
                 elementLayouts[elementId] = new ElementLayout();
@@ -277,8 +287,14 @@ public class ClusterGaugeView extends View {
             elementLayouts[elementId].dx = dx;
             elementLayouts[elementId].dy = dy;
             elementLayouts[elementId].scale = scale;
+            elementLayouts[elementId].rotation = rot;
             postInvalidate();
         }
+    }
+
+    public void setElementLayout(int elementId, float dx, float dy, float scale) {
+        float rot = (elementLayouts[elementId] != null) ? elementLayouts[elementId].rotation : 0f;
+        setElementLayout(elementId, dx, dy, scale, rot);
     }
 
     public ElementLayout getElementLayout(int elementId) {
@@ -323,18 +339,69 @@ public class ClusterGaugeView extends View {
 
         if (scaleDetector != null) {
             scaleDetector.onTouchEvent(event);
-            if (scaleDetector.isInProgress()) {
-                return true;
+        }
+
+        // Disallow parent ScrollView from stealing touch events while in editor
+        int actionMasked = event.getActionMasked();
+        if (actionMasked == android.view.MotionEvent.ACTION_DOWN ||
+            actionMasked == android.view.MotionEvent.ACTION_POINTER_DOWN ||
+            actionMasked == android.view.MotionEvent.ACTION_MOVE) {
+            if (getParent() != null) {
+                getParent().requestDisallowInterceptTouchEvent(true);
             }
+        }
+
+        // Multi-touch gestures (Pinch-to-zoom + 2-finger rotation)
+        int pointerCount = event.getPointerCount();
+        if (pointerCount >= 2) {
+            isDraggingElement = false;
+            float p0x = event.getX(0);
+            float p0y = event.getY(0);
+            float p1x = event.getX(1);
+            float p1y = event.getY(1);
+            float currentAngle = (float) Math.toDegrees(Math.atan2(p1y - p0y, p1x - p0x));
+
+            if (!isTwoFingerGesture || actionMasked == android.view.MotionEvent.ACTION_POINTER_DOWN) {
+                lastTwoFingerAngle = currentAngle;
+                isTwoFingerGesture = true;
+            } else if (actionMasked == android.view.MotionEvent.ACTION_MOVE) {
+                float deltaAngle = currentAngle - lastTwoFingerAngle;
+                if (deltaAngle < -180f) deltaAngle += 360f;
+                if (deltaAngle > 180f) deltaAngle -= 360f;
+
+                if (Math.abs(deltaAngle) > 0.4f) {
+                    float newRot = elementLayouts[selectedElement].rotation + deltaAngle;
+                    while (newRot > 180f) newRot -= 360f;
+                    while (newRot < -180f) newRot += 360f;
+                    elementLayouts[selectedElement].rotation = Math.round(newRot * 10f) / 10f;
+                    lastTwoFingerAngle = currentAngle;
+                    if (onLayoutChangeListener != null) {
+                        onLayoutChangeListener.onElementLayoutChanged(
+                                selectedElement,
+                                elementLayouts[selectedElement].dx,
+                                elementLayouts[selectedElement].dy,
+                                elementLayouts[selectedElement].scale,
+                                elementLayouts[selectedElement].rotation
+                        );
+                    }
+                    postInvalidate();
+                }
+            }
+            return true;
+        } else {
+            isTwoFingerGesture = false;
         }
 
         float x = event.getX();
         float y = event.getY();
 
-        switch (event.getActionMasked()) {
+        switch (actionMasked) {
             case android.view.MotionEvent.ACTION_DOWN:
                 int hit = -1;
                 int[] hitOrder = {
+                        ClusterConfig.ELEM_MEDIA_PLAYER,
+                        ClusterConfig.ELEM_TOP_HEADER,
+                        ClusterConfig.ELEM_BOTTOM_FOOTER,
                         ClusterConfig.ELEM_WIDGET_LEFT,
                         ClusterConfig.ELEM_WIDGET_RIGHT,
                         ClusterConfig.ELEM_WIDGET_CENTER,
@@ -375,8 +442,8 @@ public class ClusterGaugeView extends View {
                     float deltaX = (x - touchStartX) / (float) Math.max(1, viewWidth);
                     float deltaY = (y - touchStartY) / (float) Math.max(1, viewHeight);
 
-                    float newDx = Math.max(-0.45f, Math.min(0.45f, initialElemDx + deltaX));
-                    float newDy = Math.max(-0.45f, Math.min(0.45f, initialElemDy + deltaY));
+                    float newDx = Math.max(-0.48f, Math.min(0.48f, initialElemDx + deltaX));
+                    float newDy = Math.max(-0.48f, Math.min(0.48f, initialElemDy + deltaY));
 
                     elementLayouts[selectedElement].dx = newDx;
                     elementLayouts[selectedElement].dy = newDy;
@@ -386,7 +453,8 @@ public class ClusterGaugeView extends View {
                                 selectedElement,
                                 newDx,
                                 newDy,
-                                elementLayouts[selectedElement].scale
+                                elementLayouts[selectedElement].scale,
+                                elementLayouts[selectedElement].rotation
                         );
                     }
                     postInvalidate();
@@ -397,6 +465,10 @@ public class ClusterGaugeView extends View {
             case android.view.MotionEvent.ACTION_UP:
             case android.view.MotionEvent.ACTION_CANCEL:
                 isDraggingElement = false;
+                isTwoFingerGesture = false;
+                if (getParent() != null) {
+                    getParent().requestDisallowInterceptTouchEvent(false);
+                }
                 postInvalidate();
                 return true;
         }
@@ -830,8 +902,8 @@ public class ClusterGaugeView extends View {
         drawTachometerScale(canvas, effRightCx, effRightCy, effRightRadius, 8000, 5500, Color.WHITE, Color.parseColor("#FF1744"), true);
 
         // Needles
-        drawSportNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.parseColor("#FF1744"));
-        drawSportNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.parseColor("#FF1744"));
+        drawSportNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.82f, getSpeedAngle(displaySpeed, 240) + elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation, Color.parseColor("#FF1744"));
+        drawSportNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.82f, getRpmAngle(displayRpm, 8000) + elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation, Color.parseColor("#FF1744"));
 
         // Center Box: Carbon card with F1 shift light bar
         drawSportCenterCard(canvas, effCenterCx, effCenterCy, gaugeRadius * effCenterScale);
@@ -1002,8 +1074,8 @@ public class ClusterGaugeView extends View {
         drawTachometerScale(canvas, effRightCx, effRightCy, effRightRadius, 8000, 6000, Color.parseColor("#F5E6C8"), Color.parseColor("#C5A059"), false);
 
         // Classic Breguet Needles (Gold sword with circular counterweight)
-        drawLuxuryNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.80f, getSpeedAngle(displaySpeed, 240));
-        drawLuxuryNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.80f, getRpmAngle(displayRpm, 8000));
+        drawLuxuryNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.80f, getSpeedAngle(displaySpeed, 240) + elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation);
+        drawLuxuryNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.80f, getRpmAngle(displayRpm, 8000) + elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation);
 
         // Center Luxury Crest & Gear
         drawLuxuryCenterCard(canvas, effCenterCx, effCenterCy, gaugeRadius * effCenterScale);
@@ -1238,8 +1310,8 @@ public class ClusterGaugeView extends View {
         drawTachometerScale(canvas, effRightCx, effRightCy, effRightRadius, 8000, 5000, Color.parseColor("#FFB300"), Color.parseColor("#FF3D00"), true);
 
         // Aviation Orange Needles
-        drawSportNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.parseColor("#FF6D00"));
-        drawSportNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.parseColor("#FF3D00"));
+        drawSportNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.82f, getSpeedAngle(displaySpeed, 240) + elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation, Color.parseColor("#FF6D00"));
+        drawSportNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.82f, getRpmAngle(displayRpm, 8000) + elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation, Color.parseColor("#FF3D00"));
 
         // Center Console: 3D Off-Road Inclinometer / Artificial Horizon
         drawTacticalInclinometerCard(canvas, effCenterCx, effCenterCy, gaugeRadius * effCenterScale);
@@ -1561,6 +1633,12 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawTopStatusBar(Canvas canvas, int w, int h) {
+        ElementLayout layout = elementLayouts[ClusterConfig.ELEM_TOP_HEADER];
+        canvas.save();
+        canvas.translate(w * layout.dx, h * layout.dy);
+        canvas.scale(layout.scale, layout.scale, w * 0.5f, h * 0.068f);
+        canvas.rotate(layout.rotation, w * 0.5f, h * 0.068f);
+
         float barY = h * 0.068f;
 
         // Drive Mode circle ( D )
@@ -1616,6 +1694,8 @@ public class ClusterGaugeView extends View {
         canvas.drawLine(btX - 4f, barY + 4f, btX + 4f, barY - 4f, statusPillBorderPaint);
         canvas.drawLine(btX + 4f, barY - 4f, btX, barY - 8f, statusPillBorderPaint);
         canvas.drawLine(btX + 4f, barY + 4f, btX, barY + 8f, statusPillBorderPaint);
+
+        canvas.restore();
     }
 
     private void drawCenterNavPlaceholder(Canvas canvas, int w, int h) {
@@ -1640,25 +1720,37 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawFloatingMusicCard(Canvas canvas, int w, int h) {
-        if (!checkIsMusicPlaying()) {
+        if (!checkIsMusicPlaying() && !isEditMode) {
             return;
         }
 
-        // Floating M3 Glassmorphic Music Player card
-        float cardW = Math.min(360f, w * 0.28f);
-        float cardH = 54f;
-        float cardX = w * 0.5f;
-        float cardY = h * 0.82f;
-        mediaCardRect.set(cardX - cardW / 2, cardY - cardH / 2, cardX + cardW / 2, cardY + cardH / 2);
+        ElementLayout layout = elementLayouts[ClusterConfig.ELEM_MEDIA_PLAYER];
+        float baseCardW = Math.min(360f, w * 0.28f);
+        float baseCardH = 54f;
+        float baseCardX = w * 0.5f;
+        float baseCardY = h * 0.82f;
+
+        float curCardX = baseCardX + w * layout.dx;
+        float curCardY = baseCardY + h * layout.dy;
+        float curCardW = baseCardW * layout.scale;
+        float curCardH = baseCardH * layout.scale;
+        mediaCardRect.set(curCardX - curCardW / 2f, curCardY - curCardH / 2f, curCardX + curCardW / 2f, curCardY + curCardH / 2f);
+
+        canvas.save();
+        canvas.translate(w * layout.dx, h * layout.dy);
+        canvas.scale(layout.scale, layout.scale, baseCardX, baseCardY);
+        canvas.rotate(layout.rotation, baseCardX, baseCardY);
+
+        RectF localCardRect = new RectF(baseCardX - baseCardW / 2f, baseCardY - baseCardH / 2f, baseCardX + baseCardW / 2f, baseCardY + baseCardH / 2f);
 
         statusPillBgPaint.setColor(Color.parseColor("#E60D1520"));
-        canvas.drawRoundRect(mediaCardRect, 14f, 14f, statusPillBgPaint);
+        canvas.drawRoundRect(localCardRect, 14f, 14f, statusPillBgPaint);
         statusPillBorderPaint.setColor(Color.parseColor("#00E5FF"));
         statusPillBorderPaint.setStrokeWidth(1.2f);
-        canvas.drawRoundRect(mediaCardRect, 14f, 14f, statusPillBorderPaint);
+        canvas.drawRoundRect(localCardRect, 14f, 14f, statusPillBorderPaint);
 
         // Album Art thumbnail (dark cyan container)
-        RectF artRect = new RectF(mediaCardRect.left + 8f, cardY - 19f, mediaCardRect.left + 46f, cardY + 19f);
+        RectF artRect = new RectF(localCardRect.left + 8f, baseCardY - 19f, localCardRect.left + 46f, baseCardY + 19f);
         statusPillBgPaint.setColor(Color.parseColor("#152D42"));
         canvas.drawRoundRect(artRect, 8f, 8f, statusPillBgPaint);
 
@@ -1673,22 +1765,33 @@ public class ClusterGaugeView extends View {
         subTextPaint.setTextAlign(Paint.Align.LEFT);
         String title = (trackTitle != null && !trackTitle.isEmpty()) ? trackTitle : "Аудиопоток";
         String artist = (trackArtist != null && !trackArtist.isEmpty()) ? trackArtist : "Воспроизведение";
-        canvas.drawText(title, mediaCardRect.left + 54f, cardY - 4f, subTextPaint);
+        canvas.drawText(title, localCardRect.left + 54f, baseCardY - 4f, subTextPaint);
 
         subTextPaint.setColor(Color.parseColor("#78909C"));
         subTextPaint.setTextSize(spToPx(9.5f));
-        canvas.drawText(artist, mediaCardRect.left + 54f, cardY + 14f, subTextPaint);
+        canvas.drawText(artist, localCardRect.left + 54f, baseCardY + 14f, subTextPaint);
         subTextPaint.setTextAlign(Paint.Align.CENTER);
 
         // Play/Pause & Next icons
         subTextPaint.setColor(Color.parseColor("#00E5FF"));
         subTextPaint.setTextSize(spToPx(13));
-        canvas.drawText("❚❚", mediaCardRect.right - 44f, cardY + 5f, subTextPaint);
-        canvas.drawText("⏭", mediaCardRect.right - 18f, cardY + 5f, subTextPaint);
+        canvas.drawText("❚❚", localCardRect.right - 44f, baseCardY + 5f, subTextPaint);
+        canvas.drawText("⏭", localCardRect.right - 18f, baseCardY + 5f, subTextPaint);
+
+        canvas.restore();
     }
 
     private final RectF splitDstRect = new RectF();
     private final Paint splitBmpPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+
+    private float getNeedleAngleOffset(int splitId, boolean isTacho) {
+        if (splitId == 24 || splitId == 25) {
+            return isTacho ? -90f : 90f;
+        }
+        if (splitId == 32) return -180f;
+        if (splitId == 33 || splitId == 34 || splitId == 35) return -90f;
+        return 0f;
+    }
 
     private void drawSplitBitmapTheme(Canvas canvas, int w, int h, int splitId) {
         canvas.drawColor(Color.parseColor("#04060A"));
@@ -1715,6 +1818,8 @@ public class ClusterGaugeView extends View {
         float leftDialH = dialHeight * elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].scale;
         float rightDialW = dialWidth * elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].scale;
         float rightDialH = dialHeight * elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].scale;
+        float leftRot = elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation;
+        float rightRot = elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation;
 
         // 2. Center Cutout Mask (if HolePunch enabled) or 3D Vehicle Visualizer
         if (isHolePunchEnabled) {
@@ -1733,34 +1838,41 @@ public class ClusterGaugeView extends View {
         // 4. Left Dial: Speedometer Bitmap (drawn over cutout)
         Bitmap spdBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "spd");
         if (spdBmp != null) {
+            canvas.save();
+            canvas.rotate(leftRot, leftCx, leftDialCy);
             splitDstRect.set(leftCx - leftDialW / 2f, leftDialCy - leftDialH / 2f, leftCx + leftDialW / 2f, leftDialCy + leftDialH / 2f);
             canvas.drawBitmap(spdBmp, null, splitDstRect, splitBmpPaint);
+            canvas.restore();
         }
 
         // 5. Right Dial: Tachometer Bitmap (drawn over cutout)
         Bitmap rpmBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "rpm");
         if (rpmBmp != null) {
+            canvas.save();
+            canvas.rotate(rightRot, rightCx, rightDialCy);
             splitDstRect.set(rightCx - rightDialW / 2f, rightDialCy - rightDialH / 2f, rightCx + rightDialW / 2f, rightDialCy + rightDialH / 2f);
             canvas.drawBitmap(rpmBmp, null, splitDstRect, splitBmpPaint);
+            canvas.restore();
         }
 
         // 6. Sub-Dials: Fuel (left) & Coolant Temp (right) with theme_X_needle_small (only on angular themes with corner sub-dials)
         if (isAngular) {
-            Bitmap needleSmallBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_small");
-            if (needleSmallBmp != null) {
-                float subDialSize = dialWidth * 0.35f;
+            Bitmap needleFuelBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_small_fuel");
+            if (needleFuelBmp == null) needleFuelBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_small");
+            if (needleFuelBmp != null) {
+                float subDialSize = leftDialW * 0.35f;
                 float subHalf = subDialSize / 2f;
 
                 // Fuel Sub-dial (Upper Right of Left Dial)
-                float fuelCx = leftCx + dialWidth * 0.23f;
-                float fuelCy = dialCy - dialHeight * 0.22f;
+                float fuelCx = leftCx + leftDialW * 0.23f;
+                float fuelCy = leftDialCy - leftDialH * 0.22f;
                 int fuelPct = (latestState != null && latestState.fuelPercent > 0) ? latestState.fuelPercent : 55;
                 float fuelAngle = -45f + (fuelPct / 100f) * 90f;
 
                 canvas.save();
-                canvas.rotate(fuelAngle, fuelCx, fuelCy);
+                canvas.rotate(fuelAngle + leftRot, fuelCx, fuelCy);
                 splitDstRect.set(fuelCx - subHalf, fuelCy - subHalf, fuelCx + subHalf, fuelCy + subHalf);
-                canvas.drawBitmap(needleSmallBmp, null, splitDstRect, splitBmpPaint);
+                canvas.drawBitmap(needleFuelBmp, null, splitDstRect, splitBmpPaint);
                 canvas.restore();
 
                 // Fuel Text: 333km / 36L
@@ -1771,17 +1883,24 @@ public class ClusterGaugeView extends View {
                 canvas.drawText(rangeKm + "km", fuelCx, fuelCy - 12f, subTextPaint);
                 subTextPaint.setColor(Color.parseColor("#FFD54F"));
                 canvas.drawText(Math.round(fuelPct * 0.65f) + "L", fuelCx, fuelCy + 2f, subTextPaint);
+            }
+
+            Bitmap needleTempBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_small_temp");
+            if (needleTempBmp == null) needleTempBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_small");
+            if (needleTempBmp != null) {
+                float subDialSize = rightDialW * 0.35f;
+                float subHalf = subDialSize / 2f;
 
                 // Coolant Temp Sub-dial (Upper Left of Right Dial)
-                float tempCx = rightCx - dialWidth * 0.23f;
-                float tempCy = dialCy - dialHeight * 0.22f;
+                float tempCx = rightCx - rightDialW * 0.23f;
+                float tempCy = rightDialCy - rightDialH * 0.22f;
                 float tempVal = coolantTemp > 0 ? coolantTemp : 96f;
                 float tempAngle = 45f - ((tempVal - 40f) / 90f) * 90f;
 
                 canvas.save();
-                canvas.rotate(tempAngle, tempCx, tempCy);
+                canvas.rotate(tempAngle + rightRot, tempCx, tempCy);
                 splitDstRect.set(tempCx - subHalf, tempCy - subHalf, tempCx + subHalf, tempCy + subHalf);
-                canvas.drawBitmap(needleSmallBmp, null, splitDstRect, splitBmpPaint);
+                canvas.drawBitmap(needleTempBmp, null, splitDstRect, splitBmpPaint);
                 canvas.restore();
 
                 // Temp Text: 96°C
@@ -1790,87 +1909,90 @@ public class ClusterGaugeView extends View {
             }
         }
 
-        // 7. Main Needles (theme_X_needle.png)
-        Bitmap needleBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle");
-        if (needleBmp != null) {
-            float half = dialWidth / 2f;
-
-            // Speedometer Needle
-            canvas.save();
+        // 7. Main Needles
+        Bitmap needleSpdBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_spd");
+        if (needleSpdBmp == null) {
+            needleSpdBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle");
+        }
+        if (needleSpdBmp != null) {
+            float halfSpd = leftDialW / 2f;
             float spdAngle;
             if (isAngular) {
-                // Angular dial: 0 km/h is at -135° (bottom-left), 220 km/h is at +45° (top-right) -> 180° sweep
                 spdAngle = -135f + (Math.min(Math.max(displaySpeed, 0f), 220f) / 220f) * 180f;
             } else {
-                // Round dial: -135° to +135° -> 270° sweep
                 spdAngle = -135f + (Math.min(Math.max(displaySpeed, 0f), 240f) / 240f) * 270f;
             }
-            canvas.rotate(spdAngle, leftCx, dialCy);
-            splitDstRect.set(leftCx - half, dialCy - half, leftCx + half, dialCy + half);
-            canvas.drawBitmap(needleBmp, null, splitDstRect, splitBmpPaint);
-            canvas.restore();
-
-            // Tachometer Needle
             canvas.save();
+            canvas.rotate(spdAngle + getNeedleAngleOffset(splitId, false) + leftRot, leftCx, leftDialCy);
+            splitDstRect.set(leftCx - halfSpd, leftDialCy - halfSpd, leftCx + halfSpd, leftDialCy + halfSpd);
+            canvas.drawBitmap(needleSpdBmp, null, splitDstRect, splitBmpPaint);
+            canvas.restore();
+        }
+
+        Bitmap needleRpmBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle_rpm");
+        if (needleRpmBmp == null) {
+            needleRpmBmp = ThemeAssetLoader.loadSplitThemeBitmap(getContext(), splitId, "needle");
+        }
+        if (needleRpmBmp != null) {
+            float halfRpm = rightDialW / 2f;
             float rpmAngle;
             if (isAngular) {
-                // Angular dial (Image 2 OEM): 0 RPM is at bottom-right (-45°), sweeps COUNTER-CLOCKWISE up to 8 (-225°)
                 rpmAngle = -45f - (Math.min(Math.max(displayRpm, 0f), 8000f) / 8000f) * 180f;
             } else {
-                // Round dial: -135° to +135° clockwise
-                rpmAngle = -135f + (Math.min(Math.max(displayRpm, 0f), 8000f) / 8000f) * 270f;
+                rpmAngle = -135f + (Math.min(Math.max(displayRpm, 0f), 8000f) / 270f) * 270f;
             }
-            canvas.rotate(rpmAngle, rightCx, dialCy);
-            splitDstRect.set(rightCx - half, dialCy - half, rightCx + half, dialCy + half);
-            canvas.drawBitmap(needleBmp, null, splitDstRect, splitBmpPaint);
+            canvas.save();
+            canvas.rotate(rpmAngle + getNeedleAngleOffset(splitId, true) + rightRot, rightCx, rightDialCy);
+            splitDstRect.set(rightCx - halfRpm, rightDialCy - halfRpm, rightCx + halfRpm, rightDialCy + halfRpm);
+            canvas.drawBitmap(needleRpmBmp, null, splitDstRect, splitBmpPaint);
             canvas.restore();
         }
 
         // 8. Typography Inside Left Dial (Image 2 OEM: Large Speed + km/h + ODO Trip)
         textValuePaint.setColor(Color.WHITE);
-        textValuePaint.setTextSize(dialHeight * 0.20f);
+        textValuePaint.setTextSize(leftDialH * 0.20f);
         textValuePaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(String.valueOf(Math.round(displaySpeed)), leftCx, dialCy + dialHeight * 0.05f, textValuePaint);
+        canvas.drawText(String.valueOf(Math.round(displaySpeed)), leftCx, leftDialCy + leftDialH * 0.05f, textValuePaint);
 
         if (isAngular) {
             subTextPaint.setTextAlign(Paint.Align.LEFT);
             subTextPaint.setColor(Color.parseColor("#90A4AE"));
             subTextPaint.setTextSize(spToPx(11f));
-            canvas.drawText("km/h", leftCx - dialWidth * 0.24f, dialCy - dialHeight * 0.03f, subTextPaint);
+            canvas.drawText("km/h", leftCx - leftDialW * 0.24f, leftDialCy - leftDialH * 0.03f, subTextPaint);
         }
 
         // Odometer card (ODO: 6702 / Day: 354.0 / Trip: 338) centered under digital speed
         subTextPaint.setTextAlign(Paint.Align.CENTER);
         subTextPaint.setColor(Color.WHITE);
-        subTextPaint.setTextSize(dialHeight * 0.046f);
-        float odoY = dialCy + dialHeight * 0.17f;
+        subTextPaint.setTextSize(leftDialH * 0.046f);
+        float odoY = leftDialCy + leftDialH * 0.17f;
         canvas.drawText("ODO: 6702", leftCx, odoY, subTextPaint);
-        canvas.drawText("Day: 354.0", leftCx, odoY + dialHeight * 0.055f, subTextPaint);
-        canvas.drawText("Trip: 338", leftCx, odoY + dialHeight * 0.11f, subTextPaint);
+        canvas.drawText("Day: 354.0", leftCx, odoY + leftDialH * 0.055f, subTextPaint);
+        canvas.drawText("Trip: 338", leftCx, odoY + leftDialH * 0.11f, subTextPaint);
 
         // 9. Typography Inside Right Dial (Image 2 OEM: Large RPM + x1000 + TPMS 4 Wheels + NORMAL)
         textValuePaint.setColor(Color.WHITE);
-        textValuePaint.setTextSize(dialHeight * 0.18f);
+        textValuePaint.setTextSize(rightDialH * 0.18f);
         textValuePaint.setTextAlign(Paint.Align.CENTER);
         String rpmFormatted = String.format(java.util.Locale.US, "%.1f", displayRpm / 1000f);
-        canvas.drawText(rpmFormatted, rightCx, dialCy + dialHeight * 0.04f, textValuePaint);
+        canvas.drawText(rpmFormatted, rightCx, rightDialCy + rightDialH * 0.04f, textValuePaint);
 
         if (isAngular) {
             subTextPaint.setTextAlign(Paint.Align.LEFT);
             subTextPaint.setColor(Color.parseColor("#90A4AE"));
             subTextPaint.setTextSize(spToPx(10.5f));
-            canvas.drawText("1/min x1000", rightCx + dialWidth * 0.16f, dialCy - dialHeight * 0.03f, subTextPaint);
+            canvas.drawText("1/min x1000", rightCx + rightDialW * 0.16f, rightDialCy - rightDialH * 0.03f, subTextPaint);
         }
 
         // 4-Wheel TPMS under RPM (2.4 2.4 / 2.3 2.3) with icon_car.png
         float tpmsX = rightCx;
-        float tpmsY = dialCy + dialHeight * 0.15f;
+        float tpmsY = rightDialCy + rightDialH * 0.15f;
         Bitmap tpmsIcon = ThemeAssetLoader.loadSplitAsset(getContext(), "icon_car.png");
         if (tpmsIcon != null) {
             RectF iconRect = new RectF(tpmsX - 9f, tpmsY, tpmsX + 9f, tpmsY + 36f);
             canvas.drawBitmap(tpmsIcon, null, iconRect, splitBmpPaint);
         }
-        subTextPaint.setTextSize(dialHeight * 0.044f);
+        subTextPaint.setTextSize(rightDialH * 0.044f);
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText("2.4", tpmsX - 14f, tpmsY + 12f, subTextPaint);
@@ -1882,10 +2004,16 @@ public class ClusterGaugeView extends View {
         // Drive Mode badge under TPMS: NORMAL
         subTextPaint.setTextAlign(Paint.Align.CENTER);
         subTextPaint.setColor(Color.parseColor("#B0BEC5"));
-        subTextPaint.setTextSize(dialHeight * 0.042f);
+        subTextPaint.setTextSize(rightDialH * 0.042f);
         canvas.drawText(driveMode != null ? driveMode : "NORMAL", rightCx, tpmsY + 54f, subTextPaint);
 
-        // 10. Screen Corners (Image 2)
+        // 10. Screen Corners / Footer: 11.1L / 100km & 13.9V
+        ElementLayout footLayout = elementLayouts[ClusterConfig.ELEM_BOTTOM_FOOTER];
+        canvas.save();
+        canvas.translate(w * footLayout.dx, h * footLayout.dy);
+        canvas.scale(footLayout.scale, footLayout.scale, w * 0.5f, h * 0.94f);
+        canvas.rotate(footLayout.rotation, w * 0.5f, h * 0.94f);
+
         // Bottom-left: 11.1L / 100km
         subTextPaint.setTextAlign(Paint.Align.LEFT);
         subTextPaint.setColor(Color.WHITE);
@@ -1906,13 +2034,19 @@ public class ClusterGaugeView extends View {
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(spToPx(12.5f));
         subTextPaint.setFakeBoldText(true);
-        canvas.drawText("13.9V", w * 0.975f, h - 22f, subTextPaint);
+        canvas.restore();
 
         // 11. Dynamic Music Player card (only drawn if music is actively playing)
         drawFloatingMusicCard(canvas, w, h);
     }
 
     private void drawSplitTopStatusBar(Canvas canvas, int w, int h) {
+        ElementLayout layout = elementLayouts[ClusterConfig.ELEM_TOP_HEADER];
+        canvas.save();
+        canvas.translate(w * layout.dx, h * layout.dy);
+        canvas.scale(layout.scale, layout.scale, w * 0.5f, h * 0.065f);
+        canvas.rotate(layout.rotation, w * 0.5f, h * 0.065f);
+
         float barY = h * 0.065f;
 
         // Headlights icon (green) on left: cx = w * 0.22f
@@ -1952,6 +2086,8 @@ public class ClusterGaugeView extends View {
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(spToPx(13.5f));
         canvas.drawText(Math.round(tempVal) + "°C", w * 0.54f, barY + 4f, subTextPaint);
+
+        canvas.restore();
     }
 
     private void drawSplitCenterVisualizer(Canvas canvas, int w, int h, float dialHeight) {
@@ -2162,6 +2298,11 @@ public class ClusterGaugeView extends View {
         canvas.drawText(String.format(java.util.Locale.US, "%.1f kW", powerKw), cx, pillCy + 4f, subTextPaint);
 
         // 7. Footer Under Left Dial
+        ElementLayout footLayout = elementLayouts[ClusterConfig.ELEM_BOTTOM_FOOTER];
+        canvas.save();
+        canvas.translate(w * footLayout.dx, h * footLayout.dy);
+        canvas.scale(footLayout.scale, footLayout.scale, cx, h - 22f);
+        canvas.rotate(footLayout.rotation, cx, h - 22f);
         subTextPaint.setTextSize(h * 0.042f);
         subTextPaint.setColor(Color.parseColor("#78909C"));
         String rangeStr = ((latestState != null && latestState.rangeKm > 0) ? latestState.rangeKm : 350) + " KM";
@@ -2169,6 +2310,7 @@ public class ClusterGaugeView extends View {
         subTextPaint.setColor(Color.parseColor("#00E5FF"));
         subTextPaint.setFakeBoldText(true);
         canvas.drawText(rangeStr, cx + 46f, h - 22f, subTextPaint);
+        canvas.restore();
     }
 
     private void drawTaycanTachoArc(Canvas canvas, float cx, float cy, float radius, int w, int h) {
@@ -2341,12 +2483,18 @@ public class ClusterGaugeView extends View {
         canvas.drawText(((latestState != null && latestState.rangeKm > 0) ? latestState.rangeKm : 540) + " KM", cx, rPillCy + 4f, subTextPaint);
 
         // 8. Footer Under Right Dial
+        ElementLayout footLayoutR = elementLayouts[ClusterConfig.ELEM_BOTTOM_FOOTER];
+        canvas.save();
+        canvas.translate(w * footLayoutR.dx, h * footLayoutR.dy);
+        canvas.scale(footLayoutR.scale, footLayoutR.scale, cx, h - 22f);
+        canvas.rotate(footLayoutR.rotation, cx, h - 22f);
         subTextPaint.setTextSize(h * 0.042f);
         subTextPaint.setColor(Color.parseColor("#78909C"));
         canvas.drawText("Next Charge: ", cx - 30f, h - 22f, subTextPaint);
         subTextPaint.setColor(Color.parseColor("#00E5FF"));
         subTextPaint.setFakeBoldText(true);
         canvas.drawText("50 KM", cx + 46f, h - 22f, subTextPaint);
+        canvas.restore();
     }
 
     // =========================================================================
@@ -2389,30 +2537,36 @@ public class ClusterGaugeView extends View {
             }
             applyHolePunchIfNeeded(canvas, w, h);
             if (userSpeedoBmp != null) {
-                float halfW = gaugeRadius;
-                RectF dst = new RectF(leftCenterX - halfW, centerY - halfW, leftCenterX + halfW, centerY + halfW);
+                float halfW = effLeftRadius;
+                RectF dst = new RectF(effLeftCx - halfW, effLeftCy - halfW, effLeftCx + halfW, effLeftCy + halfW);
+                canvas.save();
+                canvas.rotate(elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation, effLeftCx, effLeftCy);
                 canvas.drawBitmap(userSpeedoBmp, null, dst, null);
+                canvas.restore();
             }
             if (userTachoBmp != null) {
-                float halfW = gaugeRadius;
-                RectF dst = new RectF(rightCenterX - halfW, centerY - halfW, rightCenterX + halfW, centerY + halfW);
+                float halfW = effRightRadius;
+                RectF dst = new RectF(effRightCx - halfW, effRightCy - halfW, effRightCx + halfW, effRightCy + halfW);
+                canvas.save();
+                canvas.rotate(elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation, effRightCx, effRightCy);
                 canvas.drawBitmap(userTachoBmp, null, dst, null);
+                canvas.restore();
             }
             if (userNeedleBmp != null) {
                 float spdAngle = getSpeedAngle(displaySpeed, 240);
                 canvas.save();
-                canvas.rotate(spdAngle, leftCenterX, centerY);
-                canvas.drawBitmap(userNeedleBmp, leftCenterX - userNeedleBmp.getWidth() / 2f, centerY - userNeedleBmp.getHeight() / 2f, null);
+                canvas.rotate(spdAngle + elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation, effLeftCx, effLeftCy);
+                canvas.drawBitmap(userNeedleBmp, effLeftCx - userNeedleBmp.getWidth() / 2f, effLeftCy - userNeedleBmp.getHeight() / 2f, null);
                 canvas.restore();
 
                 float rpmAngle = getRpmAngle(displayRpm, 8000);
                 canvas.save();
-                canvas.rotate(rpmAngle, rightCenterX, centerY);
-                canvas.drawBitmap(userNeedleBmp, rightCenterX - userNeedleBmp.getWidth() / 2f, centerY - userNeedleBmp.getHeight() / 2f, null);
+                canvas.rotate(rpmAngle + elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation, effRightCx, effRightCy);
+                canvas.drawBitmap(userNeedleBmp, effRightCx - userNeedleBmp.getWidth() / 2f, effRightCy - userNeedleBmp.getHeight() / 2f, null);
                 canvas.restore();
             } else {
-                drawSportNeedle(canvas, leftCenterX, centerY, gaugeRadius * 0.82f, getSpeedAngle(displaySpeed, 240), Color.RED);
-                drawSportNeedle(canvas, rightCenterX, centerY, gaugeRadius * 0.82f, getRpmAngle(displayRpm, 8000), Color.RED);
+                drawSportNeedle(canvas, effLeftCx, effLeftCy, effLeftRadius * 0.82f, getSpeedAngle(displaySpeed, 240) + elementLayouts[ClusterConfig.ELEM_LEFT_GAUGE].rotation, Color.RED);
+                drawSportNeedle(canvas, effRightCx, effRightCy, effRightRadius * 0.82f, getRpmAngle(displayRpm, 8000) + elementLayouts[ClusterConfig.ELEM_RIGHT_GAUGE].rotation, Color.RED);
             }
         } else {
             // Placeholder when user theme is empty
@@ -2554,6 +2708,33 @@ public class ClusterGaugeView extends View {
                 r.set(cx - halfW, cy - halfH, cx + halfW, cy + halfH);
                 break;
             }
+            case ClusterConfig.ELEM_MEDIA_PLAYER: {
+                ElementLayout el = elementLayouts[ClusterConfig.ELEM_MEDIA_PLAYER];
+                float halfW = (Math.min(360f, w * 0.28f) * 0.5f) * el.scale;
+                float halfH = 27f * el.scale;
+                float cx = w * 0.5f + w * el.dx;
+                float cy = h * 0.82f + h * el.dy;
+                r.set(cx - halfW, cy - halfH, cx + halfW, cy + halfH);
+                break;
+            }
+            case ClusterConfig.ELEM_TOP_HEADER: {
+                ElementLayout el = elementLayouts[ClusterConfig.ELEM_TOP_HEADER];
+                float halfW = (w * 0.42f) * el.scale;
+                float halfH = (h * 0.065f) * el.scale;
+                float cx = w * 0.5f + w * el.dx;
+                float cy = h * 0.075f + h * el.dy;
+                r.set(cx - halfW, cy - halfH, cx + halfW, cy + halfH);
+                break;
+            }
+            case ClusterConfig.ELEM_BOTTOM_FOOTER: {
+                ElementLayout el = elementLayouts[ClusterConfig.ELEM_BOTTOM_FOOTER];
+                float halfW = (w * 0.44f) * el.scale;
+                float halfH = (h * 0.055f) * el.scale;
+                float cx = w * 0.5f + w * el.dx;
+                float cy = h * 0.94f + h * el.dy;
+                r.set(cx - halfW, cy - halfH, cx + halfW, cy + halfH);
+                break;
+            }
         }
         return r;
     }
@@ -2565,11 +2746,21 @@ public class ClusterGaugeView extends View {
         for (int elemId = 0; elemId < ClusterConfig.ELEM_COUNT; elemId++) {
             if (elemId == selectedElement) continue;
             RectF bounds = getElementBounds(elemId, w, h);
+            canvas.save();
+            canvas.rotate(elementLayouts[elemId].rotation, bounds.centerX(), bounds.centerY());
             canvas.drawRoundRect(bounds, 12f, 12f, editorSelectionPaint);
+            canvas.restore();
         }
 
         // 2. Draw prominent glowing neon border around selected element
         RectF selBounds = getElementBounds(selectedElement, w, h);
+        float cx = selBounds.centerX();
+        float cy = selBounds.centerY();
+        ElementLayout layout = elementLayouts[selectedElement];
+
+        canvas.save();
+        canvas.rotate(layout.rotation, cx, cy);
+
         editorSelectionPaint.setColor(Color.parseColor("#00E5FF"));
         editorSelectionPaint.setStrokeWidth(3f);
         canvas.drawRoundRect(selBounds, 12f, 12f, editorSelectionPaint);
@@ -2589,17 +2780,17 @@ public class ClusterGaugeView extends View {
         canvas.drawCircle(selBounds.right, selBounds.bottom, handleRadius * 0.5f, editorHandlePaint);
 
         // 4. Draw Center Crosshair
-        float cx = selBounds.centerX();
-        float cy = selBounds.centerY();
         canvas.drawLine(cx - 14f, cy, cx + 14f, cy, editorSelectionPaint);
         canvas.drawLine(cx, cy - 14f, cx, cy + 14f, editorSelectionPaint);
 
+        canvas.restore();
+
         // 5. Draw Information Pill
-        ElementLayout layout = elementLayouts[selectedElement];
         int dxPx = Math.round(layout.dx * w);
         int dyPx = Math.round(layout.dy * h);
         int scalePct = Math.round(layout.scale * 100f);
-        String label = ClusterConfig.ELEMENT_NAMES[selectedElement] + ": X=" + (dxPx >= 0 ? "+" : "") + dxPx + "px  Y=" + (dyPx >= 0 ? "+" : "") + dyPx + "px  (" + scalePct + "%)";
+        int rotDeg = Math.round(layout.rotation);
+        String label = ClusterConfig.ELEMENT_NAMES[selectedElement] + ": X=" + (dxPx >= 0 ? "+" : "") + dxPx + "px  Y=" + (dyPx >= 0 ? "+" : "") + dyPx + "px  (" + scalePct + "%  " + (rotDeg >= 0 ? "+" : "") + rotDeg + "°)";
 
         editorTextPaint.setTextSize(spToPx(11));
         float textW = editorTextPaint.measureText(label);

@@ -24,15 +24,21 @@ public class ClusterConfig {
     public static final int ELEM_WIDGET_LEFT = 3;
     public static final int ELEM_WIDGET_RIGHT = 4;
     public static final int ELEM_WIDGET_CENTER = 5;
-    public static final int ELEM_COUNT = 6;
+    public static final int ELEM_MEDIA_PLAYER = 6;
+    public static final int ELEM_TOP_HEADER = 7;
+    public static final int ELEM_BOTTOM_FOOTER = 8;
+    public static final int ELEM_COUNT = 9;
 
     public static final String[] ELEMENT_NAMES = {
             "Левый колодец",
             "Правый колодец",
-            "Центральный блок",
+            "Центр / Карта",
             "Левый виджет",
             "Правый виджет",
-            "Нижний виджет"
+            "Нижний виджет",
+            "Плеер музыки",
+            "Верхняя строка",
+            "Нижняя строка"
     };
 
     // Telemetry Mini-Widgets
@@ -164,16 +170,25 @@ public class ClusterConfig {
         return getPrefs(context).getFloat("elem_" + elementId + "_scale", 1.0f);
     }
 
-    public static void setElementLayout(Context context, int elementId, float dx, float dy, float scale) {
+    public static float getElementRotation(Context context, int elementId) {
+        return getPrefs(context).getFloat("elem_" + elementId + "_rot", 0.0f);
+    }
+
+    public static void setElementLayout(Context context, int elementId, float dx, float dy, float scale, float rot) {
         getPrefs(context).edit()
                 .putFloat("elem_" + elementId + "_dx", dx)
                 .putFloat("elem_" + elementId + "_dy", dy)
                 .putFloat("elem_" + elementId + "_scale", scale)
+                .putFloat("elem_" + elementId + "_rot", rot)
                 .apply();
     }
 
+    public static void setElementLayout(Context context, int elementId, float dx, float dy, float scale) {
+        setElementLayout(context, elementId, dx, dy, scale, getElementRotation(context, elementId));
+    }
+
     public static void resetElementLayout(Context context, int elementId) {
-        setElementLayout(context, elementId, 0.0f, 0.0f, 1.0f);
+        setElementLayout(context, elementId, 0.0f, 0.0f, 1.0f, 0.0f);
     }
 
     public static void resetAllLayouts(Context context) {
@@ -181,7 +196,8 @@ public class ClusterConfig {
         for (int i = 0; i < ELEM_COUNT; i++) {
             editor.putFloat("elem_" + i + "_dx", 0.0f)
                   .putFloat("elem_" + i + "_dy", 0.0f)
-                  .putFloat("elem_" + i + "_scale", 1.0f);
+                  .putFloat("elem_" + i + "_scale", 1.0f)
+                  .putFloat("elem_" + i + "_rot", 0.0f);
         }
         editor.apply();
     }
