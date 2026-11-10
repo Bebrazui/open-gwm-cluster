@@ -60,6 +60,36 @@ public class MainActivity extends Activity {
     private LinearLayout containerTabThemes;
     private LinearLayout containerTabWidgets;
     private LinearLayout containerTabBus;
+    private TextView tabEditor;
+    private LinearLayout containerTabEditor;
+    private Button btnOpenEditor;
+
+    // Interactive Layout Customization Elements
+    private TextView chipElemLeftGauge;
+    private TextView chipElemRightGauge;
+    private TextView chipElemCenterBlock;
+    private TextView chipElemWidgetLeft;
+    private TextView chipElemWidgetRight;
+    private TextView chipElemWidgetCenter;
+    private TextView tvEditorActiveElementTitle;
+
+    private TextView tvEditorValX;
+    private TextView tvEditorValY;
+    private TextView tvEditorValScale;
+    private SeekBar sbEditorX;
+    private SeekBar sbEditorY;
+    private SeekBar sbEditorScale;
+    private Button btnDecX, btnIncX;
+    private Button btnDecY, btnIncY;
+    private Button btnDecScale, btnIncScale;
+
+    private Button btnSaveLayout;
+    private Button btnResetElement;
+    private Button btnResetAllElements;
+    private Button btnFullscreenEditor;
+
+    private int currentEditElement = ClusterConfig.ELEM_LEFT_GAUGE;
+    private boolean isUpdatingSlidersFromTouch = false;
 
     private Switch switchHolePunch;
     private Switch switchHolePunchMain;
@@ -99,6 +129,7 @@ public class MainActivity extends Activity {
 
         initViews();
         setupTabNavigation();
+        setupEditorControls();
         setupSpinners();
         setupWidgetSpinners();
         setupControls();
@@ -119,11 +150,18 @@ public class MainActivity extends Activity {
         tabThemes = findViewById(R.id.tabThemes);
         tabWidgets = findViewById(R.id.tabWidgets);
         tabBus = findViewById(R.id.tabBus);
+        tabEditor = findViewById(R.id.tabEditor);
 
         containerTabMain = findViewById(R.id.containerTabMain);
         containerTabThemes = findViewById(R.id.containerTabThemes);
         containerTabWidgets = findViewById(R.id.containerTabWidgets);
         containerTabBus = findViewById(R.id.containerTabBus);
+        containerTabEditor = findViewById(R.id.containerTabEditor);
+
+        btnOpenEditor = findViewById(R.id.btnOpenEditor);
+        if (btnOpenEditor != null) {
+            btnOpenEditor.setOnClickListener(v -> selectTab(4));
+        }
 
         btnToggleCluster = findViewById(R.id.btnToggleCluster);
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay);
@@ -155,12 +193,15 @@ public class MainActivity extends Activity {
         tabThemes.setOnClickListener(v -> selectTab(1));
         tabWidgets.setOnClickListener(v -> selectTab(2));
         tabBus.setOnClickListener(v -> selectTab(3));
+        if (tabEditor != null) {
+            tabEditor.setOnClickListener(v -> selectTab(4));
+        }
         selectTab(0);
     }
 
     private void selectTab(int index) {
-        TextView[] tabs = {tabMain, tabThemes, tabWidgets, tabBus};
-        LinearLayout[] containers = {containerTabMain, containerTabThemes, containerTabWidgets, containerTabBus};
+        TextView[] tabs = {tabMain, tabThemes, tabWidgets, tabBus, tabEditor};
+        LinearLayout[] containers = {containerTabMain, containerTabThemes, containerTabWidgets, containerTabBus, containerTabEditor};
 
         for (int i = 0; i < tabs.length; i++) {
             boolean active = (i == index);
@@ -171,6 +212,10 @@ public class MainActivity extends Activity {
             if (containers[i] != null) {
                 containers[i].setVisibility(active ? View.VISIBLE : View.GONE);
             }
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setEditMode(index == 4, currentEditElement);
         }
     }
 
@@ -507,5 +552,272 @@ public class MainActivity extends Activity {
         if (vehicleProvider != null) {
             vehicleProvider.stopListening();
         }
+    }
+
+    private void setupEditorControls() {
+        chipElemLeftGauge = findViewById(R.id.chipElemLeftGauge);
+        chipElemRightGauge = findViewById(R.id.chipElemRightGauge);
+        chipElemCenterBlock = findViewById(R.id.chipElemCenterBlock);
+        chipElemWidgetLeft = findViewById(R.id.chipElemWidgetLeft);
+        chipElemWidgetRight = findViewById(R.id.chipElemWidgetRight);
+        chipElemWidgetCenter = findViewById(R.id.chipElemWidgetCenter);
+        tvEditorActiveElementTitle = findViewById(R.id.tvEditorActiveElementTitle);
+
+        tvEditorValX = findViewById(R.id.tvEditorValX);
+        tvEditorValY = findViewById(R.id.tvEditorValY);
+        tvEditorValScale = findViewById(R.id.tvEditorValScale);
+        sbEditorX = findViewById(R.id.sbEditorX);
+        sbEditorY = findViewById(R.id.sbEditorY);
+        sbEditorScale = findViewById(R.id.sbEditorScale);
+
+        btnDecX = findViewById(R.id.btnDecX);
+        btnIncX = findViewById(R.id.btnIncX);
+        btnDecY = findViewById(R.id.btnDecY);
+        btnIncY = findViewById(R.id.btnIncY);
+        btnDecScale = findViewById(R.id.btnDecScale);
+        btnIncScale = findViewById(R.id.btnIncScale);
+
+        btnSaveLayout = findViewById(R.id.btnSaveLayout);
+        btnResetElement = findViewById(R.id.btnResetElement);
+        btnResetAllElements = findViewById(R.id.btnResetAllElements);
+        btnFullscreenEditor = findViewById(R.id.btnFullscreenEditor);
+
+        TextView[] chips = {
+                chipElemLeftGauge,
+                chipElemRightGauge,
+                chipElemCenterBlock,
+                chipElemWidgetLeft,
+                chipElemWidgetRight,
+                chipElemWidgetCenter
+        };
+
+        for (int i = 0; i < chips.length; i++) {
+            final int elemId = i;
+            if (chips[i] != null) {
+                chips[i].setOnClickListener(v -> selectEditorElement(elemId));
+            }
+        }
+
+        // Stepper buttons
+        if (btnDecX != null && sbEditorX != null) btnDecX.setOnClickListener(v -> sbEditorX.setProgress(sbEditorX.getProgress() - 10));
+        if (btnIncX != null && sbEditorX != null) btnIncX.setOnClickListener(v -> sbEditorX.setProgress(sbEditorX.getProgress() + 10));
+        if (btnDecY != null && sbEditorY != null) btnDecY.setOnClickListener(v -> sbEditorY.setProgress(sbEditorY.getProgress() - 10));
+        if (btnIncY != null && sbEditorY != null) btnIncY.setOnClickListener(v -> sbEditorY.setProgress(sbEditorY.getProgress() + 10));
+        if (btnDecScale != null && sbEditorScale != null) btnDecScale.setOnClickListener(v -> sbEditorScale.setProgress(sbEditorScale.getProgress() - 5));
+        if (btnIncScale != null && sbEditorScale != null) btnIncScale.setOnClickListener(v -> sbEditorScale.setProgress(sbEditorScale.getProgress() + 5));
+
+        SeekBar.OnSeekBarChangeListener sliderListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (isUpdatingSlidersFromTouch) return;
+                applySlidersToCurrentElement();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        };
+
+        if (sbEditorX != null) sbEditorX.setOnSeekBarChangeListener(sliderListener);
+        if (sbEditorY != null) sbEditorY.setOnSeekBarChangeListener(sliderListener);
+        if (sbEditorScale != null) sbEditorScale.setOnSeekBarChangeListener(sliderListener);
+
+        // Sync touch drag/pinch from gaugePreview to sliders
+        if (gaugePreview != null) {
+            gaugePreview.setOnLayoutChangeListener(new ClusterGaugeView.OnLayoutChangeListener() {
+                @Override
+                public void onElementSelected(int elementId) {
+                    runOnUiThread(() -> selectEditorElement(elementId));
+                }
+
+                @Override
+                public void onElementLayoutChanged(int elementId, float dx, float dy, float scale) {
+                    runOnUiThread(() -> updateSlidersForElement(dx, dy, scale));
+                }
+            });
+        }
+
+        // Save button
+        if (btnSaveLayout != null) {
+            btnSaveLayout.setOnClickListener(v -> saveLayoutToConfig());
+        }
+
+        // Reset current element button
+        if (btnResetElement != null) {
+            btnResetElement.setOnClickListener(v -> {
+                ClusterConfig.resetElementLayout(this, currentEditElement);
+                if (gaugePreview != null) {
+                    gaugePreview.setElementLayout(currentEditElement, 0f, 0f, 1.0f);
+                }
+                selectEditorElement(currentEditElement);
+                android.widget.Toast.makeText(this, "Элемент сброшен в заводские координаты", android.widget.Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        // Reset all button
+        if (btnResetAllElements != null) {
+            btnResetAllElements.setOnClickListener(v -> {
+                ClusterConfig.resetAllLayouts(this);
+                if (gaugePreview != null) {
+                    gaugePreview.loadLayoutConfig();
+                }
+                selectEditorElement(currentEditElement);
+                android.widget.Toast.makeText(this, "Все элементы сброшены в заводские координаты", android.widget.Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        // Fullscreen editor button
+        if (btnFullscreenEditor != null) {
+            btnFullscreenEditor.setOnClickListener(v -> openFullscreenEditorDialog());
+        }
+
+        selectEditorElement(ClusterConfig.ELEM_LEFT_GAUGE);
+    }
+
+    private void selectEditorElement(int elementId) {
+        currentEditElement = elementId;
+        TextView[] chips = {
+                chipElemLeftGauge,
+                chipElemRightGauge,
+                chipElemCenterBlock,
+                chipElemWidgetLeft,
+                chipElemWidgetRight,
+                chipElemWidgetCenter
+        };
+
+        for (int i = 0; i < chips.length; i++) {
+            if (chips[i] != null) {
+                boolean sel = (i == elementId);
+                chips[i].setBackgroundResource(sel ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
+                chips[i].setTextColor(Color.parseColor(sel ? "#A8E6BD" : "#8FA395"));
+            }
+        }
+
+        if (tvEditorActiveElementTitle != null && elementId < ClusterConfig.ELEMENT_NAMES.length) {
+            tvEditorActiveElementTitle.setText("НАСТРОЙКА: " + ClusterConfig.ELEMENT_NAMES[elementId].toUpperCase());
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setSelectedElement(elementId);
+            ClusterGaugeView.ElementLayout layout = gaugePreview.getElementLayout(elementId);
+            updateSlidersForElement(layout.dx, layout.dy, layout.scale);
+        }
+    }
+
+    private void updateSlidersForElement(float dx, float dy, float scale) {
+        isUpdatingSlidersFromTouch = true;
+        try {
+            int progX = Math.round(dx * 1000f) + 300;
+            int progY = Math.round(dy * 1000f) + 300;
+            int progScale = Math.round((scale - 0.40f) * 100f);
+
+            if (sbEditorX != null) sbEditorX.setProgress(Math.max(0, Math.min(600, progX)));
+            if (sbEditorY != null) sbEditorY.setProgress(Math.max(0, Math.min(600, progY)));
+            if (sbEditorScale != null) sbEditorScale.setProgress(Math.max(0, Math.min(200, progScale)));
+
+            int dxPx = Math.round(dx * 1920f);
+            int dyPx = Math.round(dy * 720f);
+            int scalePct = Math.round(scale * 100f);
+
+            if (tvEditorValX != null) tvEditorValX.setText((dxPx >= 0 ? "+" : "") + dxPx + " px (" + Math.round(dx * 100f) + "%)");
+            if (tvEditorValY != null) tvEditorValY.setText((dyPx >= 0 ? "+" : "") + dyPx + " px (" + Math.round(dy * 100f) + "%)");
+            if (tvEditorValScale != null) tvEditorValScale.setText(scalePct + "%");
+        } finally {
+            isUpdatingSlidersFromTouch = false;
+        }
+    }
+
+    private void applySlidersToCurrentElement() {
+        if (sbEditorX == null || sbEditorY == null || sbEditorScale == null) return;
+        float dx = (sbEditorX.getProgress() - 300) / 1000f;
+        float dy = (sbEditorY.getProgress() - 300) / 1000f;
+        float scale = 0.40f + (sbEditorScale.getProgress() / 100f);
+
+        int dxPx = Math.round(dx * 1920f);
+        int dyPx = Math.round(dy * 720f);
+        int scalePct = Math.round(scale * 100f);
+
+        if (tvEditorValX != null) tvEditorValX.setText((dxPx >= 0 ? "+" : "") + dxPx + " px (" + Math.round(dx * 100f) + "%)");
+        if (tvEditorValY != null) tvEditorValY.setText((dyPx >= 0 ? "+" : "") + dyPx + " px (" + Math.round(dy * 100f) + "%)");
+        if (tvEditorValScale != null) tvEditorValScale.setText(scalePct + "%");
+
+        if (gaugePreview != null) {
+            gaugePreview.setElementLayout(currentEditElement, dx, dy, scale);
+        }
+    }
+
+    private void saveLayoutToConfig() {
+        if (gaugePreview != null) {
+            for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
+                ClusterGaugeView.ElementLayout layout = gaugePreview.getElementLayout(i);
+                ClusterConfig.setElementLayout(this, i, layout.dx, layout.dy, layout.scale);
+            }
+        }
+        InstrumentClusterService.applyConfig(this);
+        android.widget.Toast.makeText(this, "💾 Расположение сохранено и применено к приборной панели!", android.widget.Toast.LENGTH_LONG).show();
+    }
+
+    private void openFullscreenEditorDialog() {
+        android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.parseColor("#06080B"));
+
+        ClusterGaugeView fsView = new ClusterGaugeView(this);
+        fsView.loadLayoutConfig();
+        fsView.setEditMode(true, currentEditElement);
+        LinearLayout.LayoutParams viewParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
+        root.addView(fsView, viewParams);
+
+        // Control bar at bottom
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        bar.setPadding(24, 12, 24, 12);
+        bar.setBackgroundColor(Color.parseColor("#0E131A"));
+
+        TextView hint = new TextView(this);
+        hint.setText("Перетаскивайте пальцем | Щипок для масштаба");
+        hint.setTextColor(Color.parseColor("#A8E6BD"));
+        hint.setTextSize(12f);
+        LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+        bar.addView(hint, hintParams);
+
+        Button btnSaveFs = new Button(this);
+        btnSaveFs.setText("💾 Сохранить");
+        btnSaveFs.setTextColor(Color.parseColor("#A4E2B8"));
+        btnSaveFs.setBackgroundResource(R.drawable.m3_button_primary);
+        btnSaveFs.setPadding(32, 8, 32, 8);
+        btnSaveFs.setOnClickListener(v -> {
+            for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
+                ClusterGaugeView.ElementLayout l = fsView.getElementLayout(i);
+                ClusterConfig.setElementLayout(this, i, l.dx, l.dy, l.scale);
+            }
+            if (gaugePreview != null) gaugePreview.loadLayoutConfig();
+            InstrumentClusterService.applyConfig(this);
+            android.widget.Toast.makeText(this, "💾 Расположение сохранено!", android.widget.Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+        bar.addView(btnSaveFs);
+
+        Button btnClose = new Button(this);
+        btnClose.setText("✕ Закрыть");
+        btnClose.setTextColor(Color.parseColor("#D1DDD4"));
+        btnClose.setBackgroundResource(R.drawable.m3_button_secondary);
+        LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        closeParams.leftMargin = 16;
+        btnClose.setLayoutParams(closeParams);
+        btnClose.setOnClickListener(v -> {
+            if (gaugePreview != null) gaugePreview.loadLayoutConfig();
+            dialog.dismiss();
+        });
+        bar.addView(btnClose);
+
+        root.addView(bar, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        dialog.setContentView(root);
+        dialog.show();
     }
 }

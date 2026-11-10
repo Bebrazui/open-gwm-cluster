@@ -44,6 +44,7 @@ public class InstrumentClusterService extends Service {
                     org.opengwm.split.ui.ClusterConfig.getWidgetRight(context),
                     org.opengwm.split.ui.ClusterConfig.getWidgetCenter(context)
             );
+            activeClusterView.loadLayoutConfig();
             activeClusterView.postInvalidate();
         }
     }

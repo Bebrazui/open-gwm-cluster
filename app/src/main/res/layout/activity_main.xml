@@ -177,6 +177,43 @@
             </LinearLayout>
 
             <!-- ========================================================= -->
+                            <!-- CARD: Quick Access Interactive Layout Editor -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ИНТЕРАКТИВНЫЙ РЕДАКТОР"
+                        android:textColor="#A8E6BD"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Перемещение и масштабирование колодцев, экранов и мини-виджетов:"
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/btnOpenEditor"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/m3_button_primary"
+                        android:text="📐 Настроить расположение и размеры"
+                        android:textColor="#A4E2B8"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
             <!-- TAB 1: ТЕМЫ (Стиль шкал, вырезы, сглаживание)              -->
             <!-- ========================================================= -->
             <LinearLayout
@@ -684,72 +721,476 @@
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
+            <!-- ========================================================= -->
+            <!-- TAB 4: РЕДАКТОР (Интерактивная калибровка и масштабирование)-->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/containerTabEditor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- CARD 1: ВЫБОР ЭЛЕМЕНТА -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ВЫБОР ЭЛЕМЕНТА ДЛЯ КАЛИБРОВКИ"
+                        android:textColor="#A8E6BD"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Выберите элемент или просто коснитесь его на экране выше:"
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipElemLeftGauge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:background="@drawable/m3_pill_active"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🔘 Левый колодец"
+                                android:textColor="#A8E6BD"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemRightGauge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🔘 Правый колодец"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemCenterBlock"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🔲 Центр / Экран"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemWidgetLeft"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🏷️ Левый виджет"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemWidgetRight"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🏷️ Правый виджет"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipElemWidgetCenter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/m3_pill_inactive"
+                                android:gravity="center"
+                                android:paddingHorizontal="14dp"
+                                android:text="🏷️ Нижний виджет"
+                                android:textColor="#8FA395"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+
+                <!-- CARD 2: СЛАЙДЕРЫ ТОЧНОЙ НАСТРОЙКИ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvEditorActiveElementTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="НАСТРОЙКА: ЛЕВЫЙ КОЛОДЕЦ"
+                        android:textColor="#A8E6BD"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <!-- Позиция X -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Позиция X (по горизонтали)"
+                            android:textColor="#D1DDD4"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvEditorValX"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 px (0%)"
+                            android:textColor="#A4E2B8"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnDecX"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="−"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbEditorX"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="600"
+                            android:progress="300" />
+
+                        <Button
+                            android:id="@+id/btnIncX"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="+"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <!-- Позиция Y -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Позиция Y (по вертикали)"
+                            android:textColor="#D1DDD4"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvEditorValY"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 px (0%)"
+                            android:textColor="#A4E2B8"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnDecY"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="−"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbEditorY"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="600"
+                            android:progress="300" />
+
+                        <Button
+                            android:id="@+id/btnIncY"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="+"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <!-- Размер / Масштаб -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Размер / Масштаб"
+                            android:textColor="#D1DDD4"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvEditorValScale"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100%"
+                            android:textColor="#A4E2B8"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnDecScale"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="−"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+
+                        <SeekBar
+                            android:id="@+id/sbEditorScale"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="200"
+                            android:progress="60" />
+
+                        <Button
+                            android:id="@+id/btnIncScale"
+                            android:layout_width="44dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="+"
+                            android:textColor="#D1DDD4"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- CARD 3: КНОПКИ ДЕЙСТВИЯ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <Button
+                        android:id="@+id/btnSaveLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/m3_button_primary"
+                        android:text="💾 Сохранить расположение"
+                        android:textColor="#A4E2B8"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnResetElement"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="↺ Сброс элемента"
+                            android:textColor="#D1DDD4"
+                            android:textSize="12sp" />
+
+                        <Button
+                            android:id="@+id/btnResetAllElements"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="↺ Сбросить всё"
+                            android:textColor="#D1DDD4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnFullscreenEditor"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/m3_button_secondary"
+                        android:text="⛶ Во весь экран (Холст 1920x720)"
+                        android:textColor="#00E5FF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <!-- ============================================================= -->
     <!-- M3 EXPRESSIVE FLOATING PILL DOCK (Matching User's Mockup)     -->
     <!-- ============================================================= -->
-    <LinearLayout
-        android:id="@+id/layoutDock"
+    <HorizontalScrollView
         android:layout_width="wrap_content"
         android:layout_height="56dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/m3_dock_bg"
-        android:elevation="8dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="4dp">
+        android:scrollbars="none"
+        android:overScrollMode="never">
 
-        <TextView
-            android:id="@+id/tabMain"
+        <LinearLayout
+            android:id="@+id/layoutDock"
             android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:background="@drawable/m3_pill_active"
+            android:layout_height="56dp"
+            android:background="@drawable/m3_dock_bg"
+            android:elevation="8dp"
             android:gravity="center"
-            android:paddingHorizontal="16dp"
-            android:text="Главная"
-            android:textColor="#A8E6BD"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:padding="4dp">
 
-        <TextView
-            android:id="@+id/tabThemes"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:background="@drawable/m3_pill_inactive"
-            android:gravity="center"
-            android:paddingHorizontal="16dp"
-            android:text="Темы"
-            android:textColor="#8FA395"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tabMain"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_active"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Главная"
+                android:textColor="#A8E6BD"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tabWidgets"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:background="@drawable/m3_pill_inactive"
-            android:gravity="center"
-            android:paddingHorizontal="16dp"
-            android:text="Виджеты"
-            android:textColor="#8FA395"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tabThemes"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Темы"
+                android:textColor="#8FA395"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tabBus"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:background="@drawable/m3_pill_inactive"
-            android:gravity="center"
-            android:paddingHorizontal="16dp"
-            android:text="Шина CAN"
-            android:textColor="#8FA395"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tabWidgets"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Виджеты"
+                android:textColor="#8FA395"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabBus"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Шина CAN"
+                android:textColor="#8FA395"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabEditor"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Редактор"
+                android:textColor="#8FA395"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
 </RelativeLayout>

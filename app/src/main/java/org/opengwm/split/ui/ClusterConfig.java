@@ -17,6 +17,24 @@ public class ClusterConfig {
     public static final String KEY_WIDGET_RIGHT = "pref_widget_right";
     public static final String KEY_WIDGET_CENTER = "pref_widget_center";
 
+    // Custom Interactive Layout Elements
+    public static final int ELEM_LEFT_GAUGE = 0;
+    public static final int ELEM_RIGHT_GAUGE = 1;
+    public static final int ELEM_CENTER_BLOCK = 2;
+    public static final int ELEM_WIDGET_LEFT = 3;
+    public static final int ELEM_WIDGET_RIGHT = 4;
+    public static final int ELEM_WIDGET_CENTER = 5;
+    public static final int ELEM_COUNT = 6;
+
+    public static final String[] ELEMENT_NAMES = {
+            "Левый колодец",
+            "Правый колодец",
+            "Центральный блок",
+            "Левый виджет",
+            "Правый виджет",
+            "Нижний виджет"
+    };
+
     // Telemetry Mini-Widgets
     public static final int WIDGET_NONE = 0;           // Выключено
     public static final int WIDGET_FUEL = 1;           // Остаток топлива (л / %)
@@ -132,5 +150,39 @@ public class ClusterConfig {
 
     public static void setWidgetCenter(Context context, int widget) {
         getPrefs(context).edit().putInt(KEY_WIDGET_CENTER, widget).apply();
+    }
+
+    public static float getElementDx(Context context, int elementId) {
+        return getPrefs(context).getFloat("elem_" + elementId + "_dx", 0.0f);
+    }
+
+    public static float getElementDy(Context context, int elementId) {
+        return getPrefs(context).getFloat("elem_" + elementId + "_dy", 0.0f);
+    }
+
+    public static float getElementScale(Context context, int elementId) {
+        return getPrefs(context).getFloat("elem_" + elementId + "_scale", 1.0f);
+    }
+
+    public static void setElementLayout(Context context, int elementId, float dx, float dy, float scale) {
+        getPrefs(context).edit()
+                .putFloat("elem_" + elementId + "_dx", dx)
+                .putFloat("elem_" + elementId + "_dy", dy)
+                .putFloat("elem_" + elementId + "_scale", scale)
+                .apply();
+    }
+
+    public static void resetElementLayout(Context context, int elementId) {
+        setElementLayout(context, elementId, 0.0f, 0.0f, 1.0f);
+    }
+
+    public static void resetAllLayouts(Context context) {
+        SharedPreferences.Editor editor = getPrefs(context).edit();
+        for (int i = 0; i < ELEM_COUNT; i++) {
+            editor.putFloat("elem_" + i + "_dx", 0.0f)
+                  .putFloat("elem_" + i + "_dy", 0.0f)
+                  .putFloat("elem_" + i + "_scale", 1.0f);
+        }
+        editor.apply();
     }
 }
