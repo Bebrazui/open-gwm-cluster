@@ -1,5 +1,8 @@
 package org.opengwm.split.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +25,9 @@ import org.opengwm.split.vehicle.VehicleState;
 public class InstrumentClusterService extends Service {
 
     private static final String TAG = "OpenGwmCluster";
+    private static final String CHANNEL_ID = "cluster_overlay_service";
+    private static final int NOTIFICATION_ID = 2001;
+
     public static final String ACTION_START = "org.opengwm.split.action.START_CLUSTER";
     public static final String ACTION_STOP = "org.opengwm.split.action.STOP_CLUSTER";
     public static final String EXTRA_TARGET_DISPLAY_ID = "target_display_id";
@@ -52,7 +58,30 @@ public class InstrumentClusterService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        startAsForeground();
         vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
+    }
+
+    private void startAsForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && nm.getNotificationChannel(CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                        CHANNEL_ID,
+                        "Instrument Cluster Overlay",
+                        NotificationManager.IMPORTANCE_LOW
+                );
+                channel.setShowBadge(false);
+                nm.createNotificationChannel(channel);
+            }
+            Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                    .setContentTitle("OpenGWM Cluster")
+                    .setContentText("Оверлей приборной панели активен")
+                    .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                    .setOngoing(true)
+                    .build();
+            startForeground(NOTIFICATION_ID, notification);
+        }
     }
 
     @Override
@@ -107,6 +136,7 @@ public class InstrumentClusterService extends Service {
 
         if (targetDisplay == null) {
             Log.w(TAG, "Secondary instrument cluster display not found! Cluster service will stop.");
+            stopCluster();
             stopSelf();
             return;
         }
@@ -155,11 +185,17 @@ public class InstrumentClusterService extends Service {
             isServiceRunning = true;
         } catch (Exception e) {
             Log.e(TAG, "Failed to mount cluster overlay", e);
+            stopCluster();
             stopSelf();
         }
     }
 
     private void stopCluster() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE);
+        } else {
+            stopForeground(true);
+        }
         if (!isRunning) return;
         vehicleProvider.stopListening();
         if (clusterWindowManager != null && clusterView != null) {
