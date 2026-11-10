@@ -10,9 +10,32 @@ android {
     defaultConfig {
         applicationId = "org.opengwm.split"
         minSdk = 28
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0-alpha"
+        targetSdk = 30
+        versionCode = 2
+        versionName = "1.4.1"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 
     compileOptions {
