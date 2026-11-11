@@ -1891,7 +1891,7 @@ public class ClusterGaugeView extends View {
                 tickMajorPaint.setStrokeWidth(isMajor ? 4.0f : (isMid ? 2.4f : 1.5f));
                 canvas.drawLine(x1, y1, x2, y2, tickMajorPaint);
 
-                if (isMajor) {
+                if (isMajor && r > 0) {
                     float textR = effLeftRadius * 0.69f;
                     float tx = (float) (effLeftCx + textR * Math.cos(rad));
                     float ty = (float) (effLeftCy + textR * Math.sin(rad) + tachoNumSize * 0.35f);
@@ -1910,6 +1910,14 @@ public class ClusterGaugeView extends View {
             subTextPaint.setTextSize(effLeftRadius * 0.095f);
             subTextPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("OFF", offX, offY, subTextPaint);
+
+            // Orange tick at OFF
+            float offTickIn = effLeftRadius * 0.80f;
+            float offTickOut = effLeftRadius * 0.90f;
+            tickMajorPaint.setColor(Color.parseColor("#FF6200"));
+            tickMajorPaint.setStrokeWidth(4.0f);
+            canvas.drawLine((float) (effLeftCx + offTickIn * Math.cos(offRad)), (float) (effLeftCy + offTickIn * Math.sin(offRad)),
+                    (float) (effLeftCx + offTickOut * Math.cos(offRad)), (float) (effLeftCy + offTickOut * Math.sin(offRad)), tickMajorPaint);
 
             double readyRad = Math.toRadians(78.0);
             float readyX = (float) (effLeftCx + effLeftRadius * 0.65f * Math.cos(readyRad));
@@ -2087,10 +2095,10 @@ public class ClusterGaugeView extends View {
         needleCapPaint.setColor(Color.parseColor("#2B2E37"));
         canvas.drawCircle(cx, cy, 19f, needleCapPaint);
 
-        // Horizontal Neon Orange Accent Stripe across Cap
+        // Neon Orange Accent Stripe on Cap along needle direction
         needlePinPaint.setColor(Color.parseColor("#FF6200"));
         needlePinPaint.setStrokeWidth(4.5f);
-        canvas.drawLine(cx - 16f, cy, cx + 16f, cy, needlePinPaint);
+        canvas.drawLine(cx, cy, cx + 18f, cy, needlePinPaint);
 
         canvas.restore();
     }
