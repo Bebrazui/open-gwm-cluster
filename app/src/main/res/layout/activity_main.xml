@@ -133,6 +133,16 @@
                         android:text="Выдать разрешение поверх окон"
                         android:textColor="#A4E2B8"
                         android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/btnOpenLogsQuick"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/m3_button_secondary"
+                        android:text="📋 Диагностика и логи CAN / VHAL"
+                        android:textColor="#A4E2B8"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <!-- CARD: Quick HolePunch / Island Toggle -->
@@ -1257,6 +1267,268 @@
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
+
+            <!-- ========================================================= -->
+            <!-- TAB 5: ЛОГИ И ДИАГНОСТИКА (AAS, VHAL, CAN, Дисплеи)        -->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/containerTabLogs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- CARD 1: СВОДНЫЙ СТАТУС СИСТЕМЫ И ШИНЫ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="СВОДНЫЙ СТАТУС ОБОРУДОВАНИЯ"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/btnRefreshDiagStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:paddingHorizontal="10dp"
+                            android:text="🔄 Обновить"
+                            android:textColor="#A4E2B8"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvDiagCarServiceStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="• Служба com.android.car: проверка..."
+                        android:textColor="#E5EAE6"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvDiagVhalStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="• Доступ к VHAL (SA8155): проверка..."
+                        android:textColor="#E5EAE6"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvDiagDisplaysStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="• Дисплеи в системе: проверка..."
+                        android:textColor="#E5EAE6"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvDiagOverlayStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="• Оверлей поверх окон: проверка..."
+                        android:textColor="#E5EAE6"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvDiagSocketCanStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="• SocketCAN (/dev/can0): проверка..."
+                        android:textColor="#879C8F"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- CARD 2: ДЕЙСТВИЯ С ЛОГАМИ И ЗОНДАЖ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ДЕЙСТВИЯ И ДИАГНОСТИКА"
+                        android:textColor="#A8E6BD"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnProbeVhalNow"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/m3_button_primary"
+                            android:text="⚡ Опросить VHAL"
+                            android:textColor="#0C2013"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/btnCopyLogs"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="📋 Копировать"
+                            android:textColor="#A4E2B8"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnExportLogsFile"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="💾 В файл"
+                            android:textColor="#A4E2B8"
+                            android:textSize="12sp" />
+
+                        <Button
+                            android:id="@+id/btnClearLogs"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/m3_button_secondary"
+                            android:text="🧹 Очистить"
+                            android:textColor="#879C8F"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <!-- Filter Chips -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/chipFilterAll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:background="@drawable/m3_pill_active"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="Все"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/chipFilterErrors"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="Ошибки"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/chipFilterBus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="Шина/VHAL"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/chipFilterDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="Дисплеи"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- CARD 3: ТЕРМИНАЛ ЖИВОГО ВЫВОДА ЛОГОВ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/m3_card_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvLogCounter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ЖИВОЙ ТЕРМИНАЛ (0 строк)"
+                        android:textColor="#A8E6BD"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <ScrollView
+                        android:id="@+id/scrollLogTerminal"
+                        android:layout_width="match_parent"
+                        android:layout_height="320dp"
+                        android:layout_marginTop="10dp"
+                        android:background="#060907"
+                        android:padding="8dp">
+
+                        <TextView
+                            android:id="@+id/tvLogOutput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:lineSpacingExtra="2dp"
+                            android:text="Ожидание сообщений логгера..."
+                            android:textColor="#A8E6BD"
+                            android:textIsSelectable="true"
+                            android:textSize="11sp" />
+                    </ScrollView>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
@@ -1338,6 +1610,18 @@
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
                 android:text="Редактор"
+                android:textColor="#8FA395"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabLogs"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:background="@drawable/m3_pill_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="Логи и Диагностика"
                 android:textColor="#8FA395"
                 android:textSize="13sp"
                 android:textStyle="bold" />

@@ -17,16 +17,24 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.util.DisplayMetrics;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import org.opengwm.split.service.InstrumentClusterService;
 import org.opengwm.split.ui.ClusterConfig;
 import org.opengwm.split.ui.ClusterGaugeView;
+import org.opengwm.split.util.AppLogger;
 import org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider;
 import org.opengwm.split.vehicle.VehicleDataProvider;
 import org.opengwm.split.vehicle.VehicleState;
+import java.io.File;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -68,6 +76,30 @@ public class MainActivity extends Activity {
     private TextView tabEditor;
     private LinearLayout containerTabEditor;
     private Button btnOpenEditor;
+
+    private TextView tabLogs;
+    private LinearLayout containerTabLogs;
+    private Button btnOpenLogsQuick;
+
+    // Diagnostics & Log Views
+    private TextView tvDiagCarServiceStatus;
+    private TextView tvDiagVhalStatus;
+    private TextView tvDiagDisplaysStatus;
+    private TextView tvDiagOverlayStatus;
+    private TextView tvDiagSocketCanStatus;
+    private Button btnRefreshDiagStatus;
+    private Button btnProbeVhalNow;
+    private Button btnCopyLogs;
+    private Button btnExportLogsFile;
+    private Button btnClearLogs;
+    private TextView chipFilterAll;
+    private TextView chipFilterErrors;
+    private TextView chipFilterBus;
+    private TextView chipFilterDisplay;
+    private TextView tvLogCounter;
+    private ScrollView scrollLogTerminal;
+    private TextView tvLogOutput;
+    private int currentLogFilter = 0; // 0=All, 1=Errors, 2=Bus/VHAL, 3=Display
 
     // Interactive Layout Customization Elements
     private TextView chipElemLeftGauge;
@@ -145,6 +177,8 @@ public class MainActivity extends Activity {
         setupWidgetSpinners();
         setupControls();
         setupVehicleTelemetry();
+        setupDiagnosticsControls();
+        AppLogger.i("MainActivity", "Приложение запущено. Устройство: " + Build.MANUFACTURER + " " + Build.MODEL + " (Android " + Build.VERSION.RELEASE + ", API " + Build.VERSION.SDK_INT + ")");
     }
 
     private void initViews() {
@@ -162,17 +196,42 @@ public class MainActivity extends Activity {
         tabWidgets = findViewById(R.id.tabWidgets);
         tabBus = findViewById(R.id.tabBus);
         tabEditor = findViewById(R.id.tabEditor);
+        tabLogs = findViewById(R.id.tabLogs);
 
         containerTabMain = findViewById(R.id.containerTabMain);
         containerTabThemes = findViewById(R.id.containerTabThemes);
         containerTabWidgets = findViewById(R.id.containerTabWidgets);
         containerTabBus = findViewById(R.id.containerTabBus);
         containerTabEditor = findViewById(R.id.containerTabEditor);
+        containerTabLogs = findViewById(R.id.containerTabLogs);
 
         btnOpenEditor = findViewById(R.id.btnOpenEditor);
         if (btnOpenEditor != null) {
             btnOpenEditor.setOnClickListener(v -> selectTab(4));
         }
+
+        btnOpenLogsQuick = findViewById(R.id.btnOpenLogsQuick);
+        if (btnOpenLogsQuick != null) {
+            btnOpenLogsQuick.setOnClickListener(v -> selectTab(5));
+        }
+
+        tvDiagCarServiceStatus = findViewById(R.id.tvDiagCarServiceStatus);
+        tvDiagVhalStatus = findViewById(R.id.tvDiagVhalStatus);
+        tvDiagDisplaysStatus = findViewById(R.id.tvDiagDisplaysStatus);
+        tvDiagOverlayStatus = findViewById(R.id.tvDiagOverlayStatus);
+        tvDiagSocketCanStatus = findViewById(R.id.tvDiagSocketCanStatus);
+        btnRefreshDiagStatus = findViewById(R.id.btnRefreshDiagStatus);
+        btnProbeVhalNow = findViewById(R.id.btnProbeVhalNow);
+        btnCopyLogs = findViewById(R.id.btnCopyLogs);
+        btnExportLogsFile = findViewById(R.id.btnExportLogsFile);
+        btnClearLogs = findViewById(R.id.btnClearLogs);
+        chipFilterAll = findViewById(R.id.chipFilterAll);
+        chipFilterErrors = findViewById(R.id.chipFilterErrors);
+        chipFilterBus = findViewById(R.id.chipFilterBus);
+        chipFilterDisplay = findViewById(R.id.chipFilterDisplay);
+        tvLogCounter = findViewById(R.id.tvLogCounter);
+        scrollLogTerminal = findViewById(R.id.scrollLogTerminal);
+        tvLogOutput = findViewById(R.id.tvLogOutput);
 
         btnToggleCluster = findViewById(R.id.btnToggleCluster);
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay);
@@ -211,12 +270,15 @@ public class MainActivity extends Activity {
         if (tabEditor != null) {
             tabEditor.setOnClickListener(v -> selectTab(4));
         }
+        if (tabLogs != null) {
+            tabLogs.setOnClickListener(v -> selectTab(5));
+        }
         selectTab(0);
     }
 
     private void selectTab(int index) {
-        TextView[] tabs = {tabMain, tabThemes, tabWidgets, tabBus, tabEditor};
-        LinearLayout[] containers = {containerTabMain, containerTabThemes, containerTabWidgets, containerTabBus, containerTabEditor};
+        TextView[] tabs = {tabMain, tabThemes, tabWidgets, tabBus, tabEditor, tabLogs};
+        LinearLayout[] containers = {containerTabMain, containerTabThemes, containerTabWidgets, containerTabBus, containerTabEditor, containerTabLogs};
 
         for (int i = 0; i < tabs.length; i++) {
             boolean active = (i == index);
@@ -231,6 +293,11 @@ public class MainActivity extends Activity {
 
         if (gaugePreview != null) {
             gaugePreview.setEditMode(index == 4, currentEditElement);
+        }
+
+        if (index == 5) {
+            updateDiagnosticSummary();
+            renderLogs();
         }
     }
 
@@ -602,6 +669,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        AppLogger.removeListener(logListener);
         if (autoSweepAnimator != null) {
             autoSweepAnimator.cancel();
         }
@@ -903,5 +971,208 @@ public class MainActivity extends Activity {
         root.addView(bar, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         dialog.setContentView(root);
         dialog.show();
+    }
+
+    // =========================================================================
+    // 6. DIAGNOSTICS & SYSTEM LOGS TERMINAL
+    // =========================================================================
+    private final AppLogger.LogListener logListener = new AppLogger.LogListener() {
+        @Override
+        public void onNewLog(AppLogger.LogEntry entry) {
+            runOnUiThread(() -> {
+                if (containerTabLogs != null && containerTabLogs.getVisibility() == View.VISIBLE) {
+                    renderLogs();
+                } else if (tvLogCounter != null) {
+                    tvLogCounter.setText("ЖИВОЙ ТЕРМИНАЛ (" + AppLogger.getEntriesSnapshot().size() + " строк)");
+                }
+            });
+        }
+
+        @Override
+        public void onLogsCleared() {
+            runOnUiThread(() -> {
+                if (tvLogOutput != null) tvLogOutput.setText("Логи очищены.");
+                if (tvLogCounter != null) tvLogCounter.setText("ЖИВОЙ ТЕРМИНАЛ (0 строк)");
+            });
+        }
+    };
+
+    private void setupDiagnosticsControls() {
+        AppLogger.addListener(logListener);
+
+        if (btnRefreshDiagStatus != null) {
+            btnRefreshDiagStatus.setOnClickListener(v -> updateDiagnosticSummary());
+        }
+
+        if (btnProbeVhalNow != null) {
+            btnProbeVhalNow.setOnClickListener(v -> {
+                Toast.makeText(MainActivity.this, "Запуск зондажа VHAL / шины...", Toast.LENGTH_SHORT).show();
+                new Thread(() -> {
+                    if (vehicleProvider instanceof AndroidAutomotiveVehicleProvider) {
+                        ((AndroidAutomotiveVehicleProvider) vehicleProvider).probeAllProperties();
+                    } else {
+                        AppLogger.w("Diagnostics", "Провайдер не является AndroidAutomotiveVehicleProvider");
+                    }
+                    runOnUiThread(this::updateDiagnosticSummary);
+                }).start();
+            });
+        }
+
+        if (btnCopyLogs != null) {
+            btnCopyLogs.setOnClickListener(v -> {
+                String allLogs = AppLogger.getAllLogsAsString();
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null) {
+                    cm.setPrimaryClip(ClipData.newPlainText("OpenGWM Logs", allLogs));
+                    Toast.makeText(MainActivity.this, "Логи скопированы в буфер обмена", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (btnExportLogsFile != null) {
+            btnExportLogsFile.setOnClickListener(v -> {
+                File f = AppLogger.exportToFile(MainActivity.this);
+                if (f != null) {
+                    Toast.makeText(MainActivity.this, "Файл сохранен: " + f.getName(), Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Ошибка сохранения файла", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (btnClearLogs != null) {
+            btnClearLogs.setOnClickListener(v -> {
+                AppLogger.clear();
+                Toast.makeText(MainActivity.this, "Логи очищены", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        View.OnClickListener filterClick = v -> {
+            if (v == chipFilterAll) currentLogFilter = 0;
+            else if (v == chipFilterErrors) currentLogFilter = 1;
+            else if (v == chipFilterBus) currentLogFilter = 2;
+            else if (v == chipFilterDisplay) currentLogFilter = 3;
+
+            updateFilterPills();
+            renderLogs();
+        };
+
+        if (chipFilterAll != null) chipFilterAll.setOnClickListener(filterClick);
+        if (chipFilterErrors != null) chipFilterErrors.setOnClickListener(filterClick);
+        if (chipFilterBus != null) chipFilterBus.setOnClickListener(filterClick);
+        if (chipFilterDisplay != null) chipFilterDisplay.setOnClickListener(filterClick);
+    }
+
+    private void updateFilterPills() {
+        TextView[] chips = {chipFilterAll, chipFilterErrors, chipFilterBus, chipFilterDisplay};
+        for (int i = 0; i < chips.length; i++) {
+            if (chips[i] == null) continue;
+            boolean sel = (i == currentLogFilter);
+            chips[i].setBackgroundResource(sel ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
+            chips[i].setTextColor(Color.parseColor(sel ? "#A8E6BD" : "#8FA395"));
+        }
+    }
+
+    private void updateDiagnosticSummary() {
+        boolean overlayOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+        if (tvDiagOverlayStatus != null) {
+            tvDiagOverlayStatus.setText(overlayOk ? "• Оверлей поверх окон: [ 🟢 РАЗРЕШЕНО ]" : "• Оверлей поверх окон: [ 🔴 ЗАПРЕЩЕНО (нажмите 'Выдать разрешение') ]");
+            tvDiagOverlayStatus.setTextColor(Color.parseColor(overlayOk ? "#8CE4A8" : "#FF5252"));
+        }
+
+        boolean isBound = false;
+        boolean hasProp = false;
+        boolean hasSensor = false;
+        if (vehicleProvider instanceof AndroidAutomotiveVehicleProvider) {
+            AndroidAutomotiveVehicleProvider aavp = (AndroidAutomotiveVehicleProvider) vehicleProvider;
+            isBound = aavp.isServiceBound();
+            hasProp = aavp.hasCarProperty();
+            hasSensor = aavp.hasCarSensor();
+        }
+
+        if (tvDiagCarServiceStatus != null) {
+            if (isBound && hasProp) {
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ 🟢 ПОДКЛЮЧЕНА (CarProperty OK) ]");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#8CE4A8"));
+            } else if (isBound) {
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ 🟡 СВЯЗАНА (Ожидание ICarProperty) ]");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#FFD54F"));
+            } else {
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ ⚪ НЕ ПОДКЛЮЧЕНА (Телефон или нет car_service) ]");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#B0BEC5"));
+            }
+        }
+
+        if (tvDiagVhalStatus != null) {
+            if (hasProp) {
+                tvDiagVhalStatus.setText("• Доступ к VHAL (Qualcomm SA8155): [ 🟢 АКТИВЕН ]");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#8CE4A8"));
+            } else if (hasSensor) {
+                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): [ 🟡 ТОЛЬКО CarSensorManager ]");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#FFD54F"));
+            } else {
+                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): [ ⚪ НЕДОСТУПЕН ]");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#B0BEC5"));
+            }
+        }
+
+        // Displays Check
+        DisplayManager dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = dm != null ? dm.getDisplays() : new Display[0];
+        boolean hasSecondary = false;
+        StringBuilder sbDisp = new StringBuilder("• Дисплеи в системе (" + displays.length + "): ");
+        for (Display d : displays) {
+            DisplayMetrics m = new DisplayMetrics();
+            d.getRealMetrics(m);
+            sbDisp.append("[ID ").append(d.getDisplayId()).append(": ").append(m.widthPixels).append("x").append(m.heightPixels).append("] ");
+            if (d.getDisplayId() != Display.DEFAULT_DISPLAY) {
+                hasSecondary = true;
+            }
+        }
+        if (tvDiagDisplaysStatus != null) {
+            tvDiagDisplaysStatus.setText(sbDisp.toString());
+            tvDiagDisplaysStatus.setTextColor(Color.parseColor(hasSecondary ? "#8CE4A8" : "#FFB74D"));
+        }
+
+        if (tvDiagSocketCanStatus != null) {
+            tvDiagSocketCanStatus.setText("• SocketCAN: " + AndroidAutomotiveVehicleProvider.getCan0Status());
+        }
+    }
+
+    private void renderLogs() {
+        List<AppLogger.LogEntry> snapshot = AppLogger.getEntriesSnapshot();
+        if (tvLogCounter != null) {
+            tvLogCounter.setText("ЖИВОЙ ТЕРМИНАЛ (" + snapshot.size() + " строк)");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int matched = 0;
+        for (int i = Math.max(0, snapshot.size() - 250); i < snapshot.size(); i++) {
+            AppLogger.LogEntry e = snapshot.get(i);
+            boolean pass = true;
+            if (currentLogFilter == 1) { // Errors only
+                pass = (e.level == AppLogger.Level.ERROR || e.level == AppLogger.Level.WARN);
+            } else if (currentLogFilter == 2) { // Bus / VHAL
+                pass = e.tag.contains("AAS") || e.tag.contains("CAN") || e.tag.contains("VHAL") || e.message.contains("PROP");
+            } else if (currentLogFilter == 3) { // Displays
+                pass = e.tag.contains("Cluster") || e.message.contains("Display") || e.message.contains("Screen");
+            }
+
+            if (pass) {
+                sb.append(e.getFormatted()).append("\n");
+                matched++;
+            }
+        }
+
+        if (matched == 0) {
+            sb.append("Нет записей под выбранный фильтр.");
+        }
+
+        if (tvLogOutput != null) {
+            tvLogOutput.setText(sb.toString());
+            if (scrollLogTerminal != null) {
+                scrollLogTerminal.post(() -> scrollLogTerminal.fullScroll(View.FOCUS_DOWN));
+            }
+        }
     }
 }

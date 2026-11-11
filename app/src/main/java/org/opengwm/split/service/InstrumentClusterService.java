@@ -11,9 +11,11 @@ import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 import org.opengwm.split.ui.ClusterGaugeView;
+import org.opengwm.split.util.AppLogger;
 import org.opengwm.split.vehicle.MockVehicleProvider;
 import org.opengwm.split.vehicle.VehicleDataProvider;
 import org.opengwm.split.vehicle.VehicleState;
@@ -107,9 +109,19 @@ public class InstrumentClusterService extends Service {
 
         DisplayManager dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
         if (dm == null) {
-            Log.e(TAG, "DisplayManager is not available");
+            AppLogger.e(TAG, "DisplayManager недоступен в системе");
             stopSelf();
             return;
+        }
+
+        Display[] displays = dm.getDisplays();
+        AppLogger.i(TAG, "Запуск службы приборной панели. Найдено экранов: " + (displays != null ? displays.length : 0));
+        if (displays != null) {
+            for (Display d : displays) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                d.getRealMetrics(metrics);
+                AppLogger.i(TAG, "  Экран ID " + d.getDisplayId() + ": " + d.getName() + " (" + metrics.widthPixels + "x" + metrics.heightPixels + ")");
+            }
         }
 
         Display targetDisplay = null;
@@ -123,9 +135,8 @@ public class InstrumentClusterService extends Service {
             targetDisplay = dm.getDisplay(2);
         }
 
-        if (targetDisplay == null) {
+        if (targetDisplay == null && displays != null) {
             // Fallback: look for any secondary non-default display
-            Display[] displays = dm.getDisplays();
             for (Display d : displays) {
                 if (d.getDisplayId() != Display.DEFAULT_DISPLAY) {
                     targetDisplay = d;
@@ -135,13 +146,13 @@ public class InstrumentClusterService extends Service {
         }
 
         if (targetDisplay == null) {
-            Log.w(TAG, "Secondary instrument cluster display not found! Cluster service will stop.");
+            AppLogger.e(TAG, "ОШИБКА: Вторичный дисплей приборной панели (Display ID 2) не найден! Служба остановлена.");
             stopCluster();
             stopSelf();
             return;
         }
 
-        Log.i(TAG, "Attaching cluster overlay to display ID: " + targetDisplay.getDisplayId() + " (" + targetDisplay.getName() + ")");
+        AppLogger.s(TAG, "Подключение оверлея к дисплею ID: " + targetDisplay.getDisplayId() + " (" + targetDisplay.getName() + ")");
 
         try {
             Context displayContext = createDisplayContext(targetDisplay);
@@ -170,6 +181,7 @@ public class InstrumentClusterService extends Service {
             clusterView = new ClusterGaugeView(displayContext);
             activeClusterView = clusterView;
             clusterWindowManager.addView(clusterView, params);
+            AppLogger.s(TAG, "УСПЕШНО: Оверлей шкал добавлен в WindowManager дисплея ID " + targetDisplay.getDisplayId());
 
             // Connect vehicle telemetry to gauges
             vehicleProvider.startListening(new VehicleDataProvider.Callback() {
@@ -184,7 +196,7 @@ public class InstrumentClusterService extends Service {
             isRunning = true;
             isServiceRunning = true;
         } catch (Exception e) {
-            Log.e(TAG, "Failed to mount cluster overlay", e);
+            AppLogger.e(TAG, "Ошибка вывода оверлея на экран", e);
             stopCluster();
             stopSelf();
         }

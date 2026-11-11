@@ -8,6 +8,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import org.opengwm.split.util.AppLogger;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -101,13 +103,13 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
     private final ServiceConnection carServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "Connected to CarService via bound Intent! Binder=" + service);
+            AppLogger.s(TAG, "УСПЕШНО: CarService подключен через bindService! Binder=" + service);
             initFromBinder(service);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.w(TAG, "CarService disconnected");
+            AppLogger.w(TAG, "ВНИМАНИЕ: CarService отключен системой");
             iCarProperty = null;
             iCarSensor = null;
             getPropertyMethod = null;
@@ -118,6 +120,7 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
     private synchronized void initFromBinder(IBinder binder) {
         if (binder == null) return;
         try {
+            AppLogger.i(TAG, "Инициализация ICar из binder: " + binder);
             // ICar.Stub.asInterface(binder)
             Class<?> iCarStubClass = Class.forName("android.car.ICar$Stub");
             Method asInterfaceMethod = iCarStubClass.getMethod("asInterface", IBinder.class);
@@ -143,10 +146,12 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         }
                     }
                     this.iCarProperty = propObj;
-                    Log.i(TAG, "ICarProperty interface ready! getPropertyMethod=" + getPropertyMethod);
+                    AppLogger.s(TAG, "ICarProperty готов! getPropertyMethod=" + getPropertyMethod);
+                } else {
+                    AppLogger.w(TAG, "getCarService('property') вернул null");
                 }
             } catch (Throwable t) {
-                Log.w(TAG, "Failed resolving ICarProperty: " + t.getMessage());
+                AppLogger.w(TAG, "Ошибка резолва ICarProperty: " + t.getMessage());
             }
 
             // 2. Resolve ICarSensor (Android 9 native sensor service - bypasses CAR_ENGINE_DETAILED signature check)
@@ -167,14 +172,16 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         }
                     }
                     this.iCarSensor = sensorObj;
-                    Log.i(TAG, "ICarSensor interface ready! getLatestSensorEventMethod=" + getLatestSensorEventMethod);
+                    AppLogger.s(TAG, "ICarSensor готов! getLatestSensorEventMethod=" + getLatestSensorEventMethod);
+                } else {
+                    AppLogger.w(TAG, "getCarService('sensor') вернул null");
                 }
             } catch (Throwable t) {
-                Log.w(TAG, "ICarSensor resolution skipped: " + t.getMessage());
+                AppLogger.w(TAG, "Резолв ICarSensor пропущен: " + t.getMessage());
             }
 
         } catch (Throwable t) {
-            Log.e(TAG, "Error resolving Car services from binder", t);
+            AppLogger.e(TAG, "Ошибка резолва Car служб из binder", t);
         }
     }
 
@@ -196,7 +203,7 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
     private void bindCarService() {
         if (context == null) {
-            Log.w(TAG, "No Context provided, relying solely on ServiceManager fallback");
+            AppLogger.w(TAG, "No Context provided, relying solely on ServiceManager fallback");
             return;
         }
         try {
@@ -204,16 +211,16 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
             intent.setComponent(new ComponentName("com.android.car", "com.android.car.CarService"));
             intent.setAction("android.car.ICar");
             isBound = context.bindService(intent, carServiceConnection, Context.BIND_AUTO_CREATE);
-            Log.i(TAG, "bindService explicit component result = " + isBound);
+            AppLogger.i(TAG, "bindService: com.android.car.CarService результат = " + isBound);
 
             if (!isBound) {
                 Intent intent2 = new Intent("android.car.ICar");
                 intent2.setPackage("com.android.car");
                 isBound = context.bindService(intent2, carServiceConnection, Context.BIND_AUTO_CREATE);
-                Log.i(TAG, "bindService action+package result = " + isBound);
+                AppLogger.i(TAG, "bindService: action+package com.android.car результат = " + isBound);
             }
         } catch (Throwable t) {
-            Log.e(TAG, "Exception during bindCarService", t);
+            AppLogger.e(TAG, "Исключение при bindCarService", t);
         }
     }
 
@@ -229,6 +236,7 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
                         Method getServiceMethod = smClass.getMethod("getService", String.class);
                         IBinder binder = (IBinder) getServiceMethod.invoke(null, "car_service");
                         if (binder != null) {
+                            AppLogger.s(TAG, "ServiceManager вернул binder 'car_service' напрямую!");
                             initFromBinder(binder);
                         }
                     } catch (Throwable ignored) {}
@@ -577,6 +585,130 @@ public class AndroidAutomotiveVehicleProvider implements VehicleDataProvider {
 
     public String getDiagnosticStatus() {
         return "SPD:" + currentSpeed + " [" + speedSource + "] | RPM:" + currentRpm + " [" + rpmSource + "] | GEAR:" + currentGear + " | TEMP:" + Math.round(currentTemp) + "C";
+    }
+
+    public boolean isServiceBound() {
+        return isBound;
+    }
+
+    public boolean hasCarProperty() {
+        return iCarProperty != null;
+    }
+
+    public boolean hasCarSensor() {
+        return iCarSensor != null;
+    }
+
+    public static String getCan0Status() {
+        File f = new File("/dev/can0");
+        if (!f.exists()) return "Отсутствует в ядре (/dev/can0 не найден)";
+        if (!f.canRead()) return "Найден, но нет прав чтения (нужен root/chmod 666)";
+        return "Доступен для чтения (SocketCAN активен)";
+    }
+
+    public void probeAllProperties() {
+        AppLogger.i(TAG, "=== ЗАПУСК ПРИНУДИТЕЛЬНОГО ЗОНДАЖА VHAL ===");
+        AppLogger.i(TAG, "Статус: isBound=" + isBound + ", iCarProperty=" + (iCarProperty != null) + ", iCarSensor=" + (iCarSensor != null));
+
+        if (iCarProperty == null) {
+            AppLogger.w(TAG, "ICarProperty еще не подключен. Запрашиваем ServiceManager напрямую...");
+            try {
+                Class<?> smClass = Class.forName("android.os.ServiceManager");
+                Method getServiceMethod = smClass.getMethod("getService", String.class);
+                IBinder binder = (IBinder) getServiceMethod.invoke(null, "car_service");
+                if (binder != null) {
+                    AppLogger.s(TAG, "УСПЕХ: ServiceManager вернул binder для 'car_service'!");
+                    initFromBinder(binder);
+                } else {
+                    AppLogger.e(TAG, "ServiceManager: binder 'car_service' = null (ОС не является Android Automotive или нет прав)");
+                }
+            } catch (Throwable t) {
+                AppLogger.e(TAG, "Ошибка вызова ServiceManager: " + t.getMessage());
+            }
+        }
+
+        if (iCarProperty == null && iCarSensor == null) {
+            AppLogger.e(TAG, "ОТЧЕТ: Ни один автомобильный сервис (Property/Sensor) не доступен.");
+            AppLogger.i(TAG, "Проверка SocketCAN: " + getCan0Status());
+            return;
+        }
+
+        int[][] propsToTest = {
+                {PROP_GWM_ACTOR_SPEED, 0},
+                {PROP_PERF_VEHICLE_SPEED, 0},
+                {PROP_GWM_VENDOR_SPEED, 0},
+                {PROP_GWM_ACTOR_RPM, 0},
+                {PROP_ENGINE_RPM, 0},
+                {PROP_GWM_VENDOR_RPM, 0},
+                {PROP_CURRENT_GEAR, 0},
+                {PROP_GEAR_SELECTION, 0},
+                {PROP_GWM_CURRENT_GEAR, 0},
+                {PROP_GWM_ENG_COOLANT_TEMP, 0},
+                {PROP_ENGINE_COOLANT_TEMP, 0},
+                {PROP_GWM_FUEL_LEVEL, 0},
+                {PROP_FUEL_LEVEL, 0},
+                {PROP_GWM_OUTSIDE_TEMP, 0},
+                {PROP_ENV_OUTSIDE_TEMP, 0},
+                {PROP_PERF_ODOMETER, 0},
+                {PROP_RANGE_REMAINING, 0}
+        };
+
+        String[] propNames = {
+                "GWM_ACTOR_SPEED (0x216116e4)",
+                "PERF_VEHICLE_SPEED (0x11600207)",
+                "GWM_VENDOR_SPEED (0x21600207)",
+                "GWM_ACTOR_RPM (0x2161169f)",
+                "ENGINE_RPM (0x11600305)",
+                "GWM_VENDOR_RPM (0x21600305)",
+                "CURRENT_GEAR (0x11400401)",
+                "GEAR_SELECTION (0x11400400)",
+                "GWM_CURRENT_GEAR (0x214016c9)",
+                "GWM_ENG_COOLANT (0x216016b3)",
+                "ENGINE_COOLANT (0x11600301)",
+                "GWM_FUEL_LEVEL (0x21401391)",
+                "FUEL_LEVEL (0x11600205)",
+                "GWM_OUTSIDE_TEMP (0x21601786)",
+                "ENV_OUTSIDE_TEMP (0x11600703)",
+                "PERF_ODOMETER (0x11600204)",
+                "RANGE_REMAINING (0x11600208)"
+        };
+
+        if (iCarProperty != null && getPropertyMethod != null) {
+            for (int i = 0; i < propsToTest.length; i++) {
+                int propId = propsToTest[i][0];
+                int areaId = propsToTest[i][1];
+                String name = propNames[i];
+                try {
+                    Object valObj = getPropertyMethod.invoke(iCarProperty, propId, areaId);
+                    if (valObj == null) {
+                        AppLogger.w(TAG, name + " -> NULL");
+                    } else {
+                        Object val = extractValue(valObj);
+                        AppLogger.s(TAG, name + " -> " + val);
+                    }
+                } catch (Throwable t) {
+                    Throwable cause = t.getCause() != null ? t.getCause() : t;
+                    AppLogger.e(TAG, name + " -> " + cause.getClass().getSimpleName() + ": " + cause.getMessage());
+                }
+            }
+        }
+
+        if (iCarSensor != null && getLatestSensorEventMethod != null) {
+            try {
+                Object speedEvent = getLatestSensorEventMethod.invoke(iCarSensor, SENSOR_TYPE_CAR_SPEED);
+                AppLogger.s(TAG, "CarSensor SPEED -> " + extractSensorFloat(speedEvent) + " m/s");
+            } catch (Throwable t) {
+                AppLogger.e(TAG, "CarSensor SPEED error: " + t.getMessage());
+            }
+            try {
+                Object rpmEvent = getLatestSensorEventMethod.invoke(iCarSensor, SENSOR_TYPE_RPM);
+                AppLogger.s(TAG, "CarSensor RPM -> " + extractSensorFloat(rpmEvent));
+            } catch (Throwable t) {
+                AppLogger.e(TAG, "CarSensor RPM error: " + t.getMessage());
+            }
+        }
+
+        AppLogger.i(TAG, "=== ЗОНДАЖ VHAL ЗАВЕРШЕН ===");
     }
 
     @Override
