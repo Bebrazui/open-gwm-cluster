@@ -44,6 +44,11 @@ public class MainActivity extends Activity {
     private Button btnAutoSweep;
 
     private Spinner spinnerTheme;
+    private Button btnPrevTheme;
+    private Button btnNextTheme;
+    private TextView tvCurrentThemeName;
+    private TextView tvThemeCounter;
+    private int currentThemeIndex = 0;
     private Spinner spinnerGear;
     private Spinner spinnerMode;
     private Spinner spinnerWidgetLeft;
@@ -174,6 +179,10 @@ public class MainActivity extends Activity {
         btnAutoSweep = findViewById(R.id.btnAutoSweep);
 
         spinnerTheme = findViewById(R.id.spinnerTheme);
+        btnPrevTheme = findViewById(R.id.btnPrevTheme);
+        btnNextTheme = findViewById(R.id.btnNextTheme);
+        tvCurrentThemeName = findViewById(R.id.tvCurrentThemeName);
+        tvThemeCounter = findViewById(R.id.tvThemeCounter);
         spinnerGear = findViewById(R.id.spinnerGear);
         spinnerMode = findViewById(R.id.spinnerMode);
         spinnerWidgetLeft = findViewById(R.id.spinnerWidgetLeft);
@@ -256,6 +265,35 @@ public class MainActivity extends Activity {
         spinnerWidgetCenter.setOnItemSelectedListener(widgetListener);
     }
 
+    private void selectThemeByIndex(int index) {
+        if (themeValues == null || themeValues.isEmpty()) return;
+        if (index < 0) {
+            index = themeValues.size() - 1;
+        } else if (index >= themeValues.size()) {
+            index = 0;
+        }
+        currentThemeIndex = index;
+        int themeVal = themeValues.get(index);
+        String name = themeDisplayNames.get(index);
+
+        if (tvCurrentThemeName != null) {
+            tvCurrentThemeName.setText(name);
+            tvCurrentThemeName.setSelected(true);
+        }
+        if (tvThemeCounter != null) {
+            tvThemeCounter.setText((index + 1) + " / " + themeValues.size());
+        }
+        if (spinnerTheme != null && spinnerTheme.getSelectedItemPosition() != index) {
+            spinnerTheme.setSelection(index, false);
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setThemeStyle(themeVal);
+        }
+        ClusterConfig.setTheme(this, themeVal);
+        InstrumentClusterService.applyConfig(this);
+    }
+
     private void setupSpinners() {
         // Theme Spinner
         themeDisplayNames.clear();
@@ -280,6 +318,9 @@ public class MainActivity extends Activity {
         themeDisplayNames.add("Тайкан Arc (Theme 51, светящийся неон)");
         themeValues.add(ClusterConfig.THEME_TAYCAN_ARC);
 
+        themeDisplayNames.add("MINI Cooper (Двойной хром-колодец, LCD, неон)");
+        themeValues.add(ClusterConfig.THEME_MINI_COOPER);
+
         themeDisplayNames.add("Пользовательская тема (/sdcard/gwm_split_user_themes/)");
         themeValues.add(ClusterConfig.THEME_USER_THEME);
 
@@ -295,22 +336,31 @@ public class MainActivity extends Activity {
         spinnerTheme.setAdapter(themeAdapter);
 
         int currentTheme = ClusterConfig.getTheme(this);
-        int selectedIndex = 5; // Default Taycan
+        int selectedIndex = 6; // Default MINI Cooper
         for (int i = 0; i < themeValues.size(); i++) {
             if (themeValues.get(i) == currentTheme) {
                 selectedIndex = i;
                 break;
             }
         }
-        spinnerTheme.setSelection(selectedIndex);
+        selectThemeByIndex(selectedIndex);
+
+        if (btnPrevTheme != null) {
+            btnPrevTheme.setOnClickListener(v -> selectThemeByIndex(currentThemeIndex - 1));
+        }
+        if (btnNextTheme != null) {
+            btnNextTheme.setOnClickListener(v -> selectThemeByIndex(currentThemeIndex + 1));
+        }
+        if (tvCurrentThemeName != null && spinnerTheme != null) {
+            tvCurrentThemeName.setOnClickListener(v -> spinnerTheme.performClick());
+        }
 
         spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                int themeVal = themeValues.get(position);
-                gaugePreview.setThemeStyle(themeVal);
-                ClusterConfig.setTheme(MainActivity.this, themeVal);
-                InstrumentClusterService.applyConfig(MainActivity.this);
+                if (position != currentThemeIndex) {
+                    selectThemeByIndex(position);
+                }
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
         });

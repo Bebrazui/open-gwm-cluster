@@ -239,40 +239,92 @@
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
-                    <!-- Row 1: Theme Selector -->
+                    <!-- Row 1: Theme Selector with Stepper Arrows -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:text="Тема оформления"
                                 android:textColor="#E5EAE6"
-                                android:textSize="13sp" />
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvThemeCounter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Стиль колодцев и графика"
-                                android:textColor="#879C8F"
-                                android:textSize="11sp" />
+                                android:text="1 / 46"
+                                android:textColor="#A8E6BD"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
+                        <!-- Stepper Bar: [ ◀ ] [ Название темы ] [ ▶ ] -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/m3_card_bg"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="4dp">
+
+                            <Button
+                                android:id="@+id/btnPrevTheme"
+                                android:layout_width="52dp"
+                                android:layout_height="42dp"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="◀"
+                                android:textColor="#A8E6BD"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvCurrentThemeName"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:ellipsize="marquee"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:gravity="center"
+                                android:marqueeRepeatLimit="marquee_forever"
+                                android:paddingHorizontal="10dp"
+                                android:singleLine="true"
+                                android:text="Загрузка..."
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/btnNextTheme"
+                                android:layout_width="52dp"
+                                android:layout_height="42dp"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="▶"
+                                android:textColor="#A8E6BD"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Invisible Spinner for quick-pick dialog on title click -->
                         <Spinner
                             android:id="@+id/spinnerTheme"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minWidth="140dp" />
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:visibility="gone" />
                     </LinearLayout>
 
                     <View

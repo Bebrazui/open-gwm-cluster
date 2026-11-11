@@ -69,6 +69,7 @@ public class ClusterConfig {
     public static final int THEME_MINIMAL_OLED = 4;     // Scandinavian floating arc ribbons on deep obsidian black
     public static final int THEME_TAYCAN_ARC = 5;       // Porsche Taycan / Theme 51 dual glowing neon sweep arcs
     public static final int THEME_USER_THEME = 6;       // Custom community theme pack from /sdcard/gwm_split_user_themes/
+    public static final int THEME_MINI_COOPER = 7;      // MINI Cooper F56 overlapping chrome twin-gauge with LCD & fuel ladder
     public static final int THEME_SPLIT_OFFSET = 100;   // Base offset for original Split themes (100 + id)
 
     public static final int[] SPLIT_THEME_IDS = {
