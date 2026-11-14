@@ -39,25 +39,25 @@ public class carData {
         }
     }
 
-    // High-level decoded vehicle properties for UI
+    // High-level decoded vehicle properties for UI (Default unknown, populated by real FDBus CAN)
     public float speed = 0f;
     public float rpm = 0f;
     public int currentGear = 1; // P
     public String customGearStr = null;
-    public float coolantTemp = 90f;
-    public float oilTemp = 90f;
-    public float oilPress = 300f;
-    public float remainFuelPerc = 50f;
-    public float remainOdometer = 300f;
-    public float batteryVoltage = 13.8f;
-    public float batteryPowerLevel = 100f;
-    public float odoTotal = 15000f;
-    public float outsideTemp = 20f;
-    public float insideTemp = 22f;
-    public float wheel_fl_p = 2.4f;
-    public float wheel_fr_p = 2.4f;
-    public float wheel_rl_p = 2.4f;
-    public float wheel_rr_p = 2.4f;
+    public float coolantTemp = -999f;
+    public float oilTemp = -999f;
+    public float oilPress = -1f;
+    public float remainFuelPerc = -1f;
+    public float remainOdometer = -1f;
+    public float batteryVoltage = -1f;
+    public float batteryPowerLevel = -1f;
+    public float odoTotal = -1f;
+    public float outsideTemp = -999f;
+    public float insideTemp = -999f;
+    public float wheel_fl_p = -1f;
+    public float wheel_fr_p = -1f;
+    public float wheel_rl_p = -1f;
+    public float wheel_rr_p = -1f;
     public int driveMode = 0;
     public float steerAngle = 0f;
 
@@ -192,6 +192,12 @@ public class carData {
         if (!listeners.isEmpty()) {
             String gearStr = (this.customGearStr != null && !this.customGearStr.isEmpty()) ?
                     this.customGearStr : formatGear(this.currentGear);
+            int fuelPct = (this.remainFuelPerc >= 0f) ? Math.round(this.remainFuelPerc) : -1;
+            int range = (this.remainOdometer >= 0f) ? Math.round(this.remainOdometer) : -1;
+            float batt = (this.batteryVoltage > 0f) ? this.batteryVoltage : ((this.batteryPowerLevel > 0f) ? this.batteryPowerLevel : -1f);
+            int odo = (this.odoTotal >= 0f) ? Math.round(this.odoTotal) : -1;
+            float tpms = (this.wheel_fl_p > 0f) ? this.wheel_fl_p : -1f;
+
             VehicleState st = new VehicleState(
                     Math.round(this.speed),
                     gearStr,
@@ -200,12 +206,12 @@ public class carData {
                     this.coolantTemp,
                     "FDBus-Live",
                     -1f,
-                    Math.round(this.remainFuelPerc),
-                    Math.round(this.remainOdometer),
-                    this.batteryVoltage > 0 ? this.batteryVoltage : (this.batteryPowerLevel > 0 ? this.batteryPowerLevel : 13.8f),
-                    Math.round(this.odoTotal),
+                    fuelPct,
+                    range,
+                    batt,
+                    odo,
                     this.outsideTemp,
-                    this.wheel_fl_p > 0 ? this.wheel_fl_p : -1f
+                    tpms
             );
             for (TelemetryListener l : listeners) {
                 try {

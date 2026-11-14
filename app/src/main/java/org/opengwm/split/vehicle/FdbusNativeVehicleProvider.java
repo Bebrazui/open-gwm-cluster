@@ -124,6 +124,12 @@ public class FdbusNativeVehicleProvider implements VehicleDataProvider {
 
     public VehicleState getCurrentState() {
         if (carDataInstance != null) {
+            int fuelPct = (carDataInstance.remainFuelPerc >= 0f) ? Math.round(carDataInstance.remainFuelPerc) : -1;
+            int range = (carDataInstance.remainOdometer >= 0f) ? Math.round(carDataInstance.remainOdometer) : -1;
+            float batt = (carDataInstance.batteryVoltage > 0f) ? carDataInstance.batteryVoltage : -1f;
+            int odo = (carDataInstance.odoTotal >= 0f) ? Math.round(carDataInstance.odoTotal) : -1;
+            float tpms = (carDataInstance.wheel_fl_p > 0f) ? carDataInstance.wheel_fl_p : -1f;
+
             return new VehicleState(
                     Math.round(carDataInstance.speed),
                     carData.formatGear(carDataInstance.currentGear),
@@ -132,14 +138,14 @@ public class FdbusNativeVehicleProvider implements VehicleDataProvider {
                     carDataInstance.coolantTemp,
                     "FDBus-Live",
                     -1f,
-                    Math.round(carDataInstance.remainFuelPerc),
-                    Math.round(carDataInstance.remainOdometer),
-                    carDataInstance.batteryVoltage,
-                    Math.round(carDataInstance.odoTotal),
+                    fuelPct,
+                    range,
+                    batt,
+                    odo,
                     carDataInstance.outsideTemp,
-                    carDataInstance.wheel_fl_p
+                    tpms
             );
         }
-        return new VehicleState(0, "P", 0, false, 90f, "FDBus-Idle", -1f, 50, 300, 13.8f, 15000, 20f, 2.4f);
+        return new VehicleState(0, "P", 0, false, -999f, "FDBus-Idle", -1f, -1, -1, -1f, -1, -999f, -1f);
     }
 }

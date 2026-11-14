@@ -2612,12 +2612,14 @@ public class ClusterGaugeView extends View {
         canvas.drawText(gear, w * 0.50f, barY + 5f, subTextPaint);
         subTextPaint.setFakeBoldText(false);
 
-        // Outside Temp: 0°C or +18°C
-        float tempVal = (latestState != null) ? latestState.outsideTempC : 18f;
+        // Outside Temp
+        String tempText = (latestState != null && latestState.outsideTempC > -50f)
+                ? (Math.round(latestState.outsideTempC) + "°C")
+                : "--°C";
         subTextPaint.setTextAlign(Paint.Align.LEFT);
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(spToPx(13.5f));
-        canvas.drawText(Math.round(tempVal) + "°C", w * 0.54f, barY + 4f, subTextPaint);
+        canvas.drawText(tempText, w * 0.54f, barY + 4f, subTextPaint);
 
         canvas.restore();
     }
@@ -2680,11 +2682,13 @@ public class ClusterGaugeView extends View {
         subTextPaint.setFakeBoldText(true);
         canvas.drawText(timeStr, w * 0.055f, h * 0.12f, subTextPaint);
 
-        float outsideTemp = (latestState != null) ? latestState.outsideTempC : 18f;
+        String outTempStr = (latestState != null && latestState.outsideTempC > -50f)
+                ? ((latestState.outsideTempC >= 0 ? "+" : "") + Math.round(latestState.outsideTempC) + "°C")
+                : "--°C";
         subTextPaint.setColor(Color.parseColor("#80DEEA"));
         subTextPaint.setTextSize(spToPx(12));
         subTextPaint.setFakeBoldText(false);
-        canvas.drawText((outsideTemp >= 0 ? "+" : "") + Math.round(outsideTemp) + "°C", w * 0.055f, h * 0.16f, subTextPaint);
+        canvas.drawText(outTempStr, w * 0.055f, h * 0.16f, subTextPaint);
 
         // 2. 4-Wheel TPMS card (Top-Right exterior)
         float tpmsX = cx + arcR * 0.90f;
@@ -2698,11 +2702,11 @@ public class ClusterGaugeView extends View {
         statusPillBorderPaint.setStrokeWidth(1.8f);
         canvas.drawArc(new RectF(tpmsX - 16f, tpmsY, tpmsX - 4f, tpmsY + 44f), 100f, 160f, false, statusPillBorderPaint);
 
-        float barVal = (latestState != null) ? latestState.tirePressureBar : 2.5f;
-        String p1 = String.format(java.util.Locale.US, "FL: %.1f", barVal);
-        String p2 = String.format(java.util.Locale.US, "FR: %.1f", barVal);
-        String p3 = String.format(java.util.Locale.US, "RL: %.1f", barVal + 0.1f);
-        String p4 = String.format(java.util.Locale.US, "RR: %.1f bar", barVal + 0.1f);
+        boolean hasTpms = (latestState != null && latestState.tirePressureBar > 0f);
+        String p1 = hasTpms ? String.format(java.util.Locale.US, "FL: %.1f", latestState.tirePressureBar) : "FL: --";
+        String p2 = hasTpms ? String.format(java.util.Locale.US, "FR: %.1f", latestState.tirePressureBar) : "FR: --";
+        String p3 = hasTpms ? String.format(java.util.Locale.US, "RL: %.1f", latestState.tirePressureBar) : "RL: --";
+        String p4 = hasTpms ? String.format(java.util.Locale.US, "RR: %.1f bar", latestState.tirePressureBar) : "RR: -- bar";
         canvas.drawText(p1, tpmsX, tpmsY + 10f, subTextPaint);
         canvas.drawText(p2, tpmsX, tpmsY + 22f, subTextPaint);
         canvas.drawText(p3, tpmsX, tpmsY + 34f, subTextPaint);
@@ -2788,11 +2792,13 @@ public class ClusterGaugeView extends View {
         subTextPaint.setTextSize(radius * 0.075f);
         canvas.drawText("Odometer", cx, cy - radius * 0.48f, subTextPaint);
 
-        int odoVal = (latestState != null && latestState.odometerKm > 0) ? latestState.odometerKm : 14350;
+        String odoStr = (latestState != null && latestState.odometerKm > 0)
+                ? ("Total: " + String.format(java.util.Locale.US, "%,d KM", latestState.odometerKm))
+                : "Total: -- KM";
         subTextPaint.setColor(Color.WHITE);
         subTextPaint.setTextSize(radius * 0.088f);
         subTextPaint.setFakeBoldText(true);
-        canvas.drawText("Total: " + String.format(java.util.Locale.US, "%,d KM", odoVal), cx, cy - radius * 0.34f, subTextPaint);
+        canvas.drawText(odoStr, cx, cy - radius * 0.34f, subTextPaint);
 
         // Center: Digital Speed + KM/H
         textValuePaint.setColor(Color.WHITE);
@@ -2803,10 +2809,10 @@ public class ClusterGaugeView extends View {
         textUnitPaint.setTextSize(radius * 0.082f);
         canvas.drawText("KM/H", cx, cy + radius * 0.16f, textUnitPaint);
 
-        // Below Center: Trip: 89 KM
+        // Below Center: Trip
         subTextPaint.setColor(Color.parseColor("#80DEEA"));
         subTextPaint.setTextSize(radius * 0.082f);
-        canvas.drawText("Trip: 89 KM", cx, cy + radius * 0.34f, subTextPaint);
+        canvas.drawText("Trip: -- KM", cx, cy + radius * 0.34f, subTextPaint);
 
         // Bottom Inside: Instant Power Use + Value Pill [ 0.0 kW ]
         subTextPaint.setColor(Color.parseColor("#78909C"));
@@ -2837,7 +2843,7 @@ public class ClusterGaugeView extends View {
         canvas.rotate(footLayout.rotation, cx, h - 22f);
         subTextPaint.setTextSize(h * 0.042f);
         subTextPaint.setColor(Color.parseColor("#78909C"));
-        String rangeStr = ((latestState != null && latestState.rangeKm > 0) ? latestState.rangeKm : 350) + " KM";
+        String rangeStr = (latestState != null && latestState.rangeKm >= 0) ? (latestState.rangeKm + " KM") : "-- KM";
         canvas.drawText("Range Left: ", cx - 30f, h - 22f, subTextPaint);
         subTextPaint.setColor(Color.parseColor("#00E5FF"));
         subTextPaint.setFakeBoldText(true);
@@ -2975,12 +2981,13 @@ public class ClusterGaugeView extends View {
         statusPillBorderPaint.setStrokeWidth(1.4f);
         canvas.drawRoundRect(batteryCardRect, 6f, 6f, statusPillBorderPaint);
 
-        int socVal = (latestState != null && latestState.fuelPercent > 0) ? latestState.fuelPercent : 85;
+        int socVal = (latestState != null && latestState.fuelPercent >= 0) ? latestState.fuelPercent : -1;
+        String socText = (socVal >= 0) ? (socVal + "%") : "--%";
         subTextPaint.setTextAlign(Paint.Align.LEFT);
         subTextPaint.setColor(Color.parseColor("#00E5FF"));
         subTextPaint.setTextSize(radius * 0.075f);
         subTextPaint.setFakeBoldText(true);
-        canvas.drawText(socVal + "%", batteryCardRect.left + 8f, batCardY + 4f, subTextPaint);
+        canvas.drawText(socText, batteryCardRect.left + 8f, batCardY + 4f, subTextPaint);
 
         // Battery icon glyph with fill bar
         float bIconLeft = batteryCardRect.right - radius * 0.12f;
@@ -2991,9 +2998,11 @@ public class ClusterGaugeView extends View {
         canvas.drawRect(bIcon.right, batCardY - 3f, bIcon.right + 2f, batCardY + 3f, statusPillBorderPaint);
 
         statusPillBgPaint.setColor(Color.parseColor("#00E676"));
-        canvas.drawRect(bIcon.left + 2f, bIcon.top + 2f, bIcon.left + 2f + (bIcon.width() - 4f) * (socVal / 100f), bIcon.bottom - 2f, statusPillBgPaint);
+        if (socVal >= 0) {
+            canvas.drawRect(bIcon.left + 2f, bIcon.top + 2f, bIcon.left + 2f + (bIcon.width() - 4f) * (socVal / 100f), bIcon.bottom - 2f, statusPillBgPaint);
+        }
 
-        // Regen Braking & Pill [ 540 KM ]
+        // Regen Braking & Pill
         subTextPaint.setTextAlign(Paint.Align.CENTER);
         subTextPaint.setColor(Color.parseColor("#78909C"));
         subTextPaint.setTextSize(radius * 0.065f);
@@ -3009,10 +3018,11 @@ public class ClusterGaugeView extends View {
         statusPillBorderPaint.setStrokeWidth(1.2f);
         canvas.drawRoundRect(pillRect, rPillH / 2f, rPillH / 2f, statusPillBorderPaint);
 
+        String regenRangeStr = (latestState != null && latestState.rangeKm >= 0) ? (latestState.rangeKm + " KM") : "-- KM";
         subTextPaint.setColor(Color.parseColor("#80DEEA"));
         subTextPaint.setTextSize(radius * 0.075f);
         subTextPaint.setFakeBoldText(true);
-        canvas.drawText(((latestState != null && latestState.rangeKm > 0) ? latestState.rangeKm : 540) + " KM", cx, rPillCy + 4f, subTextPaint);
+        canvas.drawText(regenRangeStr, cx, rPillCy + 4f, subTextPaint);
 
         // 8. Footer Under Right Dial
         ElementLayout footLayoutR = elementLayouts[ClusterConfig.ELEM_BOTTOM_FOOTER];

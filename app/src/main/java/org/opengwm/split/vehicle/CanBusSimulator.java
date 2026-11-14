@@ -83,7 +83,7 @@ public class CanBusSimulator {
     }
 
     private CanBusSimulator() {
-        startFdbusSocketServer();
+        // Passive on vehicle startup. Only activates when manually requested.
     }
 
     public void addListener(StatusListener l) {
@@ -108,41 +108,7 @@ public class CanBusSimulator {
         return packetCounter.get();
     }
 
-    /**
-     * Starts background abstract UNIX domain socket listener for @/data/misc/fdbus/fdb-ns
-     * to respond to native FDBus clients if they attempt connection on the device.
-     */
-    private void startFdbusSocketServer() {
-        if (isSocketServerRunning.get()) return;
 
-        socketListenerThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Try abstract socket name matching FDBus name server
-                    localServerSocket = new LocalServerSocket("/data/misc/fdbus/fdb-ns");
-                    isSocketServerRunning.set(true);
-                    AppLogger.i(TAG, "Abstract socket server @/data/misc/fdbus/fdb-ns успешно запущен.");
-
-                    while (isSocketServerRunning.get()) {
-                        try {
-                            LocalSocket clientSocket = localServerSocket.accept();
-                            if (clientSocket != null) {
-                                AppLogger.i(TAG, "FDBus IPC Client connected from JNI/NativeLib!");
-                                // Keep connection alive or handle ping
-                            }
-                        } catch (IOException e) {
-                            if (!isSocketServerRunning.get()) break;
-                        }
-                    }
-                } catch (Throwable t) {
-                    AppLogger.w(TAG, "Не удалось открыть сокет @/data/misc/fdbus/fdb-ns (нормально на непривилегированном Android): " + t.getMessage());
-                }
-            }
-        }, "FDBus-Socket-Sim");
-        socketListenerThread.setDaemon(true);
-        socketListenerThread.start();
-    }
 
     /**
      * Starts realistic 50 Hz driving cycle simulation.
