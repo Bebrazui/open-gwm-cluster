@@ -166,10 +166,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        org.opengwm.split.theme.ThemeAssetLoader.dumpAllDecrypted(this);
-        android.graphics.Bitmap testBmp = org.opengwm.split.theme.ThemeAssetLoader.loadDecryptedBitmap(this, "themes/47/theme_47_spd.bin");
-        android.util.Log.i("MainActivity", "Test direct decode: " + (testBmp != null ? (testBmp.getWidth() + "x" + testBmp.getHeight()) : "NULL"));
-
         initViews();
         setupTabNavigation();
         setupEditorControls();
@@ -606,7 +602,13 @@ public class MainActivity extends Activity {
     }
 
     private void setupVehicleTelemetry() {
-        vehicleProvider = new AndroidAutomotiveVehicleProvider(this);
+        if (org.opengwm.split.vehicle.FdbusNativeVehicleProvider.isAvailable()) {
+            AppLogger.i("MainActivity", "Активирован нативный FDBus IPC провайдер (GA-Server sub-ms CAN stream)");
+            vehicleProvider = new org.opengwm.split.vehicle.FdbusNativeVehicleProvider(this);
+        } else {
+            AppLogger.i("MainActivity", "Нативные библиотеки FDBus недоступны, fallback на AndroidAutomotiveVehicleProvider");
+            vehicleProvider = new AndroidAutomotiveVehicleProvider(this);
+        }
         vehicleProvider.startListening(new VehicleDataProvider.Callback() {
             @Override
             public void onVehicleStateChanged(final VehicleState state) {
@@ -1011,7 +1013,7 @@ public class MainActivity extends Activity {
                     if (vehicleProvider instanceof AndroidAutomotiveVehicleProvider) {
                         ((AndroidAutomotiveVehicleProvider) vehicleProvider).probeAllProperties();
                     } else {
-                        AppLogger.w("Diagnostics", "Провайдер не является AndroidAutomotiveVehicleProvider");
+                        new AndroidAutomotiveVehicleProvider(MainActivity.this).probeAllProperties();
                     }
                     runOnUiThread(this::updateDiagnosticSummary);
                 }).start();

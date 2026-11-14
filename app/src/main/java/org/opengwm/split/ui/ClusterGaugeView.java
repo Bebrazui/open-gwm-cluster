@@ -162,6 +162,7 @@ public class ClusterGaugeView extends View {
     private final Paint statusPillBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint statusPillBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint innerArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint miniFuelLedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     // Dynamic Media Player Detection & Metadata
     private boolean isMusicActive = false;
@@ -2180,9 +2181,8 @@ public class ClusterGaugeView extends View {
         int activeBars = (fuelPct >= 0) ? Math.min(8, Math.max(0, Math.round((fuelPct / 100f) * 8f))) : -1;
 
         // 8 curved LED segments
-        Paint ledPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        ledPaint.setStyle(Paint.Style.STROKE);
-        ledPaint.setStrokeWidth(strokeW * 0.72f);
+        miniFuelLedPaint.setStyle(Paint.Style.STROKE);
+        miniFuelLedPaint.setStrokeWidth(strokeW * 0.72f);
 
         for (int i = 0; i < 8; i++) {
             float segAngle = 24f - i * 6.8f;
@@ -2190,11 +2190,11 @@ public class ClusterGaugeView extends View {
 
             if (isActive) {
                 int col = (activeBars <= 2) ? Color.parseColor("#FF2626") : Color.parseColor("#FFA000");
-                ledPaint.setColor(col);
+                miniFuelLedPaint.setColor(col);
             } else {
-                ledPaint.setColor(Color.parseColor("#221810"));
+                miniFuelLedPaint.setColor(Color.parseColor("#221810"));
             }
-            canvas.drawArc(arcRect, segAngle - 2.5f, 5.0f, false, ledPaint);
+            canvas.drawArc(arcRect, segAngle - 2.5f, 5.0f, false, miniFuelLedPaint);
         }
 
         // Fuel pump icon stamped at bottom of wing

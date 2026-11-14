@@ -42,7 +42,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
+    implementation("androidx.lifecycle:lifecycle-livedata:2.6.2")
+    testImplementation("junit:junit:4.13.2")
 }

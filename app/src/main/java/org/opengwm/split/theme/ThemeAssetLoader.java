@@ -24,32 +24,25 @@ public class ThemeAssetLoader {
         if (BITMAP_CACHE.containsKey(assetPath)) {
             return BITMAP_CACHE.get(assetPath);
         }
-        try {
-            InputStream is = context.getAssets().open(assetPath);
-            Bitmap bmp = BitmapFactory.decodeStream(is);
-            is.close();
-            if (bmp != null) {
-                BITMAP_CACHE.put(assetPath, bmp);
-                return bmp;
-            }
-        } catch (Throwable ignored) {
+        Bitmap bmp = loadDirectAsset(context, assetPath);
+        if (bmp != null) {
+            return bmp;
         }
 
-        // Automatic fallback resolution for needles (e.g., theme_24_needle_spd vs theme_X_needle)
+        // Fallbacks without mutual recursion
         if ("needle_spd".equals(component) || "needle_rpm".equals(component)) {
-            return loadSplitThemeBitmap(context, themeId, "needle");
+            bmp = loadDirectAsset(context, "split_themes/theme_" + themeId + "_needle.png");
         } else if ("needle".equals(component)) {
-            Bitmap spd = loadSplitThemeBitmap(context, themeId, "needle_spd");
-            if (spd != null) return spd;
+            bmp = loadDirectAsset(context, "split_themes/theme_" + themeId + "_needle_spd.png");
         } else if ("needle_small_fuel".equals(component) || "needle_small_temp".equals(component)) {
-            return loadSplitThemeBitmap(context, themeId, "needle_small");
+            bmp = loadDirectAsset(context, "split_themes/theme_" + themeId + "_needle_small.png");
         }
 
-        return null;
+        BITMAP_CACHE.put(assetPath, bmp);
+        return bmp;
     }
 
-    public static Bitmap loadSplitAsset(Context context, String fileName) {
-        String assetPath = "split_themes/" + fileName;
+    private static Bitmap loadDirectAsset(Context context, String assetPath) {
         if (BITMAP_CACHE.containsKey(assetPath)) {
             return BITMAP_CACHE.get(assetPath);
         }
@@ -57,13 +50,16 @@ public class ThemeAssetLoader {
             InputStream is = context.getAssets().open(assetPath);
             Bitmap bmp = BitmapFactory.decodeStream(is);
             is.close();
-            if (bmp != null) {
-                BITMAP_CACHE.put(assetPath, bmp);
-                return bmp;
-            }
+            BITMAP_CACHE.put(assetPath, bmp);
+            return bmp;
         } catch (Throwable ignored) {
+            BITMAP_CACHE.put(assetPath, null);
+            return null;
         }
-        return null;
+    }
+
+    public static Bitmap loadSplitAsset(Context context, String fileName) {
+        return loadDirectAsset(context, "split_themes/" + fileName);
     }
 
     public static Context getSpoofedContext(Context base) {
@@ -97,27 +93,7 @@ public class ThemeAssetLoader {
             byte[] encryptedData = baos.toByteArray();
             byte[] decrypted = null;
 
-            if (com.altaysoft.t500_split.NativeLib.isLoaded()) {
-                Context spoofed = getSpoofedContext(context);
-                try {
-                    com.altaysoft.t500_split.NativeLib.nativeSetContext(spoofed);
-                    com.altaysoft.t500_split.NativeLib.nativeInitStrings(spoofed);
-                } catch (Throwable t) {
-                    Log.w(TAG, "NativeLib init error: " + t.getMessage());
-                }
-                try {
-                    decrypted = com.altaysoft.t500_split.NativeLib.decryptThemeImage(spoofed, encryptedData);
-                } catch (Throwable t) {
-                    Log.w(TAG, "NativeLib decryptThemeImage (spoofed) error: " + t.getMessage());
-                }
-                if (decrypted == null) {
-                    try {
-                        decrypted = com.altaysoft.t500_split.NativeLib.decryptThemeImage(context, encryptedData);
-                    } catch (Throwable t) {
-                        Log.w(TAG, "NativeLib decryptThemeImage (direct) error: " + t.getMessage());
-                    }
-                }
-            } else if (ThemeCrypt.isLoaded()) {
+            if (ThemeCrypt.isLoaded()) {
                 Context spoofed = getSpoofedContext(context);
                 decrypted = ThemeCrypt.decrypt(spoofed, encryptedData);
             }

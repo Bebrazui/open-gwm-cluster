@@ -61,7 +61,11 @@ public class InstrumentClusterService extends Service {
     public void onCreate() {
         super.onCreate();
         startAsForeground();
-        vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
+        if (org.opengwm.split.vehicle.FdbusNativeVehicleProvider.isAvailable()) {
+            vehicleProvider = new org.opengwm.split.vehicle.FdbusNativeVehicleProvider(this);
+        } else {
+            vehicleProvider = new org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider(this);
+        }
     }
 
     private void startAsForeground() {
