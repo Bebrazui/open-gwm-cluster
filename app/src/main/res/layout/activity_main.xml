@@ -780,6 +780,76 @@
                             android:text="Запустить тест стрелок (Sweep)"
                             android:textColor="#A4E2B8"
                             android:textSize="12sp" />
+
+                        <!-- CAN BUS SIMULATOR (Способ А) -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="СИМУЛЯТОР CAN-ШИНЫ (СПОСОБ А)"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvCanSimStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Статус: Остановлен | Частота: 0.0 Гц | Пакетов: 0"
+                            android:textColor="#88A090"
+                            android:textSize="11sp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <Button
+                                android:id="@+id/btnCanSimDrive"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_primary"
+                                android:text="▶ Поездка 50Hz"
+                                android:textColor="#003822"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/btnCanSimFault"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="⚠ Сбой (Fault)"
+                                android:textColor="#FFB4AB"
+                                android:textSize="11sp" />
+
+                            <Button
+                                android:id="@+id/btnCanSimStress"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="⚡ Шторм 200Hz"
+                                android:textColor="#E0E0FF"
+                                android:textSize="11sp" />
+
+                            <Button
+                                android:id="@+id/btnCanSimStop"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="0.8"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="⏹ Стоп"
+                                android:textColor="#A0A0A0"
+                                android:textSize="11sp" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

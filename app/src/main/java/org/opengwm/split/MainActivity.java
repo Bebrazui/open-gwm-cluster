@@ -31,6 +31,7 @@ import org.opengwm.split.ui.ClusterConfig;
 import org.opengwm.split.ui.ClusterGaugeView;
 import org.opengwm.split.util.AppLogger;
 import org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider;
+import org.opengwm.split.vehicle.CanBusSimulator;
 import org.opengwm.split.vehicle.VehicleDataProvider;
 import org.opengwm.split.vehicle.VehicleState;
 import java.io.File;
@@ -50,6 +51,13 @@ public class MainActivity extends Activity {
     private Button btnToggleCluster;
     private Button btnGrantOverlay;
     private Button btnAutoSweep;
+
+    // CAN Bus Simulator (Способ А)
+    private TextView tvCanSimStatus;
+    private Button btnCanSimDrive;
+    private Button btnCanSimFault;
+    private Button btnCanSimStress;
+    private Button btnCanSimStop;
 
     private Spinner spinnerTheme;
     private Button btnPrevTheme;
@@ -232,6 +240,12 @@ public class MainActivity extends Activity {
         btnToggleCluster = findViewById(R.id.btnToggleCluster);
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay);
         btnAutoSweep = findViewById(R.id.btnAutoSweep);
+
+        tvCanSimStatus = findViewById(R.id.tvCanSimStatus);
+        btnCanSimDrive = findViewById(R.id.btnCanSimDrive);
+        btnCanSimFault = findViewById(R.id.btnCanSimFault);
+        btnCanSimStress = findViewById(R.id.btnCanSimStress);
+        btnCanSimStop = findViewById(R.id.btnCanSimStop);
 
         spinnerTheme = findViewById(R.id.spinnerTheme);
         btnPrevTheme = findViewById(R.id.btnPrevTheme);
@@ -548,6 +562,48 @@ public class MainActivity extends Activity {
         });
 
         btnAutoSweep.setOnClickListener(v -> startAutoSweepDemo());
+
+        // CAN Bus Simulator (Способ А) wiring
+        CanBusSimulator.getInstance().addListener((mode, actualHz, packetsSent, info) -> {
+            if (tvCanSimStatus != null) {
+                String hzStr = String.format(java.util.Locale.US, "%.1f Гц", actualHz);
+                tvCanSimStatus.setText("Статус: " + info + " | " + hzStr + " | Пакетов: " + packetsSent);
+            }
+        });
+
+        if (btnCanSimDrive != null) {
+            btnCanSimDrive.setOnClickListener(v -> {
+                isDemoActive = false;
+                if (switchDemoMode != null) switchDemoMode.setChecked(false);
+                CanBusSimulator.getInstance().startDriveMode();
+                AppLogger.i("MainActivity", "Запущена симуляция CAN-шины 50 Гц (Поездка)");
+            });
+        }
+
+        if (btnCanSimFault != null) {
+            btnCanSimFault.setOnClickListener(v -> {
+                isDemoActive = false;
+                if (switchDemoMode != null) switchDemoMode.setChecked(false);
+                CanBusSimulator.getInstance().injectFault();
+                AppLogger.i("MainActivity", "Запущен тест сбоев CAN-шины");
+            });
+        }
+
+        if (btnCanSimStress != null) {
+            btnCanSimStress.setOnClickListener(v -> {
+                isDemoActive = false;
+                if (switchDemoMode != null) switchDemoMode.setChecked(false);
+                CanBusSimulator.getInstance().startStressMode();
+                AppLogger.i("MainActivity", "Запущен стресс-тест CAN-шины 200 Гц");
+            });
+        }
+
+        if (btnCanSimStop != null) {
+            btnCanSimStop.setOnClickListener(v -> {
+                CanBusSimulator.getInstance().stop();
+                AppLogger.i("MainActivity", "Остановлен симулятор CAN-шины");
+            });
+        }
     }
 
     private void applyDemoValues() {

@@ -10,3 +10,5 @@ open-gwm-cluster.apk
 .externalNativeBuild
 .cxx
 local.properties
+
+GWM_MEGA_DUMP.txt

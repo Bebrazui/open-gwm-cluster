@@ -43,6 +43,7 @@ public class carData {
     public float speed = 0f;
     public float rpm = 0f;
     public int currentGear = 1; // P
+    public String customGearStr = null;
     public float coolantTemp = 90f;
     public float oilTemp = 90f;
     public float oilPress = 300f;
@@ -189,7 +190,8 @@ public class carData {
 
     public void dispatchTelemetry() {
         if (!listeners.isEmpty()) {
-            String gearStr = formatGear(this.currentGear);
+            String gearStr = (this.customGearStr != null && !this.customGearStr.isEmpty()) ?
+                    this.customGearStr : formatGear(this.currentGear);
             VehicleState st = new VehicleState(
                     Math.round(this.speed),
                     gearStr,
@@ -215,8 +217,14 @@ public class carData {
         long now = System.currentTimeMillis();
         if (now - lastLogTime > 500) {
             lastLogTime = now;
-            AppLogger.i(TAG, "CAN Telemetry: speed=" + speed + " km/h, rpm=" + rpm + ", gear=" + formatGear(currentGear) + ", coolant=" + coolantTemp + "C, batt=" + batteryVoltage + "V");
+            String gearDisplay = (this.customGearStr != null) ? this.customGearStr : formatGear(this.currentGear);
+            AppLogger.i(TAG, "CAN Telemetry: speed=" + speed + " km/h, rpm=" + rpm + ", gear=" + gearDisplay + ", coolant=" + coolantTemp + "C, batt=" + batteryVoltage + "V");
         }
+    }
+
+    public void setCustomGear(String gear) {
+        this.customGearStr = gear;
+        dispatchTelemetry();
     }
 
     public static String formatGear(int g) {
@@ -234,6 +242,15 @@ public class carData {
             case 11: return "M7";
             case 12: return "M8";
             case 13: return "M9";
+            case 21: return "D1";
+            case 22: return "D2";
+            case 23: return "D3";
+            case 24: return "D4";
+            case 25: return "D5";
+            case 26: return "D6";
+            case 27: return "D7";
+            case 28: return "D8";
+            case 29: return "D9";
             default: return "D";
         }
     }
