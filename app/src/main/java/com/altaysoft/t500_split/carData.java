@@ -186,9 +186,11 @@ public class carData {
         sInstance = this;
     }
 
+    public static volatile long packetCount = 0;
     private long lastLogTime = 0;
 
     public void dispatchTelemetry() {
+        packetCount++;
         if (!listeners.isEmpty()) {
             String gearStr = (this.customGearStr != null && !this.customGearStr.isEmpty()) ?
                     this.customGearStr : formatGear(this.currentGear);

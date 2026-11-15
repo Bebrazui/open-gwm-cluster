@@ -605,6 +605,14 @@ public class ClusterGaugeView extends View {
         super.onAttachedToWindow();
         initAudioMonitoring();
         registerMediaReceiver();
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+            int w = (dm != null && dm.widthPixels > 0) ? dm.widthPixels : 1920;
+            int h = (dm != null && dm.heightPixels > 0) ? dm.heightPixels : 720;
+            onSizeChanged(w, h, 0, 0);
+        }
+        requestLayout();
+        invalidate();
     }
 
     @Override
@@ -744,11 +752,22 @@ public class ClusterGaugeView extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int w = MeasureSpec.getSize(widthMeasureSpec);
+        int h = MeasureSpec.getSize(heightMeasureSpec);
+        if (w <= 0) w = 1920;
+        if (h <= 0) h = 720;
+        setMeasuredDimension(w, h);
+    }
+
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        if (w <= 0) w = 1920;
+        if (h <= 0) h = 720;
         this.viewWidth = w;
         this.viewHeight = h;
-        if (w <= 0 || h <= 0) return;
 
         // Native 1920x720 instrument cluster geometry:
         // Left dial cx=305 (~0.16w), right dial cx=1615 (~0.84w), cy=360 (0.50h), radius=270

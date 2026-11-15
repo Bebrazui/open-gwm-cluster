@@ -52,6 +52,11 @@ public class MainActivity extends Activity {
     private Button btnGrantOverlay;
     private Button btnAutoSweep;
 
+    private TextView chipTargetAll;
+    private TextView chipTarget2;
+    private TextView chipTarget1;
+    private TextView chipTarget0;
+
     // CAN Bus Simulator (Способ А)
     private TextView tvCanSimStatus;
     private Button btnCanSimDrive;
@@ -180,6 +185,7 @@ public class MainActivity extends Activity {
         setupSpinners();
         setupWidgetSpinners();
         setupControls();
+        setupTargetDisplayControls();
         setupVehicleTelemetry();
         setupDiagnosticsControls();
         AppLogger.i("MainActivity", "Приложение запущено. Устройство: " + Build.MANUFACTURER + " " + Build.MODEL + " (Android " + Build.VERSION.RELEASE + ", API " + Build.VERSION.SDK_INT + ")");
@@ -240,6 +246,11 @@ public class MainActivity extends Activity {
         btnToggleCluster = findViewById(R.id.btnToggleCluster);
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay);
         btnAutoSweep = findViewById(R.id.btnAutoSweep);
+
+        chipTargetAll = findViewById(R.id.chipTargetAll);
+        chipTarget2 = findViewById(R.id.chipTarget2);
+        chipTarget1 = findViewById(R.id.chipTarget1);
+        chipTarget0 = findViewById(R.id.chipTarget0);
 
         tvCanSimStatus = findViewById(R.id.tvCanSimStatus);
         btnCanSimDrive = findViewById(R.id.btnCanSimDrive);
@@ -493,6 +504,7 @@ public class MainActivity extends Activity {
             } else {
                 Intent intent = new Intent(MainActivity.this, InstrumentClusterService.class);
                 intent.setAction(InstrumentClusterService.ACTION_START);
+                intent.putExtra(InstrumentClusterService.EXTRA_TARGET_DISPLAY_ID, ClusterConfig.getTargetDisplay(MainActivity.this));
                 startService(intent);
                 updateButtonLabels();
             }
@@ -657,6 +669,56 @@ public class MainActivity extends Activity {
         autoSweepAnimator.start();
     }
 
+    private void setupTargetDisplayControls() {
+        if (chipTargetAll != null) {
+            chipTargetAll.setOnClickListener(v -> setTargetDisplayMode(ClusterConfig.DISPLAY_TARGET_ALL_SECONDARY));
+        }
+        if (chipTarget2 != null) {
+            chipTarget2.setOnClickListener(v -> setTargetDisplayMode(2));
+        }
+        if (chipTarget1 != null) {
+            chipTarget1.setOnClickListener(v -> setTargetDisplayMode(1));
+        }
+        if (chipTarget0 != null) {
+            chipTarget0.setOnClickListener(v -> setTargetDisplayMode(0));
+        }
+        updateTargetDisplayChips();
+    }
+
+    private void setTargetDisplayMode(int displayId) {
+        ClusterConfig.setTargetDisplay(this, displayId);
+        updateTargetDisplayChips();
+        updateButtonLabels();
+        if (InstrumentClusterService.isServiceRunning) {
+            Toast.makeText(this, "Переключение экрана оверлея...", Toast.LENGTH_SHORT).show();
+            Intent stopIntent = new Intent(this, InstrumentClusterService.class);
+            stopIntent.setAction(InstrumentClusterService.ACTION_STOP);
+            startService(stopIntent);
+
+            findViewById(android.R.id.content).postDelayed(() -> {
+                Intent startIntent = new Intent(this, InstrumentClusterService.class);
+                startIntent.setAction(InstrumentClusterService.ACTION_START);
+                startIntent.putExtra(InstrumentClusterService.EXTRA_TARGET_DISPLAY_ID, displayId);
+                startService(startIntent);
+                updateButtonLabels();
+            }, 300);
+        }
+    }
+
+    private void updateTargetDisplayChips() {
+        int current = ClusterConfig.getTargetDisplay(this);
+        applyChipState(chipTargetAll, current == ClusterConfig.DISPLAY_TARGET_ALL_SECONDARY);
+        applyChipState(chipTarget2, current == 2);
+        applyChipState(chipTarget1, current == 1);
+        applyChipState(chipTarget0, current == 0);
+    }
+
+    private void applyChipState(TextView chip, boolean active) {
+        if (chip == null) return;
+        chip.setBackgroundResource(active ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
+        chip.setTextColor(Color.parseColor(active ? "#A8E6BD" : "#8FA395"));
+    }
+
     private void setupVehicleTelemetry() {
         if (org.opengwm.split.vehicle.FdbusNativeVehicleProvider.isAvailable()) {
             AppLogger.i("MainActivity", "Активирован нативный FDBus IPC провайдер (GA-Server sub-ms CAN stream)");
@@ -671,8 +733,10 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     if (!isDemoActive) {
                         gaugePreview.updateTelemetry(state);
-                        tvVehicleTelemetry.setText("Шина: " + state.speedKmh + " км/ч | " + (state.rpm > 0 ? state.rpm + " об/мин" : "--") +
+                        long pkts = com.altaysoft.t500_split.carData.packetCount;
+                        tvVehicleTelemetry.setText("Шина CAN: " + state.speedKmh + " км/ч | " + (state.rpm > 0 ? state.rpm + " об/мин" : "--") +
                                 " | " + (state.gear != null ? state.gear : "--") +
+                                " | Пакеты: " + pkts +
                                 " | ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--"));
                         if (tvLiveSensorStats != null) {
                             tvLiveSensorStats.setText(
@@ -695,6 +759,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         scanDisplays();
+        updateTargetDisplayChips();
         updateButtonLabels();
     }
 
@@ -719,8 +784,20 @@ public class MainActivity extends Activity {
         if (btnToggleCluster != null) {
             boolean running = InstrumentClusterService.isServiceRunning;
             btnToggleCluster.setText(running ? "Остановить панель приборов" : "Запустить на приборной панели");
-            tvStatus.setText(running ? "Служба активна: трансляция на вторичный дисплей" :
-                    "Трансляция шкал на экран приборной панели (Display ID 2)");
+
+            int target = ClusterConfig.getTargetDisplay(this);
+            String targetDesc;
+            if (target == ClusterConfig.DISPLAY_TARGET_ALL_SECONDARY) {
+                targetDesc = "Оба вторичных экрана (ID 1 + 2)";
+            } else if (target == 0) {
+                targetDesc = "Центральный экран (ID 0 - Тест)";
+            } else {
+                targetDesc = "Экран ID " + target;
+            }
+
+            tvStatus.setText(running ?
+                    ("Служба АКТИВНА: вывод на " + targetDesc) :
+                    ("Цель вывода: " + targetDesc));
         }
     }
 

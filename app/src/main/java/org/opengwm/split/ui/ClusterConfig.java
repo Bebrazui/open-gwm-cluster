@@ -16,6 +16,10 @@ public class ClusterConfig {
     public static final String KEY_WIDGET_LEFT = "pref_widget_left";
     public static final String KEY_WIDGET_RIGHT = "pref_widget_right";
     public static final String KEY_WIDGET_CENTER = "pref_widget_center";
+    public static final String KEY_TARGET_DISPLAY = "pref_target_display";
+
+    public static final int DISPLAY_TARGET_AUTO = -1;
+    public static final int DISPLAY_TARGET_ALL_SECONDARY = -2;
 
     // Custom Interactive Layout Elements
     public static final int ELEM_LEFT_GAUGE = 0;
@@ -157,6 +161,14 @@ public class ClusterConfig {
 
     public static void setWidgetCenter(Context context, int widget) {
         getPrefs(context).edit().putInt(KEY_WIDGET_CENTER, widget).apply();
+    }
+
+    public static int getTargetDisplay(Context context) {
+        return getPrefs(context).getInt(KEY_TARGET_DISPLAY, DISPLAY_TARGET_ALL_SECONDARY);
+    }
+
+    public static void setTargetDisplay(Context context, int displayId) {
+        getPrefs(context).edit().putInt(KEY_TARGET_DISPLAY, displayId).apply();
     }
 
     public static float getElementDx(Context context, int elementId) {

@@ -109,9 +109,75 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Трансляция шкал на экран приборной панели (Display ID 2)"
+                        android:text="Трансляция шкал на экран приборной панели"
                         android:textColor="#879C8F"
                         android:textSize="12sp" />
+
+                    <!-- Target Display Selector Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:text="Экран:"
+                            android:textColor="#8FA395"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/chipTargetAll"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1.2"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/m3_pill_active"
+                            android:gravity="center"
+                            android:text="Оба (1+2)"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/chipTarget2"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:text="ID 2 (HDMI)"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/chipTarget1"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:text="ID 1 (HDMI)"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/chipTarget0"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/m3_pill_inactive"
+                            android:gravity="center"
+                            android:text="ID 0 (Тест)"
+                            android:textColor="#8FA395"
+                            android:textSize="11sp" />
+                    </LinearLayout>
 
                     <Button
                         android:id="@+id/btnToggleCluster"

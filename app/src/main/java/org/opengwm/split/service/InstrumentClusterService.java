@@ -10,19 +10,25 @@ import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.Gravity;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.opengwm.split.R;
+import org.opengwm.split.ui.ClusterConfig;
 import org.opengwm.split.ui.ClusterGaugeView;
 import org.opengwm.split.util.AppLogger;
-import org.opengwm.split.vehicle.MockVehicleProvider;
 import org.opengwm.split.vehicle.VehicleDataProvider;
 import org.opengwm.split.vehicle.VehicleState;
 
 /**
  * Service that projects custom instrument cluster themes ("Колодцы")
- * directly onto the secondary display (Display ID 2 in Tank 500 / GWM).
+ * onto the target display(s) in GWM Tank 500 / SA8155.
+ * Uses exact native layout parameters matching the vehicle's QNX hypervisor.
  */
 public class InstrumentClusterService extends Service {
 
@@ -34,26 +40,70 @@ public class InstrumentClusterService extends Service {
     public static final String ACTION_STOP = "org.opengwm.split.action.STOP_CLUSTER";
     public static final String EXTRA_TARGET_DISPLAY_ID = "target_display_id";
 
-    private WindowManager clusterWindowManager;
-    private ClusterGaugeView clusterView;
+    // Overlay session on a single display
+    private static class DisplayOverlaySession {
+        final Display display;
+        final WindowManager windowManager;
+        final FrameLayout rootLayout;
+        final ClusterGaugeView gaugeView;
+
+        DisplayOverlaySession(Display display, WindowManager wm, FrameLayout root, ClusterGaugeView gaugeView) {
+            this.display = display;
+            this.windowManager = wm;
+            this.rootLayout = root;
+            this.gaugeView = gaugeView;
+        }
+
+        void updateTelemetry(VehicleState state) {
+            if (gaugeView != null) {
+                gaugeView.updateTelemetry(state);
+            }
+        }
+
+        void applyConfig(Context context) {
+            if (gaugeView != null) {
+                gaugeView.setThemeStyle(ClusterConfig.getTheme(context));
+                gaugeView.setHolePunch(ClusterConfig.isHolePunchEnabled(context));
+                gaugeView.setSmoothing(ClusterConfig.isSmoothingEnabled(context));
+                gaugeView.setWidgets(
+                        ClusterConfig.getWidgetLeft(context),
+                        ClusterConfig.getWidgetRight(context),
+                        ClusterConfig.getWidgetCenter(context)
+                );
+                gaugeView.loadLayoutConfig();
+                gaugeView.postInvalidate();
+            }
+        }
+
+        void destroy() {
+            try {
+                if (windowManager != null && rootLayout != null) {
+                    windowManager.removeView(rootLayout);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private final List<DisplayOverlaySession> activeSessions = new CopyOnWriteArrayList<>();
+    public static final List<ClusterGaugeView> activeViews = new CopyOnWriteArrayList<>();
+    public static volatile ClusterGaugeView activeClusterView = null; // for backwards compatibility
+    public static volatile boolean isServiceRunning = false;
+
     private VehicleDataProvider vehicleProvider;
     private boolean isRunning = false;
 
-    public static volatile boolean isServiceRunning = false;
-    public static volatile ClusterGaugeView activeClusterView = null;
-
     public static void applyConfig(Context context) {
-        if (activeClusterView != null) {
-            activeClusterView.setThemeStyle(org.opengwm.split.ui.ClusterConfig.getTheme(context));
-            activeClusterView.setHolePunch(org.opengwm.split.ui.ClusterConfig.isHolePunchEnabled(context));
-            activeClusterView.setSmoothing(org.opengwm.split.ui.ClusterConfig.isSmoothingEnabled(context));
-            activeClusterView.setWidgets(
-                    org.opengwm.split.ui.ClusterConfig.getWidgetLeft(context),
-                    org.opengwm.split.ui.ClusterConfig.getWidgetRight(context),
-                    org.opengwm.split.ui.ClusterConfig.getWidgetCenter(context)
+        for (ClusterGaugeView view : activeViews) {
+            view.setThemeStyle(ClusterConfig.getTheme(context));
+            view.setHolePunch(ClusterConfig.isHolePunchEnabled(context));
+            view.setSmoothing(ClusterConfig.isSmoothingEnabled(context));
+            view.setWidgets(
+                    ClusterConfig.getWidgetLeft(context),
+                    ClusterConfig.getWidgetRight(context),
+                    ClusterConfig.getWidgetCenter(context)
             );
-            activeClusterView.loadLayoutConfig();
-            activeClusterView.postInvalidate();
+            view.loadLayoutConfig();
+            view.postInvalidate();
         }
     }
 
@@ -83,7 +133,7 @@ public class InstrumentClusterService extends Service {
             Notification notification = new Notification.Builder(this, CHANNEL_ID)
                     .setContentTitle("OpenGWM Cluster")
                     .setContentText("Оверлей приборной панели активен")
-                    .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                    .setSmallIcon(R.drawable.icon_split)
                     .setOngoing(true)
                     .build();
             startForeground(NOTIFICATION_ID, notification);
@@ -103,9 +153,79 @@ public class InstrumentClusterService extends Service {
             return START_NOT_STICKY;
         }
 
-        int targetDisplayId = (intent != null) ? intent.getIntExtra(EXTRA_TARGET_DISPLAY_ID, -1) : -1;
+        int targetDisplayId = (intent != null) ?
+                intent.getIntExtra(EXTRA_TARGET_DISPLAY_ID, ClusterConfig.getTargetDisplay(this)) :
+                ClusterConfig.getTargetDisplay(this);
+
         startCluster(targetDisplayId);
         return START_STICKY;
+    }
+
+    private boolean attachOverlayToDisplay(Display targetDisplay) {
+        if (targetDisplay == null) return false;
+        try {
+            Context appContext = getApplicationContext();
+            Context displayContext = appContext.createDisplayContext(targetDisplay);
+            WindowManager wm = (WindowManager) displayContext.getSystemService(Context.WINDOW_SERVICE);
+            if (wm == null) {
+                AppLogger.e(TAG, "WindowManager недоступен для дисплея ID: " + targetDisplay.getDisplayId());
+                return false;
+            }
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            targetDisplay.getRealMetrics(metrics);
+            int width = metrics.widthPixels > 0 ? metrics.widthPixels : 1920;
+            int height = metrics.heightPixels > 0 ? metrics.heightPixels : 720;
+
+            // Strict working flags from GWM Tank 500 decompiled split:
+            // 536 = FLAG_NOT_FOCUSABLE (8) | FLAG_NOT_TOUCHABLE (16) | FLAG_LAYOUT_NO_LIMITS (512)
+            // gravity = 8388659 (Gravity.TOP | Gravity.START), type = 2038 (TYPE_APPLICATION_OVERLAY)
+            int layoutType;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            } else {
+                @SuppressWarnings("deprecation")
+                int deprecatedType = WindowManager.LayoutParams.TYPE_PHONE;
+                layoutType = deprecatedType;
+            }
+
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                    width,
+                    height,
+                    layoutType,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+            );
+            params.gravity = Gravity.TOP | Gravity.START;
+            params.x = 0;
+            params.y = 0;
+
+            FrameLayout rootLayout = new FrameLayout(displayContext);
+            rootLayout.setClipChildren(false);
+            rootLayout.setClipToPadding(false);
+            rootLayout.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+
+            ClusterGaugeView gaugeView = new ClusterGaugeView(displayContext);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width, height, Gravity.TOP | Gravity.START);
+            rootLayout.addView(gaugeView, lp);
+
+            wm.addView(rootLayout, params);
+
+            DisplayOverlaySession session = new DisplayOverlaySession(targetDisplay, wm, rootLayout, gaugeView);
+            session.applyConfig(this);
+
+            activeSessions.add(session);
+            activeViews.add(gaugeView);
+            activeClusterView = gaugeView;
+
+            AppLogger.s(TAG, "УСПЕШНО: Оверлей подключен к дисплею ID " + targetDisplay.getDisplayId() + " (" + targetDisplay.getName() + ", " + width + "x" + height + ")");
+            return true;
+        } catch (Exception e) {
+            AppLogger.e(TAG, "Ошибка подключения оверлея к дисплею ID " + targetDisplay.getDisplayId(), e);
+            return false;
+        }
     }
 
     private void startCluster(int preferredDisplayId) {
@@ -128,82 +248,77 @@ public class InstrumentClusterService extends Service {
             }
         }
 
-        Display targetDisplay = null;
-        if (preferredDisplayId >= 0) {
-            targetDisplay = dm.getDisplay(preferredDisplayId);
+        activeSessions.clear();
+        activeViews.clear();
+        boolean attachedAny = false;
+
+        if (preferredDisplayId == ClusterConfig.DISPLAY_TARGET_ALL_SECONDARY) {
+            // Attach to ALL secondary displays (e.g. Display 1 and Display 2)
+            AppLogger.i(TAG, "Режим: Проекция на ВСЕ вторичные экраны (ID 1 + 2)");
+            if (displays != null) {
+                for (Display d : displays) {
+                    if (d.getDisplayId() != Display.DEFAULT_DISPLAY) {
+                        if (attachOverlayToDisplay(d)) {
+                            attachedAny = true;
+                        }
+                    }
+                }
+            }
+        } else if (preferredDisplayId >= 0) {
+            AppLogger.i(TAG, "Режим: Проекция на выбранный экран ID " + preferredDisplayId);
+            Display target = dm.getDisplay(preferredDisplayId);
+            if (target != null && attachOverlayToDisplay(target)) {
+                attachedAny = true;
+            }
         }
 
-        // Auto-detect GWM instrument cluster display if not explicitly specified
-        if (targetDisplay == null) {
-            // Tank 500 default is display 2
-            targetDisplay = dm.getDisplay(2);
-        }
-
-        if (targetDisplay == null && displays != null) {
-            // Fallback: look for any secondary non-default display
-            for (Display d : displays) {
-                if (d.getDisplayId() != Display.DEFAULT_DISPLAY) {
-                    targetDisplay = d;
-                    break;
+        // Auto fallback if preferred display failed or none attached:
+        if (!attachedAny) {
+            AppLogger.w(TAG, "Основная цель недоступна, запуск автоматического поиска вторичных экранов...");
+            // Try Display 2
+            Display d2 = dm.getDisplay(2);
+            if (d2 != null && attachOverlayToDisplay(d2)) {
+                attachedAny = true;
+            }
+            // Try Display 1
+            if (!attachedAny) {
+                Display d1 = dm.getDisplay(1);
+                if (d1 != null && attachOverlayToDisplay(d1)) {
+                    attachedAny = true;
+                }
+            }
+            // Try any secondary display
+            if (!attachedAny && displays != null) {
+                for (Display d : displays) {
+                    if (d.getDisplayId() != Display.DEFAULT_DISPLAY) {
+                        if (attachOverlayToDisplay(d)) {
+                            attachedAny = true;
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        if (targetDisplay == null) {
-            AppLogger.e(TAG, "ОШИБКА: Вторичный дисплей приборной панели (Display ID 2) не найден! Служба остановлена.");
+        if (!attachedAny) {
+            AppLogger.e(TAG, "ОШИБКА: Не удалось подключить оверлей ни к одному дисплею!");
             stopCluster();
             stopSelf();
             return;
         }
 
-        AppLogger.s(TAG, "Подключение оверлея к дисплею ID: " + targetDisplay.getDisplayId() + " (" + targetDisplay.getName() + ")");
-
-        try {
-            Context displayContext = createDisplayContext(targetDisplay);
-            clusterWindowManager = (WindowManager) displayContext.getSystemService(Context.WINDOW_SERVICE);
-
-            int layoutType;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            } else {
-                @SuppressWarnings("deprecation")
-                int deprecatedType = WindowManager.LayoutParams.TYPE_PHONE;
-                layoutType = deprecatedType;
-            }
-
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    layoutType,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
-                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
-                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                    PixelFormat.TRANSLUCENT
-            );
-
-            clusterView = new ClusterGaugeView(displayContext);
-            activeClusterView = clusterView;
-            clusterWindowManager.addView(clusterView, params);
-            AppLogger.s(TAG, "УСПЕШНО: Оверлей шкал добавлен в WindowManager дисплея ID " + targetDisplay.getDisplayId());
-
-            // Connect vehicle telemetry to gauges
-            vehicleProvider.startListening(new VehicleDataProvider.Callback() {
-                @Override
-                public void onVehicleStateChanged(VehicleState state) {
-                    if (clusterView != null) {
-                        clusterView.updateTelemetry(state);
-                    }
+        // Connect vehicle telemetry to all active gauge views
+        vehicleProvider.startListening(new VehicleDataProvider.Callback() {
+            @Override
+            public void onVehicleStateChanged(final VehicleState state) {
+                for (DisplayOverlaySession session : activeSessions) {
+                    session.updateTelemetry(state);
                 }
-            });
+            }
+        });
 
-            isRunning = true;
-            isServiceRunning = true;
-        } catch (Exception e) {
-            AppLogger.e(TAG, "Ошибка вывода оверлея на экран", e);
-            stopCluster();
-            stopSelf();
-        }
+        isRunning = true;
+        isServiceRunning = true;
     }
 
     private void stopCluster() {
@@ -214,15 +329,15 @@ public class InstrumentClusterService extends Service {
         }
         if (!isRunning) return;
         vehicleProvider.stopListening();
-        if (clusterWindowManager != null && clusterView != null) {
-            try {
-                clusterWindowManager.removeView(clusterView);
-            } catch (Exception ignored) {}
-            clusterView = null;
-            activeClusterView = null;
+        for (DisplayOverlaySession session : activeSessions) {
+            session.destroy();
         }
+        activeSessions.clear();
+        activeViews.clear();
+        activeClusterView = null;
         isRunning = false;
         isServiceRunning = false;
+        AppLogger.i(TAG, "Служба приборной панели остановлена, все оверлеи удалены");
     }
 
     @Override
