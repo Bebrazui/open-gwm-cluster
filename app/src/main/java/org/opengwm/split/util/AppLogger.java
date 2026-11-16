@@ -63,6 +63,10 @@ public class AppLogger {
         Log.i(tag, message);
     }
 
+    public static void d(String tag, String message) {
+        Log.d(tag, message);
+    }
+
     public static void w(String tag, String message) {
         log(Level.WARN, tag, message);
         Log.w(tag, message);

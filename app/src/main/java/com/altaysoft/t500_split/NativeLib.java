@@ -15,6 +15,29 @@ public class NativeLib {
     public static synchronized boolean loadLibraries() {
         if (isLoaded) return true;
         try {
+            // Exempt Android hidden API restrictions for ServiceManager / IBinder access on Android 9+
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                try {
+                    java.lang.reflect.Method forName = Class.class.getDeclaredMethod("forName", String.class);
+                    java.lang.reflect.Method getDeclaredMethod = Class.class.getDeclaredMethod("getDeclaredMethod", String.class, Class[].class);
+                    Class<?> vmRuntimeClass = (Class<?>) forName.invoke(null, "dalvik.system.VMRuntime");
+                    java.lang.reflect.Method getRuntime = (java.lang.reflect.Method) getDeclaredMethod.invoke(vmRuntimeClass, "getRuntime", null);
+                    java.lang.reflect.Method setHiddenApiExemptions = (java.lang.reflect.Method) getDeclaredMethod.invoke(vmRuntimeClass, "setHiddenApiExemptions", new Class[]{String[].class});
+                    Object vmRuntime = getRuntime.invoke(null);
+                    setHiddenApiExemptions.invoke(vmRuntime, new Object[]{new String[]{"L"}});
+                    Log.i(TAG, "Hidden API restrictions exempted successfully");
+                } catch (Throwable t) {
+                    Log.w(TAG, "Hidden API exemption failed: " + t.getMessage());
+                }
+            }
+
+            // Ensure GwmPushBinder is loaded into classloader for JNI FindClass
+            try {
+                Class.forName("com.altaysoft.t500_split.GwmPushBinder");
+            } catch (Throwable t) {
+                Log.w(TAG, "Pre-load GwmPushBinder: " + t.getMessage());
+            }
+
             try { System.loadLibrary("c++_shared"); } catch (Throwable t) { Log.w(TAG, "c++_shared: " + t.getMessage()); }
             try { System.loadLibrary("crypto"); } catch (Throwable t) { Log.w(TAG, "crypto: " + t.getMessage()); }
             try { System.loadLibrary("ssl"); } catch (Throwable t) { Log.w(TAG, "ssl: " + t.getMessage()); }
