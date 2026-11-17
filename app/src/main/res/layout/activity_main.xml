@@ -916,6 +916,66 @@
                                 android:textColor="#A0A0A0"
                                 android:textSize="11sp" />
                         </LinearLayout>
+
+                        <!-- TRAFFIC RECORDER & REPLAY ENGINE -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="РЕКОРДЕР И РЕПЛЕЙ CAN-ТРАФИКА (ДЛЯ ТЕСТОВ)"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTrafficRecorderStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Рекордер: Остановлен | Пакетов: 0"
+                            android:textColor="#88A090"
+                            android:textSize="11sp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <Button
+                                android:id="@+id/btnTrafficRecordToggle"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="⏺ Запись шины"
+                                android:textColor="#FF8888"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/btnTrafficReplayToggle"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_primary"
+                                android:text="▶ Воспроизведение"
+                                android:textColor="#003822"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/btnTrafficInjectMock"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/m3_button_secondary"
+                                android:text="🧪 Тест-инжект"
+                                android:textColor="#A8E6BD"
+                                android:textSize="11sp" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

@@ -32,7 +32,9 @@ import org.opengwm.split.ui.ClusterGaugeView;
 import org.opengwm.split.util.AppLogger;
 import org.opengwm.split.vehicle.AndroidAutomotiveVehicleProvider;
 import org.opengwm.split.vehicle.CanBusSimulator;
+import org.opengwm.split.vehicle.TrafficRecorderReplay;
 import org.opengwm.split.vehicle.VehicleDataProvider;
+import android.content.pm.PackageManager;
 import org.opengwm.split.vehicle.VehicleState;
 import java.io.File;
 import java.util.List;
@@ -63,6 +65,13 @@ public class MainActivity extends Activity {
     private Button btnCanSimFault;
     private Button btnCanSimStress;
     private Button btnCanSimStop;
+
+    // Traffic Recorder & Replay Engine
+    private TextView tvTrafficRecorderStatus;
+    private Button btnTrafficRecordToggle;
+    private Button btnTrafficReplayToggle;
+    private Button btnTrafficInjectMock;
+    private int mockStepCounter = 0;
 
     private Spinner spinnerTheme;
     private Button btnPrevTheme;
@@ -179,6 +188,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        checkAndRequestStoragePermission();
         initViews();
         setupTabNavigation();
         setupEditorControls();
@@ -257,6 +267,11 @@ public class MainActivity extends Activity {
         btnCanSimFault = findViewById(R.id.btnCanSimFault);
         btnCanSimStress = findViewById(R.id.btnCanSimStress);
         btnCanSimStop = findViewById(R.id.btnCanSimStop);
+
+        tvTrafficRecorderStatus = findViewById(R.id.tvTrafficRecorderStatus);
+        btnTrafficRecordToggle = findViewById(R.id.btnTrafficRecordToggle);
+        btnTrafficReplayToggle = findViewById(R.id.btnTrafficReplayToggle);
+        btnTrafficInjectMock = findViewById(R.id.btnTrafficInjectMock);
 
         spinnerTheme = findViewById(R.id.spinnerTheme);
         btnPrevTheme = findViewById(R.id.btnPrevTheme);
@@ -615,6 +630,82 @@ public class MainActivity extends Activity {
                 CanBusSimulator.getInstance().stop();
                 AppLogger.i("MainActivity", "Остановлен симулятор CAN-шины");
             });
+        }
+
+        // Traffic Recorder & Replay Controls
+        if (btnTrafficRecordToggle != null) {
+            btnTrafficRecordToggle.setOnClickListener(v -> {
+                checkAndRequestStoragePermission();
+                if (TrafficRecorderReplay.isRecording()) {
+                    TrafficRecorderReplay.stopRecording();
+                    btnTrafficRecordToggle.setText("⏺ Запись шины");
+                    btnTrafficRecordToggle.setTextColor(Color.parseColor("#FF8888"));
+                } else {
+                    boolean started = TrafficRecorderReplay.startRecording(this);
+                    if (started) {
+                        btnTrafficRecordToggle.setText("⏹ Стоп запись");
+                        btnTrafficRecordToggle.setTextColor(Color.parseColor("#FFFFFF"));
+                    }
+                }
+            });
+        }
+
+        if (btnTrafficReplayToggle != null) {
+            btnTrafficReplayToggle.setOnClickListener(v -> {
+                checkAndRequestStoragePermission();
+                if (TrafficRecorderReplay.isReplaying()) {
+                    TrafficRecorderReplay.stopReplay();
+                    btnTrafficReplayToggle.setText("▶ Воспроизведение");
+                } else {
+                    TrafficRecorderReplay.startReplay(this);
+                    btnTrafficReplayToggle.setText("⏹ Стоп реплей");
+                }
+            });
+        }
+
+        if (btnTrafficInjectMock != null) {
+            btnTrafficInjectMock.setOnClickListener(v -> {
+                TrafficRecorderReplay.injectMockPacket(++mockStepCounter);
+                Toast.makeText(this, "Тест-пакет #" + mockStepCounter + " инжектирован", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        TrafficRecorderReplay.setStatusListener((status, packetCount, isRec, isRep) -> {
+            runOnUiThread(() -> {
+                if (tvTrafficRecorderStatus != null) {
+                    tvTrafficRecorderStatus.setText(status);
+                }
+                if (btnTrafficRecordToggle != null) {
+                    btnTrafficRecordToggle.setText(isRec ? "⏹ Стоп запись" : "⏺ Запись шины");
+                    btnTrafficRecordToggle.setTextColor(Color.parseColor(isRec ? "#FFFFFF" : "#FF8888"));
+                }
+                if (btnTrafficReplayToggle != null) {
+                    btnTrafficReplayToggle.setText(isRep ? "⏹ Стоп реплей" : "▶ Воспроизведение");
+                }
+            });
+        });
+    }
+
+    private void checkAndRequestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE
+                }, 101);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                AppLogger.s("MainActivity", "Разрешение на запись на диск получено");
+            } else {
+                AppLogger.w("MainActivity", "Разрешение на запись отклонено, запись будет идти в папку приложения");
+            }
         }
     }
 

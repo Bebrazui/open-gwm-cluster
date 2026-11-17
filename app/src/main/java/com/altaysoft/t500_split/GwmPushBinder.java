@@ -22,8 +22,15 @@ public class GwmPushBinder extends Binder implements IInterface {
     public static final String DESCRIPTOR = "com.altaysoft.t500_split.GwmPushBinder";
     public static final int TRANSACTION_ON_PUSH = IBinder.FIRST_CALL_TRANSACTION; // 1
 
+    private static volatile GwmPushBinder sInstance = null;
+
+    public static GwmPushBinder getInstance() {
+        return sInstance;
+    }
+
     public GwmPushBinder() {
         super();
+        sInstance = this;
         try {
             this.attachInterface(this, DESCRIPTOR);
         } catch (Throwable t) {
@@ -84,6 +91,9 @@ public class GwmPushBinder extends Binder implements IInterface {
         AppLogger.d(TAG, "onTransact code=" + code + " topic=" + topic + " payload=" + (payload != null ? (payload.length() > 60 ? payload.substring(0, 60) + "..." : payload) : "null"));
 
         if (topic != null) {
+            try {
+                org.opengwm.split.vehicle.TrafficRecorderReplay.record(topic, payload);
+            } catch (Throwable ignored) {}
             try {
                 onPush(topic, payload != null ? payload : "");
             } catch (Throwable t) {
