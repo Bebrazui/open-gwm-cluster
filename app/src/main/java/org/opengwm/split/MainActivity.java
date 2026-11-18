@@ -85,18 +85,38 @@ public class MainActivity extends Activity {
     private Spinner spinnerWidgetRight;
     private Spinner spinnerWidgetCenter;
 
-    private Spinner spinnerPlayerTheme;
-    private Spinner spinnerPlayerBg;
-    private Switch switchPlayerAlways;
-    private TextView tvPlayerPermissionStatus;
-    private Button btnPlayerNotificationPermission;
-    private Button btnPlayerDemoTrack;
-
+    // Cluster Overall Background Stepper
+    private Button btnPrevClusterBg;
+    private Button btnNextClusterBg;
+    private TextView tvCurrentClusterBgName;
+    private TextView tvClusterBgCounter;
     private Spinner spinnerClusterBg;
     private View containerCustomBgPick;
     private TextView tvCustomBgPath;
     private Button btnSelectCustomBg;
+    private int currentClusterBgIndex = 0;
     private static final int REQUEST_CODE_PICK_BG = 1002;
+
+    // Player Theme & Background Steppers
+    private Button btnPrevPlayerTheme;
+    private Button btnNextPlayerTheme;
+    private TextView tvCurrentPlayerThemeName;
+    private TextView tvPlayerThemeCounter;
+    private Spinner spinnerPlayerTheme;
+    private int currentPlayerThemeIndex = 0;
+
+    private Button btnPrevPlayerBg;
+    private Button btnNextPlayerBg;
+    private TextView tvCurrentPlayerBgName;
+    private TextView tvPlayerBgCounter;
+    private Spinner spinnerPlayerBg;
+    private int currentPlayerBgIndex = 0;
+
+    private Button btnGoToThemesTab;
+    private Switch switchPlayerAlways;
+    private TextView tvPlayerPermissionStatus;
+    private Button btnPlayerNotificationPermission;
+    private Button btnPlayerDemoTrack;
 
     private TextView tabMain;
     private TextView tabThemes;
@@ -299,16 +319,34 @@ public class MainActivity extends Activity {
         spinnerWidgetRight = findViewById(R.id.spinnerWidgetRight);
         spinnerWidgetCenter = findViewById(R.id.spinnerWidgetCenter);
 
-        spinnerPlayerTheme = findViewById(R.id.spinnerPlayerTheme);
-        spinnerPlayerBg = findViewById(R.id.spinnerPlayerBg);
-        switchPlayerAlways = findViewById(R.id.switchPlayerAlways);
-        tvPlayerPermissionStatus = findViewById(R.id.tvPlayerPermissionStatus);
-        btnPlayerNotificationPermission = findViewById(R.id.btnPlayerNotificationPermission);
-        btnPlayerDemoTrack = findViewById(R.id.btnPlayerDemoTrack);
+        // Cluster Background Stepper
+        btnPrevClusterBg = findViewById(R.id.btnPrevClusterBg);
+        btnNextClusterBg = findViewById(R.id.btnNextClusterBg);
+        tvCurrentClusterBgName = findViewById(R.id.tvCurrentClusterBgName);
+        tvClusterBgCounter = findViewById(R.id.tvClusterBgCounter);
         spinnerClusterBg = findViewById(R.id.spinnerClusterBg);
         containerCustomBgPick = findViewById(R.id.containerCustomBgPick);
         tvCustomBgPath = findViewById(R.id.tvCustomBgPath);
         btnSelectCustomBg = findViewById(R.id.btnSelectCustomBg);
+
+        // Player Theme & Background Steppers
+        btnPrevPlayerTheme = findViewById(R.id.btnPrevPlayerTheme);
+        btnNextPlayerTheme = findViewById(R.id.btnNextPlayerTheme);
+        tvCurrentPlayerThemeName = findViewById(R.id.tvCurrentPlayerThemeName);
+        tvPlayerThemeCounter = findViewById(R.id.tvPlayerThemeCounter);
+        spinnerPlayerTheme = findViewById(R.id.spinnerPlayerTheme);
+
+        btnPrevPlayerBg = findViewById(R.id.btnPrevPlayerBg);
+        btnNextPlayerBg = findViewById(R.id.btnNextPlayerBg);
+        tvCurrentPlayerBgName = findViewById(R.id.tvCurrentPlayerBgName);
+        tvPlayerBgCounter = findViewById(R.id.tvPlayerBgCounter);
+        spinnerPlayerBg = findViewById(R.id.spinnerPlayerBg);
+
+        btnGoToThemesTab = findViewById(R.id.btnGoToThemesTab);
+        switchPlayerAlways = findViewById(R.id.switchPlayerAlways);
+        tvPlayerPermissionStatus = findViewById(R.id.tvPlayerPermissionStatus);
+        btnPlayerNotificationPermission = findViewById(R.id.btnPlayerNotificationPermission);
+        btnPlayerDemoTrack = findViewById(R.id.btnPlayerDemoTrack);
 
         switchHolePunch = findViewById(R.id.switchHolePunch);
         switchHolePunchMain = findViewById(R.id.switchHolePunchMain);
@@ -394,45 +432,151 @@ public class MainActivity extends Activity {
         spinnerWidgetCenter.setOnItemSelectedListener(widgetListener);
     }
 
+    private void selectClusterBgByIndex(int index) {
+        int count = ClusterConfig.CLUSTER_BG_NAMES.length;
+        if (index < 0) index = count - 1;
+        if (index >= count) index = 0;
+        currentClusterBgIndex = index;
+
+        String name = ClusterConfig.CLUSTER_BG_NAMES[index];
+        if (tvCurrentClusterBgName != null) {
+            tvCurrentClusterBgName.setText(name);
+        }
+        if (tvClusterBgCounter != null) {
+            tvClusterBgCounter.setText((index + 1) + " / " + count);
+        }
+        if (spinnerClusterBg != null && spinnerClusterBg.getSelectedItemPosition() != index) {
+            spinnerClusterBg.setSelection(index, false);
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setClusterBg(index);
+        }
+        ClusterConfig.setClusterBg(this, index);
+        InstrumentClusterService.applyConfig(this);
+
+        if (containerCustomBgPick != null) {
+            containerCustomBgPick.setVisibility(index == ClusterConfig.CLUSTER_BG_CUSTOM ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void selectPlayerThemeByIndex(int index) {
+        int count = ClusterConfig.PLAYER_THEME_NAMES.length;
+        if (index < 0) index = count - 1;
+        if (index >= count) index = 0;
+        currentPlayerThemeIndex = index;
+
+        String name = ClusterConfig.PLAYER_THEME_NAMES[index];
+        if (tvCurrentPlayerThemeName != null) {
+            tvCurrentPlayerThemeName.setText(name);
+        }
+        if (tvPlayerThemeCounter != null) {
+            tvPlayerThemeCounter.setText((index + 1) + " / " + count);
+        }
+        if (spinnerPlayerTheme != null && spinnerPlayerTheme.getSelectedItemPosition() != index) {
+            spinnerPlayerTheme.setSelection(index, false);
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setPlayerTheme(index);
+        }
+        ClusterConfig.setPlayerTheme(this, index);
+        InstrumentClusterService.applyConfig(this);
+    }
+
+    private void selectPlayerBgByIndex(int index) {
+        int count = ClusterConfig.PLAYER_BG_NAMES.length;
+        if (index < 0) index = count - 1;
+        if (index >= count) index = 0;
+        currentPlayerBgIndex = index;
+
+        String name = ClusterConfig.PLAYER_BG_NAMES[index];
+        if (tvCurrentPlayerBgName != null) {
+            tvCurrentPlayerBgName.setText(name);
+        }
+        if (tvPlayerBgCounter != null) {
+            tvPlayerBgCounter.setText((index + 1) + " / " + count);
+        }
+        if (spinnerPlayerBg != null && spinnerPlayerBg.getSelectedItemPosition() != index) {
+            spinnerPlayerBg.setSelection(index, false);
+        }
+
+        if (gaugePreview != null) {
+            gaugePreview.setPlayerBg(index);
+        }
+        ClusterConfig.setPlayerBg(this, index);
+        InstrumentClusterService.applyConfig(this);
+    }
+
     private void setupMediaPlayerControls() {
-        if (spinnerPlayerTheme == null || spinnerPlayerBg == null) return;
+        // 1. Player Theme Stepper & Spinner
+        if (spinnerPlayerTheme != null) {
+            ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_THEME_NAMES);
+            themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerPlayerTheme.setAdapter(themeAdapter);
 
-        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_THEME_NAMES);
-        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerPlayerTheme.setAdapter(themeAdapter);
-        spinnerPlayerTheme.setSelection(ClusterConfig.getPlayerTheme(this));
-
-        spinnerPlayerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (gaugePreview != null) {
-                    gaugePreview.setPlayerTheme(position);
+            spinnerPlayerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position != currentPlayerThemeIndex) {
+                        selectPlayerThemeByIndex(position);
+                    }
                 }
-                ClusterConfig.setPlayerTheme(MainActivity.this, position);
-                InstrumentClusterService.applyConfig(MainActivity.this);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
 
-        ArrayAdapter<String> bgAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_BG_NAMES);
-        bgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerPlayerBg.setAdapter(bgAdapter);
-        spinnerPlayerBg.setSelection(ClusterConfig.getPlayerBg(this));
+        int initPlayerTheme = ClusterConfig.getPlayerTheme(this);
+        selectPlayerThemeByIndex(initPlayerTheme);
 
-        spinnerPlayerBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (gaugePreview != null) {
-                    gaugePreview.setPlayerBg(position);
+        if (btnPrevPlayerTheme != null) {
+            btnPrevPlayerTheme.setOnClickListener(v -> selectPlayerThemeByIndex(currentPlayerThemeIndex - 1));
+        }
+        if (btnNextPlayerTheme != null) {
+            btnNextPlayerTheme.setOnClickListener(v -> selectPlayerThemeByIndex(currentPlayerThemeIndex + 1));
+        }
+        if (tvCurrentPlayerThemeName != null && spinnerPlayerTheme != null) {
+            tvCurrentPlayerThemeName.setOnClickListener(v -> spinnerPlayerTheme.performClick());
+        }
+
+        // 2. Player Background Stepper & Spinner
+        if (spinnerPlayerBg != null) {
+            ArrayAdapter<String> bgAdapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_BG_NAMES);
+            bgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerPlayerBg.setAdapter(bgAdapter);
+
+            spinnerPlayerBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position != currentPlayerBgIndex) {
+                        selectPlayerBgByIndex(position);
+                    }
                 }
-                ClusterConfig.setPlayerBg(MainActivity.this, position);
-                InstrumentClusterService.applyConfig(MainActivity.this);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
 
+        int initPlayerBg = ClusterConfig.getPlayerBg(this);
+        selectPlayerBgByIndex(initPlayerBg);
+
+        if (btnPrevPlayerBg != null) {
+            btnPrevPlayerBg.setOnClickListener(v -> selectPlayerBgByIndex(currentPlayerBgIndex - 1));
+        }
+        if (btnNextPlayerBg != null) {
+            btnNextPlayerBg.setOnClickListener(v -> selectPlayerBgByIndex(currentPlayerBgIndex + 1));
+        }
+        if (tvCurrentPlayerBgName != null && spinnerPlayerBg != null) {
+            tvCurrentPlayerBgName.setOnClickListener(v -> spinnerPlayerBg.performClick());
+        }
+
+        // 3. Link from Tab 2 to Tab 1
+        if (btnGoToThemesTab != null) {
+            btnGoToThemesTab.setOnClickListener(v -> selectTab(1));
+        }
+
+        // 4. Switches and Test buttons
         if (switchPlayerAlways != null) {
             switchPlayerAlways.setChecked(ClusterConfig.isPlayerAlwaysVisible(this));
             switchPlayerAlways.setOnCheckedChangeListener((btn, isChecked) -> {
@@ -476,39 +620,39 @@ public class MainActivity extends Activity {
     }
 
     private void setupClusterBackgroundControls() {
-        if (spinnerClusterBg == null) return;
+        if (spinnerClusterBg != null) {
+            ArrayAdapter<String> clusterBgAdapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item, ClusterConfig.CLUSTER_BG_NAMES);
+            clusterBgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerClusterBg.setAdapter(clusterBgAdapter);
 
-        ArrayAdapter<String> clusterBgAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, ClusterConfig.CLUSTER_BG_NAMES);
-        clusterBgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerClusterBg.setAdapter(clusterBgAdapter);
-
-        int curBg = ClusterConfig.getClusterBg(this);
-        spinnerClusterBg.setSelection(curBg);
-
-        if (containerCustomBgPick != null) {
-            containerCustomBgPick.setVisibility(curBg == ClusterConfig.CLUSTER_BG_CUSTOM ? View.VISIBLE : View.GONE);
+            spinnerClusterBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position != currentClusterBgIndex) {
+                        selectClusterBgByIndex(position);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
         }
+
+        int initClusterBg = ClusterConfig.getClusterBg(this);
+        selectClusterBgByIndex(initClusterBg);
+
+        if (btnPrevClusterBg != null) {
+            btnPrevClusterBg.setOnClickListener(v -> selectClusterBgByIndex(currentClusterBgIndex - 1));
+        }
+        if (btnNextClusterBg != null) {
+            btnNextClusterBg.setOnClickListener(v -> selectClusterBgByIndex(currentClusterBgIndex + 1));
+        }
+        if (tvCurrentClusterBgName != null && spinnerClusterBg != null) {
+            tvCurrentClusterBgName.setOnClickListener(v -> spinnerClusterBg.performClick());
+        }
+
         if (tvCustomBgPath != null) {
             tvCustomBgPath.setText(ClusterConfig.getClusterBgCustomPath(this));
         }
-
-        spinnerClusterBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (gaugePreview != null) {
-                    gaugePreview.setClusterBg(position);
-                }
-                ClusterConfig.setClusterBg(MainActivity.this, position);
-                InstrumentClusterService.applyConfig(MainActivity.this);
-
-                if (containerCustomBgPick != null) {
-                    containerCustomBgPick.setVisibility(position == ClusterConfig.CLUSTER_BG_CUSTOM ? View.VISIBLE : View.GONE);
-                }
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
         if (btnSelectCustomBg != null) {
             btnSelectCustomBg.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
