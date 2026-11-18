@@ -92,6 +92,12 @@ public class MainActivity extends Activity {
     private Button btnPlayerNotificationPermission;
     private Button btnPlayerDemoTrack;
 
+    private Spinner spinnerClusterBg;
+    private View containerCustomBgPick;
+    private TextView tvCustomBgPath;
+    private Button btnSelectCustomBg;
+    private static final int REQUEST_CODE_PICK_BG = 1002;
+
     private TextView tabMain;
     private TextView tabThemes;
     private TextView tabWidgets;
@@ -202,6 +208,7 @@ public class MainActivity extends Activity {
         setupSpinners();
         setupWidgetSpinners();
         setupMediaPlayerControls();
+        setupClusterBackgroundControls();
         setupControls();
         setupTargetDisplayControls();
         setupVehicleTelemetry();
@@ -298,6 +305,10 @@ public class MainActivity extends Activity {
         tvPlayerPermissionStatus = findViewById(R.id.tvPlayerPermissionStatus);
         btnPlayerNotificationPermission = findViewById(R.id.btnPlayerNotificationPermission);
         btnPlayerDemoTrack = findViewById(R.id.btnPlayerDemoTrack);
+        spinnerClusterBg = findViewById(R.id.spinnerClusterBg);
+        containerCustomBgPick = findViewById(R.id.containerCustomBgPick);
+        tvCustomBgPath = findViewById(R.id.tvCustomBgPath);
+        btnSelectCustomBg = findViewById(R.id.btnSelectCustomBg);
 
         switchHolePunch = findViewById(R.id.switchHolePunch);
         switchHolePunchMain = findViewById(R.id.switchHolePunchMain);
@@ -461,6 +472,83 @@ public class MainActivity extends Activity {
         } else {
             tvPlayerPermissionStatus.setText("Не разрешено (нажмите Настроить)");
             tvPlayerPermissionStatus.setTextColor(Color.parseColor("#E57373"));
+        }
+    }
+
+    private void setupClusterBackgroundControls() {
+        if (spinnerClusterBg == null) return;
+
+        ArrayAdapter<String> clusterBgAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, ClusterConfig.CLUSTER_BG_NAMES);
+        clusterBgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerClusterBg.setAdapter(clusterBgAdapter);
+
+        int curBg = ClusterConfig.getClusterBg(this);
+        spinnerClusterBg.setSelection(curBg);
+
+        if (containerCustomBgPick != null) {
+            containerCustomBgPick.setVisibility(curBg == ClusterConfig.CLUSTER_BG_CUSTOM ? View.VISIBLE : View.GONE);
+        }
+        if (tvCustomBgPath != null) {
+            tvCustomBgPath.setText(ClusterConfig.getClusterBgCustomPath(this));
+        }
+
+        spinnerClusterBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (gaugePreview != null) {
+                    gaugePreview.setClusterBg(position);
+                }
+                ClusterConfig.setClusterBg(MainActivity.this, position);
+                InstrumentClusterService.applyConfig(MainActivity.this);
+
+                if (containerCustomBgPick != null) {
+                    containerCustomBgPick.setVisibility(position == ClusterConfig.CLUSTER_BG_CUSTOM ? View.VISIBLE : View.GONE);
+                }
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        if (btnSelectCustomBg != null) {
+            btnSelectCustomBg.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                startActivityForResult(Intent.createChooser(intent, "Выберите фоновое изображение"), REQUEST_CODE_PICK_BG);
+            });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_BG && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            try {
+                Uri uri = data.getData();
+                java.io.InputStream in = getContentResolver().openInputStream(uri);
+                if (in != null) {
+                    java.io.File dest = new java.io.File(getExternalFilesDir(null), "custom_cluster_bg.png");
+                    java.io.FileOutputStream out = new java.io.FileOutputStream(dest);
+                    byte[] buf = new byte[8192];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+                    in.close();
+                    out.close();
+
+                    String path = dest.getAbsolutePath();
+                    ClusterConfig.setClusterBgCustomPath(this, path);
+                    if (tvCustomBgPath != null) tvCustomBgPath.setText(path);
+                    if (gaugePreview != null) {
+                        gaugePreview.setClusterBgCustomPath(path);
+                    }
+                    InstrumentClusterService.applyConfig(this);
+                    Toast.makeText(this, "Фоновое изображение установлено!", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Throwable t) {
+                AppLogger.w("MainActivity", "Ошибка загрузки фона: " + t.getMessage());
+                Toast.makeText(this, "Ошибка загрузки файла: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

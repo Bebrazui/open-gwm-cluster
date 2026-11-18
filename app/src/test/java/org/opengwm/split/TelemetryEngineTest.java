@@ -148,4 +148,22 @@ public class TelemetryEngineTest {
         assertEquals(215000, tracker.getDurationMs());
         assertTrue("Progress must be between 0 and 1", tracker.getProgress() > 0f && tracker.getProgress() <= 1f);
     }
+
+    @Test
+    public void testClusterBackgroundConfigAndConstants() {
+        assertEquals(0, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_DEFAULT);
+        assertEquals(1, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_OLED);
+        assertEquals(2, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_CARBON);
+        assertEquals(3, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_CYBER_HEX);
+        assertEquals(4, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_AURORA_MUSIC);
+        assertEquals(5, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_BRUSHED_TITANIUM);
+        assertEquals(6, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_STARFIELD);
+        assertEquals(7, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_RADIAL_STUDIO);
+        assertEquals(8, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_CUSTOM);
+
+        assertEquals("Must have 9 cluster backgrounds", 9, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES.length);
+        assertEquals("По умолчанию (стиль темы)", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[0]);
+        assertEquals("Спортивный карбон (Twill Weave)", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[2]);
+        assertEquals("Динамический амбиент музыки", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[4]);
+    }
 }

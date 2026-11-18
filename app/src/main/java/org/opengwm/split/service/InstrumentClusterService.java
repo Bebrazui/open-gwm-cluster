@@ -101,6 +101,8 @@ public class InstrumentClusterService extends Service {
             view.setSmoothing(ClusterConfig.isSmoothingEnabled(context));
             view.setPlayerTheme(ClusterConfig.getPlayerTheme(context));
             view.setPlayerBg(ClusterConfig.getPlayerBg(context));
+            view.setClusterBg(ClusterConfig.getClusterBg(context));
+            view.setClusterBgCustomPath(ClusterConfig.getClusterBgCustomPath(context));
             view.setWidgets(
                     ClusterConfig.getWidgetLeft(context),
                     ClusterConfig.getWidgetRight(context),

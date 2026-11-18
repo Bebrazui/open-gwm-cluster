@@ -3,6 +3,7 @@ package org.opengwm.split.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -13,10 +14,12 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.graphics.Typeface;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.View;
 import org.opengwm.split.media.MediaTracker;
 import org.opengwm.split.theme.ThemeAssetLoader;
+import org.opengwm.split.util.AppLogger;
 import org.opengwm.split.vehicle.VehicleState;
 
 /**
@@ -169,6 +172,27 @@ public class ClusterGaugeView extends View {
     private int playerTheme = ClusterConfig.PLAYER_THEME_CYBER;
     private int playerBg = ClusterConfig.PLAYER_BG_ART_GLOW;
     private float vinylRotation = 0f;
+
+    // Cluster Overall Dashboard Background (За колодцами приборов)
+    private int clusterBg = ClusterConfig.CLUSTER_BG_DEFAULT;
+    private String clusterBgCustomPath = "/storage/emulated/0/gwm_cluster_bg.png";
+    private Bitmap customClusterBgBitmap = null;
+    private Bitmap carbonPatternBitmap = null;
+    private BitmapShader carbonPatternShader = null;
+    private RadialGradient carbonVignetteShader = null;
+    private Bitmap brushedPatternBitmap = null;
+    private BitmapShader brushedPatternShader = null;
+    private RadialGradient studioRadialShader = null;
+    private final Paint clusterBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint clusterAuraPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint starPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private static final int STAR_COUNT = 90;
+    private final float[] starX = new float[STAR_COUNT];
+    private final float[] starY = new float[STAR_COUNT];
+    private final float[] starR = new float[STAR_COUNT];
+    private final float[] starPhase = new float[STAR_COUNT];
+    private boolean starsInitialized = false;
     private final RectF playerArtRect = new RectF();
     private final RectF playerPrevBtnRect = new RectF();
     private final RectF playerPlayBtnRect = new RectF();
@@ -234,6 +258,8 @@ public class ClusterGaugeView extends View {
         widgetCenter = ClusterConfig.getWidgetCenter(getContext());
         playerTheme = ClusterConfig.getPlayerTheme(getContext());
         playerBg = ClusterConfig.getPlayerBg(getContext());
+        clusterBg = ClusterConfig.getClusterBg(getContext());
+        clusterBgCustomPath = ClusterConfig.getClusterBgCustomPath(getContext());
         MediaTracker.getInstance().init(getContext());
 
         for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
@@ -383,6 +409,17 @@ public class ClusterGaugeView extends View {
                     return true;
                 }
                 lastTapTime = now;
+
+                // 3. Tap on top-right corner quick-cycles Cluster Overall Background
+                if (x > viewWidth * 0.88f && y < viewHeight * 0.18f) {
+                    clusterBg = (clusterBg + 1) % ClusterConfig.CLUSTER_BG_NAMES.length;
+                    ClusterConfig.setClusterBg(getContext(), clusterBg);
+                    android.widget.Toast.makeText(getContext(),
+                            "Фон щитка: " + ClusterConfig.CLUSTER_BG_NAMES[clusterBg],
+                            android.widget.Toast.LENGTH_SHORT).show();
+                    invalidate();
+                    return true;
+                }
             }
             return super.onTouchEvent(event);
         }
@@ -553,6 +590,30 @@ public class ClusterGaugeView extends View {
 
     public int getPlayerBg() {
         return playerBg;
+    }
+
+    public void setClusterBg(int bg) {
+        this.clusterBg = bg;
+        ClusterConfig.setClusterBg(getContext(), bg);
+        invalidate();
+    }
+
+    public int getClusterBg() {
+        return clusterBg;
+    }
+
+    public void setClusterBgCustomPath(String path) {
+        this.clusterBgCustomPath = path;
+        if (this.customClusterBgBitmap != null && !this.customClusterBgBitmap.isRecycled()) {
+            this.customClusterBgBitmap.recycle();
+        }
+        this.customClusterBgBitmap = null;
+        ClusterConfig.setClusterBgCustomPath(getContext(), path);
+        invalidate();
+    }
+
+    public String getClusterBgCustomPath() {
+        return clusterBgCustomPath;
     }
 
     public void setThemeStyle(int theme) {
@@ -900,6 +961,312 @@ public class ClusterGaugeView extends View {
                 new float[]{0.0f, 0.15f, 0.38f, 0.62f, 0.78f, 0.92f, 1.0f},
                 Shader.TileMode.CLAMP
         );
+
+        buildCarbonShader();
+        buildBrushedShader();
+        buildStudioRadialShader();
+        initStars(viewWidth, viewHeight);
+    }
+
+    private void buildCarbonShader() {
+        int size = 24;
+        if (carbonPatternBitmap != null && !carbonPatternBitmap.isRecycled()) {
+            carbonPatternBitmap.recycle();
+        }
+        carbonPatternBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(carbonPatternBitmap);
+        c.drawColor(Color.parseColor("#101317"));
+
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setStrokeWidth(2.2f);
+
+        // Twill weave diagonal highlights
+        p.setColor(Color.parseColor("#262C36"));
+        for (int i = -size; i < size * 2; i += 6) {
+            c.drawLine(i, 0, i + size, size, p);
+        }
+
+        // Carbon weave deep fiber shadow lines
+        p.setColor(Color.parseColor("#090B0D"));
+        p.setStrokeWidth(1.6f);
+        for (int i = -size; i < size * 2; i += 6) {
+            c.drawLine(i + 3, 0, i + 3 + size, size, p);
+        }
+
+        carbonPatternShader = new BitmapShader(carbonPatternBitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+
+        if (viewWidth > 0 && viewHeight > 0) {
+            carbonVignetteShader = new RadialGradient(
+                    viewWidth * 0.5f, viewHeight * 0.5f, Math.max(viewWidth, viewHeight) * 0.55f,
+                    new int[]{Color.TRANSPARENT, Color.parseColor("#80000000"), Color.parseColor("#F0000000")},
+                    new float[]{0.0f, 0.65f, 1.0f},
+                    Shader.TileMode.CLAMP
+            );
+        }
+    }
+
+    private void buildBrushedShader() {
+        int size = 48;
+        if (brushedPatternBitmap != null && !brushedPatternBitmap.isRecycled()) {
+            brushedPatternBitmap.recycle();
+        }
+        brushedPatternBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(brushedPatternBitmap);
+        c.drawColor(Color.parseColor("#14181F"));
+
+        Paint p = new Paint();
+        for (int y = 0; y < size; y += 2) {
+            int gray = 18 + (y * 37) % 24;
+            p.setColor(Color.rgb(gray, gray + 2, gray + 5));
+            c.drawLine(0, y, size, y, p);
+        }
+
+        brushedPatternShader = new BitmapShader(brushedPatternBitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+    }
+
+    private void buildStudioRadialShader() {
+        if (viewWidth <= 0 || viewHeight <= 0) return;
+        studioRadialShader = new RadialGradient(
+                viewWidth * 0.5f, viewHeight * 0.45f, viewWidth * 0.65f,
+                new int[]{Color.parseColor("#1B2533"), Color.parseColor("#0C121B"), Color.parseColor("#020406")},
+                new float[]{0.0f, 0.52f, 1.0f},
+                Shader.TileMode.CLAMP
+        );
+    }
+
+    private void initStars(int w, int h) {
+        if (w <= 0 || h <= 0) return;
+        java.util.Random r = new java.util.Random(1337);
+        for (int i = 0; i < STAR_COUNT; i++) {
+            starX[i] = r.nextFloat() * w;
+            starY[i] = r.nextFloat() * h;
+            starR[i] = 0.8f + r.nextFloat() * 1.5f;
+            starPhase[i] = r.nextFloat() * 6.28f;
+        }
+        starsInitialized = true;
+    }
+
+    // =========================================================================
+    // OVERALL CLUSTER DASHBOARD BACKGROUND RENDERING (ЗА КОЛОДЦАМИ)
+    // =========================================================================
+    private void drawClusterBackground(Canvas canvas, int w, int h, int defaultThemeColor) {
+        switch (clusterBg) {
+            case ClusterConfig.CLUSTER_BG_OLED:
+                canvas.drawColor(Color.BLACK);
+                break;
+            case ClusterConfig.CLUSTER_BG_CARBON:
+                drawCarbonBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_CYBER_HEX:
+                drawCyberHexBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_AURORA_MUSIC:
+                drawAuroraMusicBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_BRUSHED_TITANIUM:
+                drawBrushedTitaniumBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_STARFIELD:
+                drawStarfieldBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_RADIAL_STUDIO:
+                drawStudioRadialBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_CUSTOM:
+                drawCustomWallpaperBackground(canvas, w, h);
+                break;
+            case ClusterConfig.CLUSTER_BG_DEFAULT:
+            default:
+                canvas.drawColor(defaultThemeColor);
+                break;
+        }
+    }
+
+    private void drawCarbonBackground(Canvas canvas, int w, int h) {
+        if (carbonPatternShader != null) {
+            clusterBgPaint.setShader(carbonPatternShader);
+            canvas.drawRect(0, 0, w, h, clusterBgPaint);
+            clusterBgPaint.setShader(null);
+        } else {
+            canvas.drawColor(Color.parseColor("#101317"));
+        }
+
+        if (carbonVignetteShader != null) {
+            clusterBgPaint.setShader(carbonVignetteShader);
+            canvas.drawRect(0, 0, w, h, clusterBgPaint);
+            clusterBgPaint.setShader(null);
+        }
+    }
+
+    private void drawCyberHexBackground(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#03050E"));
+
+        float horizonY = h * 0.48f;
+        float centerX = w * 0.5f;
+
+        clusterBgPaint.setStyle(Paint.Style.STROKE);
+        clusterBgPaint.setStrokeWidth(1.2f);
+        clusterBgPaint.setColor(Color.parseColor("#1800E5FF"));
+
+        // Perspective Rays
+        for (float deg = -75f; deg <= 75f; deg += 15f) {
+            float rad = (float) Math.toRadians(deg);
+            float targetX = centerX + (float) Math.tan(rad) * (h - horizonY) * 2.2f;
+            canvas.drawLine(centerX, horizonY, targetX, h, clusterBgPaint);
+        }
+
+        // Perspective Horizontal Lines
+        for (int i = 1; i <= 6; i++) {
+            float t = (float) i / 6.0f;
+            float lineY = horizonY + (h - horizonY) * (t * t);
+            canvas.drawLine(0, lineY, w, lineY, clusterBgPaint);
+        }
+
+        // Ambient cyber halos behind left and right gauge pods
+        clusterBgPaint.setStyle(Paint.Style.FILL);
+        RadialGradient leftHalo = new RadialGradient(
+                effLeftCx, effLeftCy, effLeftRadius * 1.45f,
+                new int[]{0x3000E5FF, 0x1000E5FF, 0x00000000},
+                null, Shader.TileMode.CLAMP
+        );
+        clusterBgPaint.setShader(leftHalo);
+        canvas.drawCircle(effLeftCx, effLeftCy, effLeftRadius * 1.45f, clusterBgPaint);
+
+        RadialGradient rightHalo = new RadialGradient(
+                effRightCx, effRightCy, effRightRadius * 1.45f,
+                new int[]{0x30E040FB, 0x10E040FB, 0x00000000},
+                null, Shader.TileMode.CLAMP
+        );
+        clusterBgPaint.setShader(rightHalo);
+        canvas.drawCircle(effRightCx, effRightCy, effRightRadius * 1.45f, clusterBgPaint);
+        clusterBgPaint.setShader(null);
+    }
+
+    private void drawAuroraMusicBackground(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#040509"));
+
+        MediaTracker tracker = MediaTracker.getInstance();
+        int dom = tracker.getDominantColor();
+        int sec = tracker.getSecondaryColor();
+
+        // 1. Left Pod Aurora Glow (in sync with track dominant color)
+        RadialGradient leftGlow = new RadialGradient(
+                effLeftCx, effLeftCy, effLeftRadius * 1.6f,
+                new int[]{withAlpha(dom, 115), withAlpha(dom, 35), 0x00000000},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP
+        );
+        clusterAuraPaint.setShader(leftGlow);
+        canvas.drawCircle(effLeftCx, effLeftCy, effLeftRadius * 1.6f, clusterAuraPaint);
+
+        // 2. Right Pod Aurora Glow (in sync with track secondary color)
+        RadialGradient rightGlow = new RadialGradient(
+                effRightCx, effRightCy, effRightRadius * 1.6f,
+                new int[]{withAlpha(sec, 115), withAlpha(sec, 35), 0x00000000},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP
+        );
+        clusterAuraPaint.setShader(rightGlow);
+        canvas.drawCircle(effRightCx, effRightCy, effRightRadius * 1.6f, clusterAuraPaint);
+
+        // 3. Center Infotainment Ambient Wash
+        RadialGradient centerWash = new RadialGradient(
+                effCenterCx, centerY, w * 0.32f,
+                new int[]{withAlpha(dom, 50), 0x00000000},
+                null, Shader.TileMode.CLAMP
+        );
+        clusterAuraPaint.setShader(centerWash);
+        canvas.drawRect(effCenterCx - w * 0.32f, 0, effCenterCx + w * 0.32f, h, clusterAuraPaint);
+        clusterAuraPaint.setShader(null);
+    }
+
+    private void drawBrushedTitaniumBackground(Canvas canvas, int w, int h) {
+        if (brushedPatternShader != null) {
+            clusterBgPaint.setShader(brushedPatternShader);
+            canvas.drawRect(0, 0, w, h, clusterBgPaint);
+            clusterBgPaint.setShader(null);
+        } else {
+            canvas.drawColor(Color.parseColor("#12151B"));
+        }
+
+        if (studioRadialShader != null) {
+            clusterBgPaint.setShader(studioRadialShader);
+            canvas.drawRect(0, 0, w, h, clusterBgPaint);
+            clusterBgPaint.setShader(null);
+        }
+    }
+
+    private void drawStarfieldBackground(Canvas canvas, int w, int h) {
+        canvas.drawColor(Color.parseColor("#020308"));
+        if (!starsInitialized) {
+            initStars(w, h);
+        }
+
+        // Deep Cosmic Nebula clouds
+        clusterBgPaint.setStyle(Paint.Style.FILL);
+        RadialGradient nebula1 = new RadialGradient(
+                effLeftCx, effLeftCy, effLeftRadius * 1.7f,
+                new int[]{0x3A512DA8, 0x15311B92, 0x00000000},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP
+        );
+        clusterBgPaint.setShader(nebula1);
+        canvas.drawCircle(effLeftCx, effLeftCy, effLeftRadius * 1.7f, clusterBgPaint);
+
+        RadialGradient nebula2 = new RadialGradient(
+                effRightCx, effRightCy, effRightRadius * 1.7f,
+                new int[]{0x32006064, 0x12004D40, 0x00000000},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP
+        );
+        clusterBgPaint.setShader(nebula2);
+        canvas.drawCircle(effRightCx, effRightCy, effRightRadius * 1.7f, clusterBgPaint);
+        clusterBgPaint.setShader(null);
+
+        // Twinkling Stars
+        long now = SystemClock.uptimeMillis();
+        for (int i = 0; i < STAR_COUNT; i++) {
+            float osc = (float) Math.sin((now * 0.0022f) + starPhase[i]);
+            int alpha = (int) (130 + 110 * osc);
+            if (alpha < 30) alpha = 30;
+            if (alpha > 255) alpha = 255;
+            starPaint.setColor((alpha << 24) | 0xFFFFFF);
+            canvas.drawCircle(starX[i], starY[i], starR[i], starPaint);
+        }
+
+        postInvalidateDelayed(33); // Keep stars smoothly twinkling
+    }
+
+    private void drawStudioRadialBackground(Canvas canvas, int w, int h) {
+        if (studioRadialShader != null) {
+            clusterBgPaint.setShader(studioRadialShader);
+            canvas.drawRect(0, 0, w, h, clusterBgPaint);
+            clusterBgPaint.setShader(null);
+        } else {
+            canvas.drawColor(Color.parseColor("#0C121B"));
+        }
+    }
+
+    private void drawCustomWallpaperBackground(Canvas canvas, int w, int h) {
+        if (customClusterBgBitmap == null && clusterBgCustomPath != null && !clusterBgCustomPath.isEmpty()) {
+            try {
+                java.io.File file = new java.io.File(clusterBgCustomPath);
+                if (file.exists()) {
+                    customClusterBgBitmap = android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath());
+                }
+            } catch (Throwable t) {
+                AppLogger.w("ClusterGaugeView", "Error loading custom wallpaper: " + t.getMessage());
+            }
+        }
+
+        if (customClusterBgBitmap != null && !customClusterBgBitmap.isRecycled()) {
+            RectF full = new RectF(0, 0, w, h);
+            canvas.drawBitmap(customClusterBgBitmap, null, full, null);
+            // 25% dark overlay for clear gauge readability
+            canvas.drawColor(0x40000000);
+        } else {
+            canvas.drawColor(Color.BLACK);
+        }
     }
 
     @Override
@@ -1014,7 +1381,7 @@ public class ClusterGaugeView extends View {
     // 1. THEME: SPORT APEX (Track Mode, 3D Deep Tubes, F1 Shift Lights)
     // =========================================================================
     private void drawSportApexTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#07080B"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#07080B"));
         applyHolePunchIfNeeded(canvas, w, h);
 
         // Dials
@@ -1172,7 +1539,7 @@ public class ClusterGaugeView extends View {
     // 2. THEME: LUXURY CHRONO (Bentley / Tank 500 Gold Chronograph)
     // =========================================================================
     private void drawLuxuryChronoTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#060608"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#060608"));
         applyHolePunchIfNeeded(canvas, w, h);
 
         // 3D Brushed Gold Bezel
@@ -1293,7 +1660,7 @@ public class ClusterGaugeView extends View {
     // 3. THEME: CYBER HEX (Futuristic Polygonal EV HUD, Tron Horizon Grid)
     // =========================================================================
     private void drawCyberHexTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#03050C"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#03050C"));
         applyHolePunchIfNeeded(canvas, w, h);
 
         // Cyberpunk perspective horizon floor in background
@@ -1420,7 +1787,7 @@ public class ClusterGaugeView extends View {
     // 4. THEME: TACTICAL 4X4 (Baja Tank, Bolted Bezels, 3D Pitch/Roll Horizon)
     // =========================================================================
     private void drawTactical4x4Theme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#0B0C0E"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#0B0C0E"));
         applyHolePunchIfNeeded(canvas, w, h);
 
         // Bolted Industrial Steel Bezels
@@ -1510,7 +1877,7 @@ public class ClusterGaugeView extends View {
     // 5. THEME: MINIMAL OLED (Nordic Clean Floating Arc Ribbons)
     // =========================================================================
     private void drawMinimalOledTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.BLACK); // Pure 100% OLED true black
+        drawClusterBackground(canvas, w, h, Color.BLACK);
         applyHolePunchIfNeeded(canvas, w, h);
 
         // Floating arc ribbons (no heavy outer rings, pure luminous arcs)
@@ -1715,7 +2082,7 @@ public class ClusterGaugeView extends View {
     // 6. THEME: TAYCAN ARC (Cyber Electric Cockpit, Image 2 Spec)
     // =========================================================================
     private void drawTaycanArcTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#04070D"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#04070D"));
 
         // 1. Outer sculpted automotive cockpit bezel & ambient glow
         drawCockpitBezel(canvas, w, h);
@@ -2348,7 +2715,7 @@ public class ClusterGaugeView extends View {
     // THEME: MINI COOPER F56 (Overlapping Asymmetric Chrome Twin Pod, LCD, Neon)
     // =========================================================================
     private void drawMiniCooperTheme(Canvas canvas, int w, int h) {
-        canvas.drawColor(Color.parseColor("#08090D"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#08090D"));
         applyHolePunchIfNeeded(canvas, w, h);
 
         Typeface origNumberTf = textNumberPaint.getTypeface();
@@ -2854,7 +3221,7 @@ public class ClusterGaugeView extends View {
     }
 
     private void drawSplitBitmapTheme(Canvas canvas, int w, int h, int splitId) {
-        canvas.drawColor(Color.parseColor("#04060A"));
+        drawClusterBackground(canvas, w, h, Color.parseColor("#04060A"));
 
         // Modern angular polygon themes (Haval / BMW digital cluster: e.g. Theme 17, 18, 24, 25, 30, 33, 40, etc.)
         boolean isAngular = (splitId == 17 || splitId == 18 || splitId == 24 || splitId == 25 ||
@@ -3602,7 +3969,7 @@ public class ClusterGaugeView extends View {
             if (userBgBmp != null) {
                 canvas.drawBitmap(userBgBmp, null, new RectF(0, 0, w, h), null);
             } else {
-                canvas.drawColor(Color.BLACK);
+                drawClusterBackground(canvas, w, h, Color.BLACK);
             }
             applyHolePunchIfNeeded(canvas, w, h);
             if (userSpeedoBmp != null) {

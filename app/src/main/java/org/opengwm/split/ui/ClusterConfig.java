@@ -19,6 +19,31 @@ public class ClusterConfig {
     public static final String KEY_PLAYER_THEME = "pref_player_theme";
     public static final String KEY_PLAYER_BG = "pref_player_bg";
     public static final String KEY_PLAYER_ALWAYS_VISIBLE = "pref_player_always_visible";
+    public static final String KEY_CLUSTER_BG = "pref_cluster_bg";
+    public static final String KEY_CLUSTER_BG_CUSTOM_PATH = "pref_cluster_bg_custom_path";
+
+    // Overall Cluster Dashboard Backgrounds (За колодцами приборов)
+    public static final int CLUSTER_BG_DEFAULT = 0;          // По умолчанию (стиль темы)
+    public static final int CLUSTER_BG_OLED = 1;             // Глубокий 100% OLED черный
+    public static final int CLUSTER_BG_CARBON = 2;           // Спортивный карбон (Twill Weave)
+    public static final int CLUSTER_BG_CYBER_HEX = 3;        // Кибер-сетка и неоновые соты
+    public static final int CLUSTER_BG_AURORA_MUSIC = 4;     // Динамический амбиент музыки (в тон треку)
+    public static final int CLUSTER_BG_BRUSHED_TITANIUM = 5; // Шлифованный темный титан
+    public static final int CLUSTER_BG_STARFIELD = 6;        // Звездное небо и туманность
+    public static final int CLUSTER_BG_RADIAL_STUDIO = 7;    // Студийный радиальный свет
+    public static final int CLUSTER_BG_CUSTOM = 8;           // Пользовательские обои (файл)
+
+    public static final String[] CLUSTER_BG_NAMES = {
+            "По умолчанию (стиль темы)",
+            "Глубокий 100% OLED черный",
+            "Спортивный карбон (Twill Weave)",
+            "Кибер-сетка и соты",
+            "Динамический амбиент музыки",
+            "Шлифованный темный титан",
+            "Звездное небо и туманность",
+            "Студийный радиальный свет",
+            "Пользовательские обои (файл)"
+    };
 
     public static final int PLAYER_THEME_CYBER = 0;   // Cyber Neon
     public static final int PLAYER_THEME_VINYL = 1;   // Classic Vinyl
@@ -216,6 +241,22 @@ public class ClusterConfig {
 
     public static void setPlayerAlwaysVisible(Context context, boolean always) {
         getPrefs(context).edit().putBoolean(KEY_PLAYER_ALWAYS_VISIBLE, always).apply();
+    }
+
+    public static int getClusterBg(Context context) {
+        return getPrefs(context).getInt(KEY_CLUSTER_BG, CLUSTER_BG_DEFAULT);
+    }
+
+    public static void setClusterBg(Context context, int bg) {
+        getPrefs(context).edit().putInt(KEY_CLUSTER_BG, bg).apply();
+    }
+
+    public static String getClusterBgCustomPath(Context context) {
+        return getPrefs(context).getString(KEY_CLUSTER_BG_CUSTOM_PATH, "/storage/emulated/0/gwm_cluster_bg.png");
+    }
+
+    public static void setClusterBgCustomPath(Context context, String path) {
+        getPrefs(context).edit().putString(KEY_CLUSTER_BG_CUSTOM_PATH, path).apply();
     }
 
     public static int getTargetDisplay(Context context) {

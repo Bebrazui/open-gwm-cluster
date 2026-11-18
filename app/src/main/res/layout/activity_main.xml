@@ -484,6 +484,79 @@
                             android:layout_height="wrap_content"
                             android:checked="true" />
                     </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="#233227" />
+
+                    <!-- Row 4: Cluster Background Selector (За колодцами) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Общий фон приборной панели"
+                                android:textColor="#E5EAE6"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Фон щитка за колодцами (OLED, Карбон, Неон, Амбиент)"
+                                android:textColor="#879C8F"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <Spinner
+                            android:id="@+id/spinnerClusterBg"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="160dp" />
+                    </LinearLayout>
+
+                    <!-- Custom Background Selector Row -->
+                    <LinearLayout
+                        android:id="@+id/containerCustomBgPick"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tvCustomBgPath"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="middle"
+                            android:singleLine="true"
+                            android:text="/sdcard/gwm_cluster_bg.png"
+                            android:textColor="#879C8F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/btnSelectCustomBg"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:background="@drawable/m3_button_secondary"
+                            android:paddingHorizontal="12dp"
+                            android:text="Выбрать фото"
+                            android:textColor="#A8E6BD"
+                            android:textSize="11sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
