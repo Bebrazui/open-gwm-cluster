@@ -11,8 +11,8 @@ android {
         applicationId = "org.opengwm.split"
         minSdk = 21
         targetSdk = 28
-        versionCode = 21
-        versionName = "1.6.3"
+        versionCode = 22
+        versionName = "1.6.4"
     }
 
     signingConfigs {

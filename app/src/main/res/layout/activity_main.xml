@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C100E">
+    android:background="#0D1117">
 
     <!-- Scrollable Content -->
     <ScrollView
@@ -36,7 +36,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Панель приборов GWM"
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
@@ -46,7 +46,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Экран: поиск вторичного дисплея..."
-                        android:textColor="#879C8F"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -58,7 +58,7 @@
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="6dp"
                     android:text="Готов к работе"
-                    android:textColor="#A4E2B8"
+                    android:textColor="#3FB950"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -100,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Управление выводом"
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -109,8 +109,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Трансляция шкал на экран приборной панели"
-                        android:textColor="#879C8F"
+                        android:text="Трансляция панели приборов на экран"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
 
                     <!-- Target Display Selector Row -->
@@ -126,7 +126,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="6dp"
                             android:text="Экран:"
-                            android:textColor="#8FA395"
+                            android:textColor="#8B949E"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -138,8 +138,8 @@
                             android:layout_marginEnd="4dp"
                             android:background="@drawable/m3_pill_active"
                             android:gravity="center"
-                            android:text="Оба (1+2)"
-                            android:textColor="#A8E6BD"
+                            android:text="Оба дисплея"
+                            android:textColor="#D3E3FD"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -151,8 +151,8 @@
                             android:layout_marginEnd="4dp"
                             android:background="@drawable/m3_pill_inactive"
                             android:gravity="center"
-                            android:text="ID 2 (HDMI)"
-                            android:textColor="#8FA395"
+                            android:text="Дисплей 2"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <TextView
@@ -163,8 +163,8 @@
                             android:layout_marginEnd="4dp"
                             android:background="@drawable/m3_pill_inactive"
                             android:gravity="center"
-                            android:text="ID 1 (HDMI)"
-                            android:textColor="#8FA395"
+                            android:text="Дисплей 1"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <TextView
@@ -174,8 +174,8 @@
                             android:layout_weight="1"
                             android:background="@drawable/m3_pill_inactive"
                             android:gravity="center"
-                            android:text="ID 0 (Тест)"
-                            android:textColor="#8FA395"
+                            android:text="Основной"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -185,8 +185,8 @@
                         android:layout_height="48dp"
                         android:layout_marginTop="14dp"
                         android:background="@drawable/m3_button_primary"
-                        android:text="Запустить на приборной панели"
-                        android:textColor="#0C2013"
+                        android:text="Запустить панель"
+                        android:textColor="#FFFFFF"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -196,8 +196,8 @@
                         android:layout_height="42dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/m3_button_secondary"
-                        android:text="Выдать разрешение поверх окон"
-                        android:textColor="#A4E2B8"
+                        android:text="Разрешение поверх окон"
+                        android:textColor="#C9D1D9"
                         android:textSize="12sp" />
 
                     <Button
@@ -206,8 +206,8 @@
                         android:layout_height="42dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/m3_button_secondary"
-                        android:text="📋 Диагностика и логи CAN / VHAL"
-                        android:textColor="#A4E2B8"
+                        android:text="Диагностика CAN / VHAL"
+                        android:textColor="#C9D1D9"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -230,8 +230,8 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Островок (Вырез HolePunch)"
-                            android:textColor="#E5EAE6"
+                            android:text="Вырезы под контрольные лампы"
+                            android:textColor="#E6EDF3"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -239,8 +239,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Выключай для телефона/планшета. Включай только на авто под окно ADAS."
-                            android:textColor="#879C8F"
+                            android:text="Маскирование физических ламп и зоны ADAS"
+                            android:textColor="#8B949E"
                             android:textSize="12sp" />
                     </LinearLayout>
 
@@ -253,42 +253,42 @@
             </LinearLayout>
 
             <!-- ========================================================= -->
-                            <!-- CARD: Quick Access Interactive Layout Editor -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+            <!-- CARD: Quick Access Interactive Layout Editor -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/m3_card_bg"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:background="@drawable/m3_card_bg"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="КАЛИБРОВКА КОМПОНОВКИ"
+                    android:textColor="#58A6FF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ИНТЕРАКТИВНЫЙ РЕДАКТОР"
-                        android:textColor="#A8E6BD"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Настройка расположения шкал, виджетов и плеера"
+                    android:textColor="#8B949E"
+                    android:textSize="12sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Перемещение и масштабирование колодцев, экранов и мини-виджетов:"
-                        android:textColor="#879C8F"
-                        android:textSize="12sp" />
-
-                    <Button
-                        android:id="@+id/btnOpenEditor"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="12dp"
-                        android:background="@drawable/m3_button_primary"
-                        android:text="📐 Настроить расположение и размеры"
-                        android:textColor="#A4E2B8"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                <Button
+                    android:id="@+id/btnOpenEditor"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/m3_button_primary"
+                    android:text="Редактор компоновки"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- TAB 1: ТЕМЫ (Стиль шкал, вырезы, сглаживание)              -->
             <!-- ========================================================= -->
@@ -310,8 +310,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Оформление и темы"
-                        android:textColor="#E5EAE6"
+                        android:text="Темы и оформление"
+                        android:textColor="#E6EDF3"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -332,8 +332,8 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Тема оформления"
-                                android:textColor="#E5EAE6"
+                                android:text="Тема приборной панели"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
 
@@ -342,7 +342,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="1 / 46"
-                                android:textColor="#A8E6BD"
+                                android:textColor="#58A6FF"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -363,7 +363,7 @@
                                 android:layout_height="42dp"
                                 android:background="@drawable/m3_button_secondary"
                                 android:text="◀"
-                                android:textColor="#A8E6BD"
+                                android:textColor="#D3E3FD"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
@@ -390,7 +390,7 @@
                                 android:layout_height="42dp"
                                 android:background="@drawable/m3_button_secondary"
                                 android:text="▶"
-                                android:textColor="#A8E6BD"
+                                android:textColor="#D3E3FD"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -407,7 +407,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Row 2: HolePunch Mask -->
                     <LinearLayout
@@ -425,15 +425,15 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Защитные вырезы (HolePunch)"
-                                android:textColor="#E5EAE6"
+                                android:text="Вырезы под контрольные лампы"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Окна для заводских ламп и поворотников"
-                                android:textColor="#879C8F"
+                                android:text="Маскирование физических ламп щитка"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -448,7 +448,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Row 3: Needle Smoothing -->
                     <LinearLayout
@@ -466,15 +466,15 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Плавность движения стрелок"
-                                android:textColor="#E5EAE6"
+                                android:text="Сглаживание стрелок"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Аппаратное сглаживание на 60 FPS"
-                                android:textColor="#879C8F"
+                                android:text="Аппаратная интерполяция 60 FPS"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -489,7 +489,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- ================================================= -->
                     <!-- CARD 2: ОБЩИЙ ФОН ЩИТКА (ЗА КОЛОДЦАМИ)            -->
@@ -504,8 +504,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Общий фон щитка (за колодцами)"
-                            android:textColor="#E5EAE6"
+                            android:text="Фон панели"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -514,18 +514,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1 / 9"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#58A6FF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="OLED черный, карбон, кибер-сетка, амбиент музыки, звездное небо"
-                        android:textColor="#879C8F"
-                        android:textSize="11sp" />
 
                     <!-- Stepper Bar: [ ◀ ] [ Название фона щитка ] [ ▶ ] -->
                     <LinearLayout
@@ -543,7 +535,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="◀"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -559,7 +551,7 @@
                             android:marqueeRepeatLimit="marquee_forever"
                             android:paddingHorizontal="10dp"
                             android:singleLine="true"
-                            android:text="По умолчанию (стиль темы)"
+                            android:text="По умолчанию"
                             android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -570,7 +562,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="▶"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -599,7 +591,7 @@
                             android:ellipsize="middle"
                             android:singleLine="true"
                             android:text="/sdcard/gwm_cluster_bg.png"
-                            android:textColor="#879C8F"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <Button
@@ -608,8 +600,8 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:paddingHorizontal="12dp"
-                            android:text="Выбрать фото"
-                            android:textColor="#A8E6BD"
+                            android:text="Выбрать файл"
+                            android:textColor="#C9D1D9"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -617,7 +609,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="14dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- ================================================= -->
                     <!-- CARD 3: ОФОРМЛЕНИЕ АУДИОПЛЕЕРА                    -->
@@ -632,8 +624,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Тема аудиоплеера"
-                            android:textColor="#E5EAE6"
+                            android:text="Стиль аудиоплеера"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -642,18 +634,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1 / 5"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#58A6FF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Cyber Neon, крутящийся винил, Aero Glass, Carbon Sport, Luxury Gold"
-                        android:textColor="#879C8F"
-                        android:textSize="11sp" />
 
                     <!-- Stepper Bar: [ ◀ ] [ Название темы плеера ] [ ▶ ] -->
                     <LinearLayout
@@ -671,7 +655,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="◀"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -687,7 +671,7 @@
                             android:marqueeRepeatLimit="marquee_forever"
                             android:paddingHorizontal="10dp"
                             android:singleLine="true"
-                            android:text="Cyber Neon (Неон, сияние)"
+                            android:text="Неон"
                             android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -698,7 +682,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="▶"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -721,8 +705,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Фон карточки плеера"
-                            android:textColor="#E5EAE6"
+                            android:text="Фон плеера"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -731,18 +715,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1 / 5"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#58A6FF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Цвета обложки трека, темное стекло, карбон, OLED, студийный"
-                        android:textColor="#879C8F"
-                        android:textSize="11sp" />
 
                     <!-- Stepper Bar: [ ◀ ] [ Название фона плеера ] [ ▶ ] -->
                     <LinearLayout
@@ -760,7 +736,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="◀"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -776,7 +752,7 @@
                             android:marqueeRepeatLimit="marquee_forever"
                             android:paddingHorizontal="10dp"
                             android:singleLine="true"
-                            android:text="Цвета обложки (Dynamic Glow)"
+                            android:text="Цвета трека"
                             android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -787,7 +763,7 @@
                             android:layout_height="42dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="▶"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="18sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -822,8 +798,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Телеметрические мини-виджеты"
-                        android:textColor="#E5EAE6"
+                        android:text="Мини-виджеты"
+                        android:textColor="#E6EDF3"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -831,8 +807,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Выберите данные шины для отображения под шкалами"
-                        android:textColor="#879C8F"
+                        android:text="Параметры телеметрии под шкалами"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
 
                     <!-- Slot 1: Left Widget -->
@@ -853,14 +829,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Левый виджет"
-                                android:textColor="#E5EAE6"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Под шкалой спидометра"
-                                android:textColor="#879C8F"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -875,7 +851,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Slot 2: Right Widget -->
                     <LinearLayout
@@ -894,14 +870,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Правый виджет"
-                                android:textColor="#E5EAE6"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Под шкалой тахометра"
-                                android:textColor="#879C8F"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -916,7 +892,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Slot 3: Center Widget -->
                     <LinearLayout
@@ -935,14 +911,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Центральный виджет"
-                                android:textColor="#E5EAE6"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="В центральной карточке"
-                                android:textColor="#879C8F"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -967,7 +943,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Текущие показания датчиков"
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -976,10 +952,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:background="#0A0E0C"
+                        android:background="#0D1117"
                         android:padding="12dp"
-                        android:text="⛽ Топливо: 62.5L (75%) | 🏁 Запас: 540 км\n⚡ АКБ: 14.1 В | 🛣️ Одометр: 18 450 км\n🌡️ ОЖ: 90 °C | ❄️ За бортом: +18 °C | 🛞 Шины: 2.3 бар"
-                        android:textColor="#8CE4A8"
+                        android:text="Топливо: 62.5 л (75%) | Запас: 540 км\nАКБ: 14.1 В | Одометр: 18 450 км\nОЖ: 90 °C | За бортом: +18 °C | Давление: 2.3 бар"
+                        android:textColor="#7EE787"
                         android:fontFamily="monospace"
                         android:lineSpacingExtra="4dp"
                         android:textSize="11sp" />
@@ -997,8 +973,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Аудиоплеер приборной панели"
-                        android:textColor="#E5EAE6"
+                        android:text="Аудиоплеер"
+                        android:textColor="#E6EDF3"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -1006,8 +982,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Отображение трека, обложки, времени и управление воспроизведением"
-                        android:textColor="#879C8F"
+                        android:text="Отображение трека, обложки и прогресса"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
 
                     <Button
@@ -1016,8 +992,8 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="14dp"
                         android:background="@drawable/m3_button_secondary"
-                        android:text="🎨 Настроить тему и фон плеера (в разделе Темы) ➜"
-                        android:textColor="#A8E6BD"
+                        android:text="Параметры плеера в разделе «Темы»"
+                        android:textColor="#C9D1D9"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -1025,7 +1001,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Always Visible Switch -->
                     <LinearLayout
@@ -1044,14 +1020,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Показывать плеер всегда"
-                                android:textColor="#E5EAE6"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Виден даже если музыка на паузе"
-                                android:textColor="#879C8F"
+                                android:text="Отображать при отсутствии воспроизведения"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -1065,7 +1041,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Notification Permission Button -->
                     <LinearLayout
@@ -1083,8 +1059,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Доступ к уведомлениям для треков"
-                                android:textColor="#E5EAE6"
+                                android:text="Доступ к медиа-уведомлениям"
+                                android:textColor="#E6EDF3"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1092,7 +1068,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Не разрешено"
-                                android:textColor="#E57373"
+                                android:textColor="#F85149"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -1103,7 +1079,7 @@
                             android:background="@drawable/m3_button_secondary"
                             android:paddingHorizontal="14dp"
                             android:text="Настроить"
-                            android:textColor="#E5EAE6"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
                     </LinearLayout>
 
@@ -1111,7 +1087,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="12dp"
-                        android:background="#233227" />
+                        android:background="#21262D" />
 
                     <!-- Test Demo Track Button -->
                     <Button
@@ -1119,8 +1095,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="42dp"
                         android:background="@drawable/m3_button_secondary"
-                        android:text="⚡ Включить демо-трек для проверки стилей"
-                        android:textColor="#8CE4A8"
+                        android:text="Демо-трек для проверки оформления"
+                        android:textColor="#C9D1D9"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -1148,8 +1124,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Поток данных шины VHAL / CAN"
-                        android:textColor="#E5EAE6"
+                        android:text="Шина данных VHAL / CAN"
+                        android:textColor="#E6EDF3"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -1158,10 +1134,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:background="#0A0E0C"
+                        android:background="#0D1117"
                         android:padding="12dp"
                         android:text="Скорость: 0 км/ч | Обороты: 0 | Передача: P | ОЖ: 90 °C"
-                        android:textColor="#8CE4A8"
+                        android:textColor="#7EE787"
                         android:fontFamily="monospace"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -1190,16 +1166,16 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Режим симуляции (Демо)"
-                                android:textColor="#E5EAE6"
+                                android:text="Симуляция телеметрии"
+                                android:textColor="#E6EDF3"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Ручное управление стрелками для проверки тем"
-                                android:textColor="#879C8F"
+                                android:text="Проверка реакции шкал на значения"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -1221,14 +1197,14 @@
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginBottom="12dp"
-                            android:background="#233227" />
+                            android:background="#21262D" />
 
                         <TextView
                             android:id="@+id/tvDemoSpeedLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Скорость: 0 км/ч"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="12sp" />
 
                         <SeekBar
@@ -1244,7 +1220,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
                             android:text="Обороты: 0 об/мин"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="12sp" />
 
                         <SeekBar
@@ -1265,7 +1241,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Передача:"
-                                android:textColor="#879C8F"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp" />
 
                             <Spinner
@@ -1279,7 +1255,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="14dp"
                                 android:text="Режим:"
-                                android:textColor="#879C8F"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp" />
 
                             <Spinner
@@ -1296,17 +1272,17 @@
                             android:layout_height="40dp"
                             android:layout_marginTop="12dp"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="Запустить тест стрелок (Sweep)"
-                            android:textColor="#A4E2B8"
+                            android:text="Тест стрелок (Sweep)"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
 
-                        <!-- CAN BUS SIMULATOR (Способ А) -->
+                        <!-- CAN BUS SIMULATOR -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
-                            android:text="СИМУЛЯТОР CAN-ШИНЫ (СПОСОБ А)"
-                            android:textColor="#A8E6BD"
+                            android:text="СИМУЛЯТОР СИГНАЛОВ CAN"
+                            android:textColor="#58A6FF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -1316,7 +1292,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="Статус: Остановлен | Частота: 0.0 Гц | Пакетов: 0"
-                            android:textColor="#88A090"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <LinearLayout
@@ -1331,8 +1307,8 @@
                                 android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_primary"
-                                android:text="▶ Поездка 50Hz"
-                                android:textColor="#003822"
+                                android:text="Поездка (50 Гц)"
+                                android:textColor="#FFFFFF"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -1343,8 +1319,8 @@
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_secondary"
-                                android:text="⚠ Сбой (Fault)"
-                                android:textColor="#FFB4AB"
+                                android:text="Сбой шины"
+                                android:textColor="#F85149"
                                 android:textSize="11sp" />
 
                             <Button
@@ -1354,8 +1330,8 @@
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_secondary"
-                                android:text="⚡ Шторм 200Hz"
-                                android:textColor="#E0E0FF"
+                                android:text="Шторм (200 Гц)"
+                                android:textColor="#D3E3FD"
                                 android:textSize="11sp" />
 
                             <Button
@@ -1365,8 +1341,8 @@
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="0.8"
                                 android:background="@drawable/m3_button_secondary"
-                                android:text="⏹ Стоп"
-                                android:textColor="#A0A0A0"
+                                android:text="Стоп"
+                                android:textColor="#8B949E"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -1375,8 +1351,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
-                            android:text="РЕКОРДЕР И РЕПЛЕЙ CAN-ТРАФИКА (ДЛЯ ТЕСТОВ)"
-                            android:textColor="#A8E6BD"
+                            android:text="ЗАПИСЬ И ВОСПРОИЗВЕДЕНИЕ ТРАФИКА"
+                            android:textColor="#58A6FF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -1386,7 +1362,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="Рекордер: Остановлен | Пакетов: 0"
-                            android:textColor="#88A090"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <LinearLayout
@@ -1401,8 +1377,8 @@
                                 android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_secondary"
-                                android:text="⏺ Запись шины"
-                                android:textColor="#FF8888"
+                                android:text="Запись шины"
+                                android:textColor="#F85149"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -1413,8 +1389,8 @@
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_primary"
-                                android:text="▶ Воспроизведение"
-                                android:textColor="#003822"
+                                android:text="Воспроизведение"
+                                android:textColor="#FFFFFF"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
@@ -1425,8 +1401,8 @@
                                 android:layout_marginStart="6dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/m3_button_secondary"
-                                android:text="🧪 Тест-инжект"
-                                android:textColor="#A8E6BD"
+                                android:text="Тест-пакет"
+                                android:textColor="#C9D1D9"
                                 android:textSize="11sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -1454,8 +1430,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ВЫБОР ЭЛЕМЕНТА ДЛЯ КАЛИБРОВКИ"
-                        android:textColor="#A8E6BD"
+                        android:text="ВЫБОР ЭЛЕМЕНТА"
+                        android:textColor="#58A6FF"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -1463,8 +1439,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Выберите элемент или просто коснитесь его на экране выше:"
-                        android:textColor="#879C8F"
+                        android:text="Выберите элемент из списка или на экране выше:"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
 
                     <HorizontalScrollView
@@ -1485,8 +1461,8 @@
                                 android:background="@drawable/m3_pill_active"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🔘 Левый колодец"
-                                android:textColor="#A8E6BD"
+                                android:text="Левый колодец"
+                                android:textColor="#D3E3FD"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1498,8 +1474,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🔘 Правый колодец"
-                                android:textColor="#8FA395"
+                                android:text="Правый колодец"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1511,8 +1487,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🔲 Центр / Экран"
-                                android:textColor="#8FA395"
+                                android:text="Центральный блок"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1524,8 +1500,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🏷️ Левый виджет"
-                                android:textColor="#8FA395"
+                                android:text="Левый виджет"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1537,8 +1513,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🏷️ Правый виджет"
-                                android:textColor="#8FA395"
+                                android:text="Правый виджет"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1550,8 +1526,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🏷️ Нижний виджет"
-                                android:textColor="#8FA395"
+                                android:text="Нижний виджет"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1563,8 +1539,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🎵 Плеер музыки"
-                                android:textColor="#8FA395"
+                                android:text="Аудиоплеер"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1576,8 +1552,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🔝 Верхняя строка"
-                                android:textColor="#8FA395"
+                                android:text="Верхняя строка"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -1589,8 +1565,8 @@
                                 android:background="@drawable/m3_pill_inactive"
                                 android:gravity="center"
                                 android:paddingHorizontal="14dp"
-                                android:text="🔻 Нижняя строка"
-                                android:textColor="#8FA395"
+                                android:text="Нижняя строка"
+                                android:textColor="#8B949E"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1611,7 +1587,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="НАСТРОЙКА: ЛЕВЫЙ КОЛОДЕЦ"
-                        android:textColor="#A8E6BD"
+                        android:textColor="#58A6FF"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -1627,8 +1603,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Позиция X (по горизонтали)"
-                            android:textColor="#D1DDD4"
+                            android:text="Позиция X"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1636,7 +1612,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 px (0%)"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -1654,7 +1630,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="−"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
 
                         <SeekBar
@@ -1671,7 +1647,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="+"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
                     </LinearLayout>
 
@@ -1687,8 +1663,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Позиция Y (по вертикали)"
-                            android:textColor="#D1DDD4"
+                            android:text="Позиция Y"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1696,7 +1672,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 px (0%)"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -1714,7 +1690,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="−"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
 
                         <SeekBar
@@ -1731,7 +1707,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="+"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
                     </LinearLayout>
 
@@ -1747,8 +1723,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Размер / Масштаб"
-                            android:textColor="#D1DDD4"
+                            android:text="Масштаб"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1756,7 +1732,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100%"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -1774,7 +1750,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="−"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
 
                         <SeekBar
@@ -1791,7 +1767,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="+"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
                     </LinearLayout>
 
@@ -1807,8 +1783,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Поворот / Угол (вращение 2 пальцами)"
-                            android:textColor="#D1DDD4"
+                            android:text="Угол поворота"
+                            android:textColor="#E6EDF3"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1816,7 +1792,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0°"
-                            android:textColor="#A4E2B8"
+                            android:textColor="#58A6FF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -1834,7 +1810,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="−"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
 
                         <SeekBar
@@ -1851,7 +1827,7 @@
                             android:layout_height="36dp"
                             android:background="@drawable/m3_button_secondary"
                             android:text="+"
-                            android:textColor="#D1DDD4"
+                            android:textColor="#C9D1D9"
                             android:textSize="18sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -1870,8 +1846,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:background="@drawable/m3_button_primary"
-                        android:text="💾 Сохранить расположение"
-                        android:textColor="#A4E2B8"
+                        android:text="Сохранить"
+                        android:textColor="#FFFFFF"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -1888,8 +1864,8 @@
                             android:layout_weight="1"
                             android:layout_marginEnd="6dp"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="↺ Сброс элемента"
-                            android:textColor="#D1DDD4"
+                            android:text="Сброс элемента"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
 
                         <Button
@@ -1899,8 +1875,8 @@
                             android:layout_weight="1"
                             android:layout_marginStart="6dp"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="↺ Сбросить всё"
-                            android:textColor="#D1DDD4"
+                            android:text="Сбросить все"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
                     </LinearLayout>
 
@@ -1910,8 +1886,8 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/m3_button_secondary"
-                        android:text="⛶ Во весь экран (Холст 1920x720)"
-                        android:textColor="#00E5FF"
+                        android:text="Во весь экран (1920×720)"
+                        android:textColor="#58A6FF"
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -1946,8 +1922,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="СВОДНЫЙ СТАТУС ОБОРУДОВАНИЯ"
-                            android:textColor="#A8E6BD"
+                            android:text="СТАТУС ОБОРУДОВАНИЯ"
+                            android:textColor="#58A6FF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -1957,8 +1933,8 @@
                             android:layout_height="32dp"
                             android:background="@drawable/m3_button_secondary"
                             android:paddingHorizontal="10dp"
-                            android:text="🔄 Обновить"
-                            android:textColor="#A4E2B8"
+                            android:text="Обновить"
+                            android:textColor="#C9D1D9"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -1968,7 +1944,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:text="• Служба com.android.car: проверка..."
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="12sp" />
 
                     <TextView
@@ -1977,7 +1953,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="• Доступ к VHAL (SA8155): проверка..."
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="12sp" />
 
                     <TextView
@@ -1986,7 +1962,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="• Дисплеи в системе: проверка..."
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="12sp" />
 
                     <TextView
@@ -1995,7 +1971,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="• Оверлей поверх окон: проверка..."
-                        android:textColor="#E5EAE6"
+                        android:textColor="#E6EDF3"
                         android:textSize="12sp" />
 
                     <TextView
@@ -2004,7 +1980,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="• SocketCAN (/dev/can0): проверка..."
-                        android:textColor="#879C8F"
+                        android:textColor="#8B949E"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -2020,8 +1996,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ДЕЙСТВИЯ И ДИАГНОСТИКА"
-                        android:textColor="#A8E6BD"
+                        android:text="ДЕЙСТВИЯ"
+                        android:textColor="#58A6FF"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -2037,8 +2013,8 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/m3_button_primary"
-                            android:text="⚡ Опросить VHAL"
-                            android:textColor="#0C2013"
+                            android:text="Опросить VHAL"
+                            android:textColor="#FFFFFF"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -2049,8 +2025,8 @@
                             android:layout_marginStart="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="📋 Копировать"
-                            android:textColor="#A4E2B8"
+                            android:text="Копировать"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
                     </LinearLayout>
 
@@ -2066,8 +2042,8 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="💾 В файл"
-                            android:textColor="#A4E2B8"
+                            android:text="Сохранить в файл"
+                            android:textColor="#C9D1D9"
                             android:textSize="12sp" />
 
                         <Button
@@ -2077,8 +2053,8 @@
                             android:layout_marginStart="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/m3_button_secondary"
-                            android:text="🧹 Очистить"
-                            android:textColor="#879C8F"
+                            android:text="Очистить"
+                            android:textColor="#8B949E"
                             android:textSize="12sp" />
                     </LinearLayout>
 
@@ -2097,7 +2073,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="Все"
-                            android:textColor="#A8E6BD"
+                            android:textColor="#D3E3FD"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -2110,7 +2086,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="Ошибки"
-                            android:textColor="#8FA395"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <TextView
@@ -2122,7 +2098,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="Шина/VHAL"
-                            android:textColor="#8FA395"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
 
                         <TextView
@@ -2134,7 +2110,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="Дисплеи"
-                            android:textColor="#8FA395"
+                            android:textColor="#8B949E"
                             android:textSize="11sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -2152,8 +2128,8 @@
                         android:id="@+id/tvLogCounter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ЖИВОЙ ТЕРМИНАЛ (0 строк)"
-                        android:textColor="#A8E6BD"
+                        android:text="ЖУРНАЛ СООБЫТИЙ (0)"
+                        android:textColor="#58A6FF"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -2162,7 +2138,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="320dp"
                         android:layout_marginTop="10dp"
-                        android:background="#060907"
+                        android:background="#0D1117"
                         android:padding="8dp">
 
                         <TextView
@@ -2171,8 +2147,8 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="monospace"
                             android:lineSpacingExtra="2dp"
-                            android:text="Ожидание сообщений логгера..."
-                            android:textColor="#A8E6BD"
+                            android:text="Ожидание сообщений..."
+                            android:textColor="#7EE787"
                             android:textIsSelectable="true"
                             android:textSize="11sp" />
                     </ScrollView>
@@ -2182,7 +2158,7 @@
     </ScrollView>
 
     <!-- ============================================================= -->
-    <!-- M3 EXPRESSIVE FLOATING PILL DOCK (Matching User's Mockup)     -->
+    <!-- M3 EXPRESSIVE FLOATING PILL DOCK                              -->
     <!-- ============================================================= -->
     <HorizontalScrollView
         android:layout_width="wrap_content"
@@ -2211,7 +2187,7 @@
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
                 android:text="Главная"
-                android:textColor="#A8E6BD"
+                android:textColor="#D3E3FD"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -2223,7 +2199,7 @@
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
                 android:text="Темы"
-                android:textColor="#8FA395"
+                android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -2235,7 +2211,7 @@
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
                 android:text="Виджеты"
-                android:textColor="#8FA395"
+                android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -2246,8 +2222,8 @@
                 android:background="@drawable/m3_pill_inactive"
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
-                android:text="Шина CAN"
-                android:textColor="#8FA395"
+                android:text="Шина"
+                android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -2259,7 +2235,7 @@
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
                 android:text="Редактор"
-                android:textColor="#8FA395"
+                android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -2270,8 +2246,8 @@
                 android:background="@drawable/m3_pill_inactive"
                 android:gravity="center"
                 android:paddingHorizontal="12dp"
-                android:text="Логи и Диагностика"
-                android:textColor="#8FA395"
+                android:text="Диагностика"
+                android:textColor="#8B949E"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>

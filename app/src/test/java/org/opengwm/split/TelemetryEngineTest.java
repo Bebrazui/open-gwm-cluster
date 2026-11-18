@@ -162,8 +162,8 @@ public class TelemetryEngineTest {
         assertEquals(8, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_CUSTOM);
 
         assertEquals("Must have 9 cluster backgrounds", 9, org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES.length);
-        assertEquals("По умолчанию (стиль темы)", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[0]);
-        assertEquals("Спортивный карбон (Twill Weave)", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[2]);
-        assertEquals("Динамический амбиент музыки", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[4]);
+        assertEquals("По умолчанию", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[0]);
+        assertEquals("Карбон", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[2]);
+        assertEquals("Амбиент музыки", org.opengwm.split.ui.ClusterConfig.CLUSTER_BG_NAMES[4]);
     }
 }

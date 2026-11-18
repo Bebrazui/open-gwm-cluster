@@ -23,54 +23,54 @@ public class ClusterConfig {
     public static final String KEY_CLUSTER_BG_CUSTOM_PATH = "pref_cluster_bg_custom_path";
 
     // Overall Cluster Dashboard Backgrounds (За колодцами приборов)
-    public static final int CLUSTER_BG_DEFAULT = 0;          // По умолчанию (стиль темы)
-    public static final int CLUSTER_BG_OLED = 1;             // Глубокий 100% OLED черный
-    public static final int CLUSTER_BG_CARBON = 2;           // Спортивный карбон (Twill Weave)
-    public static final int CLUSTER_BG_CYBER_HEX = 3;        // Кибер-сетка и неоновые соты
-    public static final int CLUSTER_BG_AURORA_MUSIC = 4;     // Динамический амбиент музыки (в тон треку)
-    public static final int CLUSTER_BG_BRUSHED_TITANIUM = 5; // Шлифованный темный титан
-    public static final int CLUSTER_BG_STARFIELD = 6;        // Звездное небо и туманность
-    public static final int CLUSTER_BG_RADIAL_STUDIO = 7;    // Студийный радиальный свет
-    public static final int CLUSTER_BG_CUSTOM = 8;           // Пользовательские обои (файл)
+    public static final int CLUSTER_BG_DEFAULT = 0;          // По умолчанию
+    public static final int CLUSTER_BG_OLED = 1;             // Черный OLED
+    public static final int CLUSTER_BG_CARBON = 2;           // Карбон
+    public static final int CLUSTER_BG_CYBER_HEX = 3;        // Кибер-сетка
+    public static final int CLUSTER_BG_AURORA_MUSIC = 4;     // Амбиент музыки
+    public static final int CLUSTER_BG_BRUSHED_TITANIUM = 5; // Темный титан
+    public static final int CLUSTER_BG_STARFIELD = 6;        // Звездное небо
+    public static final int CLUSTER_BG_RADIAL_STUDIO = 7;    // Студийный свет
+    public static final int CLUSTER_BG_CUSTOM = 8;           // Свой файл
 
     public static final String[] CLUSTER_BG_NAMES = {
-            "По умолчанию (стиль темы)",
-            "Глубокий 100% OLED черный",
-            "Спортивный карбон (Twill Weave)",
-            "Кибер-сетка и соты",
-            "Динамический амбиент музыки",
-            "Шлифованный темный титан",
-            "Звездное небо и туманность",
-            "Студийный радиальный свет",
-            "Пользовательские обои (файл)"
+            "По умолчанию",
+            "Черный OLED",
+            "Карбон",
+            "Кибер-сетка",
+            "Амбиент музыки",
+            "Темный титан",
+            "Звездное небо",
+            "Студийный свет",
+            "Свой файл"
     };
 
-    public static final int PLAYER_THEME_CYBER = 0;   // Cyber Neon
-    public static final int PLAYER_THEME_VINYL = 1;   // Classic Vinyl
-    public static final int PLAYER_THEME_GLASS = 2;   // Aero Glass
-    public static final int PLAYER_THEME_CARBON = 3;  // Carbon Sport
-    public static final int PLAYER_THEME_LUXURY = 4;  // Luxury Gold
+    public static final int PLAYER_THEME_CYBER = 0;   // Неон
+    public static final int PLAYER_THEME_VINYL = 1;   // Винил
+    public static final int PLAYER_THEME_GLASS = 2;   // Стекло
+    public static final int PLAYER_THEME_CARBON = 3;  // Карбон
+    public static final int PLAYER_THEME_LUXURY = 4;  // Люкс
 
     public static final String[] PLAYER_THEME_NAMES = {
-            "Cyber Neon (Неон, сияние)",
-            "Classic Vinyl (Крутящийся винил)",
-            "Aero Glass (Матовое стекло)",
-            "Carbon Sport (Спорт карбон)",
-            "Luxury Gold (Премиум золото)"
+            "Неон",
+            "Винил",
+            "Стекло",
+            "Карбон",
+            "Люкс"
     };
 
-    public static final int PLAYER_BG_ART_GLOW = 0;   // Цвета обложки
+    public static final int PLAYER_BG_ART_GLOW = 0;   // Цвета трека
     public static final int PLAYER_BG_DARK_GLASS = 1; // Темное стекло
-    public static final int PLAYER_BG_CARBON = 2;     // Карбоновое волокно
+    public static final int PLAYER_BG_CARBON = 2;     // Карбон
     public static final int PLAYER_BG_OLED = 3;       // Черный OLED
-    public static final int PLAYER_BG_RADIAL = 4;     // Студийный свет
+    public static final int PLAYER_BG_RADIAL = 4;     // Студийный
 
     public static final String[] PLAYER_BG_NAMES = {
-            "Цвета обложки (Dynamic Glow)",
-            "Темное стекло (Dark Glass)",
-            "Карбоновое волокно (Carbon)",
-            "Чистый черный OLED (Pure Black)",
-            "Студийный свет (Studio Radial)"
+            "Цвета трека",
+            "Темное стекло",
+            "Карбон",
+            "Черный OLED",
+            "Студийный"
     };
     public static final String KEY_TARGET_DISPLAY = "pref_target_display";
 
@@ -103,23 +103,23 @@ public class ClusterConfig {
 
     // Telemetry Mini-Widgets
     public static final int WIDGET_NONE = 0;           // Выключено
-    public static final int WIDGET_FUEL = 1;           // Остаток топлива (л / %)
-    public static final int WIDGET_RANGE = 2;          // Запас хода (км)
-    public static final int WIDGET_BATTERY = 3;        // Напряжение АКБ (В)
-    public static final int WIDGET_ODOMETER = 4;       // Общий пробег (Одометр)
-    public static final int WIDGET_COOLANT = 5;        // Температура ОЖ (°C)
-    public static final int WIDGET_OUTSIDE_TEMP = 6;   // Температура за бортом (°C)
-    public static final int WIDGET_TIRE_PRESSURE = 7;  // Давление в шинах (бар)
+    public static final int WIDGET_FUEL = 1;           // Топливо
+    public static final int WIDGET_RANGE = 2;          // Запас хода
+    public static final int WIDGET_BATTERY = 3;        // Напряжение АКБ
+    public static final int WIDGET_ODOMETER = 4;       // Одометр
+    public static final int WIDGET_COOLANT = 5;        // Температура ОЖ
+    public static final int WIDGET_OUTSIDE_TEMP = 6;   // Температура за бортом
+    public static final int WIDGET_TIRE_PRESSURE = 7;  // Давление в шинах
 
     public static final String[] WIDGET_TITLES = {
             "Выключено",
-            "Остаток топлива (л / %)",
-            "Запас хода (км)",
-            "Напряжение АКБ (В)",
-            "Общий пробег (Одометр)",
-            "Температура ОЖ (°C)",
-            "Температура за бортом (°C)",
-            "Давление в шинах (TPMS)"
+            "Топливо",
+            "Запас хода",
+            "Напряжение АКБ",
+            "Одометр",
+            "Температура ОЖ",
+            "Температура за бортом",
+            "Давление в шинах"
     };
 
     public static final int THEME_SPORT_APEX = 0;       // Track / AMG / RS with 3D deep tube bezels & shift lights

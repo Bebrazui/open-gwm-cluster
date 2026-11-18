@@ -384,7 +384,7 @@ public class MainActivity extends Activity {
             boolean active = (i == index);
             if (tabs[i] != null) {
                 tabs[i].setBackgroundResource(active ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
-                tabs[i].setTextColor(Color.parseColor(active ? "#A8E6BD" : "#8FA395"));
+                tabs[i].setTextColor(Color.parseColor(active ? "#D3E3FD" : "#8B949E"));
             }
             if (containers[i] != null) {
                 containers[i].setVisibility(active ? View.VISIBLE : View.GONE);
@@ -611,11 +611,11 @@ public class MainActivity extends Activity {
         if (tvPlayerPermissionStatus == null) return;
         boolean granted = org.opengwm.split.media.MediaTracker.isNotificationAccessGranted(this);
         if (granted) {
-            tvPlayerPermissionStatus.setText("Разрешено ✓ (активно)");
-            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#8CE4A8"));
+            tvPlayerPermissionStatus.setText("Разрешено");
+            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#3FB950"));
         } else {
-            tvPlayerPermissionStatus.setText("Не разрешено (нажмите Настроить)");
-            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#E57373"));
+            tvPlayerPermissionStatus.setText("Требуется разрешение");
+            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#F85149"));
         }
     }
 
@@ -731,33 +731,33 @@ public class MainActivity extends Activity {
         themeValues.clear();
 
         // 1. Modern 3D & Cyber Cockpit Themes
-        themeDisplayNames.add("Спорт (3D колодцы, лаунч-свет)");
+        themeDisplayNames.add("Спорт");
         themeValues.add(ClusterConfig.THEME_SPORT_APEX);
 
-        themeDisplayNames.add("Люкс (Хронограф Tank 500, золото)");
+        themeDisplayNames.add("Хронограф");
         themeValues.add(ClusterConfig.THEME_LUXURY_CHRONO);
 
-        themeDisplayNames.add("Кибернетика (Полигональный HUD)");
+        themeDisplayNames.add("Кибернетика");
         themeValues.add(ClusterConfig.THEME_CYBER_HEX);
 
-        themeDisplayNames.add("Внедорожный 4x4 (Креномер, болты)");
+        themeDisplayNames.add("Внедорожный 4x4");
         themeValues.add(ClusterConfig.THEME_TACTICAL_4X4);
 
-        themeDisplayNames.add("Минимализм (OLED, парящие арки)");
+        themeDisplayNames.add("Минимализм");
         themeValues.add(ClusterConfig.THEME_MINIMAL_OLED);
 
-        themeDisplayNames.add("Тайкан Arc (Theme 51, светящийся неон)");
+        themeDisplayNames.add("Тайкан Arc");
         themeValues.add(ClusterConfig.THEME_TAYCAN_ARC);
 
-        themeDisplayNames.add("MINI Cooper (Двойной хром-колодец, LCD, неон)");
+        themeDisplayNames.add("MINI Cooper");
         themeValues.add(ClusterConfig.THEME_MINI_COOPER);
 
-        themeDisplayNames.add("Пользовательская тема (/sdcard/gwm_split_user_themes/)");
+        themeDisplayNames.add("Пользовательская");
         themeValues.add(ClusterConfig.THEME_USER_THEME);
 
         // 2. All 38 Original GWM Split Native Themes from APK assets
         for (int splitId : ClusterConfig.SPLIT_THEME_IDS) {
-            themeDisplayNames.add("Оригинал Split: Тема " + splitId);
+            themeDisplayNames.add("Split: Тема " + splitId);
             themeValues.add(ClusterConfig.THEME_SPLIT_OFFSET + splitId);
         }
 
@@ -1135,7 +1135,7 @@ public class MainActivity extends Activity {
     private void applyChipState(TextView chip, boolean active) {
         if (chip == null) return;
         chip.setBackgroundResource(active ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
-        chip.setTextColor(Color.parseColor(active ? "#A8E6BD" : "#8FA395"));
+        chip.setTextColor(Color.parseColor(active ? "#D3E3FD" : "#8B949E"));
     }
 
     private void setupVehicleTelemetry() {
@@ -1159,13 +1159,13 @@ public class MainActivity extends Activity {
                                 " | ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--"));
                         if (tvLiveSensorStats != null) {
                             tvLiveSensorStats.setText(
-                                    "⛽ Топливо: " + (state.fuelPercent >= 0 ? state.fuelPercent + "%" : (state.fuelLiters >= 0 ? Math.round(state.fuelLiters) + "L" : "--")) +
-                                    " | 🏁 Запас: " + (state.rangeKm >= 0 ? state.rangeKm + " км" : "--") + "\n" +
-                                    "⚡ АКБ: " + (state.batteryVoltage > 0 ? String.format(java.util.Locale.US, "%.1f В", state.batteryVoltage) : "--") +
-                                    " | 🛣️ Одометр: " + (state.odometerKm >= 0 ? state.odometerKm + " км" : "--") + "\n" +
-                                    "🌡️ ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--") +
-                                    " | ❄️ За бортом: " + (state.outsideTempC > -50f ? ((state.outsideTempC >= 0 ? "+" : "") + Math.round(state.outsideTempC) + " °C") : "--") +
-                                    " | 🛞 Шины: " + (state.tirePressureBar > 0 ? String.format(java.util.Locale.US, "%.1f бар", state.tirePressureBar) : "--")
+                                    "Топливо: " + (state.fuelPercent >= 0 ? state.fuelPercent + "%" : (state.fuelLiters >= 0 ? Math.round(state.fuelLiters) + " л" : "--")) +
+                                    " | Запас: " + (state.rangeKm >= 0 ? state.rangeKm + " км" : "--") + "\n" +
+                                    "АКБ: " + (state.batteryVoltage > 0 ? String.format(java.util.Locale.US, "%.1f В", state.batteryVoltage) : "--") +
+                                    " | Одометр: " + (state.odometerKm >= 0 ? state.odometerKm + " км" : "--") + "\n" +
+                                    "ОЖ: " + (state.targetTempC > -50f ? Math.round(state.targetTempC) + " °C" : "--") +
+                                    " | За бортом: " + (state.outsideTempC > -50f ? ((state.outsideTempC >= 0 ? "+" : "") + Math.round(state.outsideTempC) + " °C") : "--") +
+                                    " | Давление: " + (state.tirePressureBar > 0 ? String.format(java.util.Locale.US, "%.1f бар", state.tirePressureBar) : "--")
                             );
                         }
                     }
@@ -1393,7 +1393,7 @@ public class MainActivity extends Activity {
             if (chips[i] != null) {
                 boolean sel = (i == elementId);
                 chips[i].setBackgroundResource(sel ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
-                chips[i].setTextColor(Color.parseColor(sel ? "#A8E6BD" : "#8FA395"));
+                chips[i].setTextColor(Color.parseColor(sel ? "#D3E3FD" : "#8B949E"));
             }
         }
 
@@ -1463,7 +1463,7 @@ public class MainActivity extends Activity {
             }
         }
         InstrumentClusterService.applyConfig(this);
-        android.widget.Toast.makeText(this, "💾 Расположение сохранено и применено к приборной панели!", android.widget.Toast.LENGTH_LONG).show();
+        android.widget.Toast.makeText(this, "Расположение сохранено", android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private void openFullscreenEditorDialog() {
@@ -1487,15 +1487,15 @@ public class MainActivity extends Activity {
         bar.setBackgroundColor(Color.parseColor("#0E131A"));
 
         TextView hint = new TextView(this);
-        hint.setText("1 палец: переместить | 2 пальца: масштаб и вращение");
-        hint.setTextColor(Color.parseColor("#A8E6BD"));
+        hint.setText("Один палец: перемещение | Два пальца: масштаб и поворот");
+        hint.setTextColor(Color.parseColor("#8B949E"));
         hint.setTextSize(12f);
         LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
         bar.addView(hint, hintParams);
 
         Button btnSaveFs = new Button(this);
-        btnSaveFs.setText("💾 Сохранить");
-        btnSaveFs.setTextColor(Color.parseColor("#A4E2B8"));
+        btnSaveFs.setText("Сохранить");
+        btnSaveFs.setTextColor(Color.parseColor("#FFFFFF"));
         btnSaveFs.setBackgroundResource(R.drawable.m3_button_primary);
         btnSaveFs.setPadding(32, 8, 32, 8);
         btnSaveFs.setOnClickListener(v -> {
@@ -1505,14 +1505,14 @@ public class MainActivity extends Activity {
             }
             if (gaugePreview != null) gaugePreview.loadLayoutConfig();
             InstrumentClusterService.applyConfig(this);
-            android.widget.Toast.makeText(this, "💾 Расположение сохранено!", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Расположение сохранено", android.widget.Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
         bar.addView(btnSaveFs);
 
         Button btnClose = new Button(this);
-        btnClose.setText("✕ Закрыть");
-        btnClose.setTextColor(Color.parseColor("#D1DDD4"));
+        btnClose.setText("Закрыть");
+        btnClose.setTextColor(Color.parseColor("#C9D1D9"));
         btnClose.setBackgroundResource(R.drawable.m3_button_secondary);
         LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         closeParams.leftMargin = 16;
@@ -1624,15 +1624,15 @@ public class MainActivity extends Activity {
             if (chips[i] == null) continue;
             boolean sel = (i == currentLogFilter);
             chips[i].setBackgroundResource(sel ? R.drawable.m3_pill_active : R.drawable.m3_pill_inactive);
-            chips[i].setTextColor(Color.parseColor(sel ? "#A8E6BD" : "#8FA395"));
+            chips[i].setTextColor(Color.parseColor(sel ? "#D3E3FD" : "#8B949E"));
         }
     }
 
     private void updateDiagnosticSummary() {
         boolean overlayOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
         if (tvDiagOverlayStatus != null) {
-            tvDiagOverlayStatus.setText(overlayOk ? "• Оверлей поверх окон: [ 🟢 РАЗРЕШЕНО ]" : "• Оверлей поверх окон: [ 🔴 ЗАПРЕЩЕНО (нажмите 'Выдать разрешение') ]");
-            tvDiagOverlayStatus.setTextColor(Color.parseColor(overlayOk ? "#8CE4A8" : "#FF5252"));
+            tvDiagOverlayStatus.setText(overlayOk ? "• Оверлей поверх окон: Разрешено" : "• Оверлей поверх окон: Требуется разрешение");
+            tvDiagOverlayStatus.setTextColor(Color.parseColor(overlayOk ? "#3FB950" : "#F85149"));
         }
 
         boolean isBound = false;
@@ -1647,27 +1647,27 @@ public class MainActivity extends Activity {
 
         if (tvDiagCarServiceStatus != null) {
             if (isBound && hasProp) {
-                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ 🟢 ПОДКЛЮЧЕНА (CarProperty OK) ]");
-                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#8CE4A8"));
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: Подключена");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#3FB950"));
             } else if (isBound) {
-                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ 🟡 СВЯЗАНА (Ожидание ICarProperty) ]");
-                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#FFD54F"));
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: Ожидание сервиса");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#D29922"));
             } else {
-                tvDiagCarServiceStatus.setText("• Служба com.android.car: [ ⚪ НЕ ПОДКЛЮЧЕНА (Телефон или нет car_service) ]");
-                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#B0BEC5"));
+                tvDiagCarServiceStatus.setText("• Служба com.android.car: Не подключена");
+                tvDiagCarServiceStatus.setTextColor(Color.parseColor("#8B949E"));
             }
         }
 
         if (tvDiagVhalStatus != null) {
             if (hasProp) {
-                tvDiagVhalStatus.setText("• Доступ к VHAL (Qualcomm SA8155): [ 🟢 АКТИВЕН ]");
-                tvDiagVhalStatus.setTextColor(Color.parseColor("#8CE4A8"));
+                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): Активен");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#3FB950"));
             } else if (hasSensor) {
-                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): [ 🟡 ТОЛЬКО CarSensorManager ]");
-                tvDiagVhalStatus.setTextColor(Color.parseColor("#FFD54F"));
+                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): CarSensorManager");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#D29922"));
             } else {
-                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): [ ⚪ НЕДОСТУПЕН ]");
-                tvDiagVhalStatus.setTextColor(Color.parseColor("#B0BEC5"));
+                tvDiagVhalStatus.setText("• Доступ к VHAL (SA8155): Недоступен");
+                tvDiagVhalStatus.setTextColor(Color.parseColor("#8B949E"));
             }
         }
 
