@@ -65,6 +65,8 @@ public class InstrumentClusterService extends Service {
                 gaugeView.setThemeStyle(ClusterConfig.getTheme(context));
                 gaugeView.setHolePunch(ClusterConfig.isHolePunchEnabled(context));
                 gaugeView.setSmoothing(ClusterConfig.isSmoothingEnabled(context));
+                gaugeView.setPlayerTheme(ClusterConfig.getPlayerTheme(context));
+                gaugeView.setPlayerBg(ClusterConfig.getPlayerBg(context));
                 gaugeView.setWidgets(
                         ClusterConfig.getWidgetLeft(context),
                         ClusterConfig.getWidgetRight(context),
@@ -97,6 +99,8 @@ public class InstrumentClusterService extends Service {
             view.setThemeStyle(ClusterConfig.getTheme(context));
             view.setHolePunch(ClusterConfig.isHolePunchEnabled(context));
             view.setSmoothing(ClusterConfig.isSmoothingEnabled(context));
+            view.setPlayerTheme(ClusterConfig.getPlayerTheme(context));
+            view.setPlayerBg(ClusterConfig.getPlayerBg(context));
             view.setWidgets(
                     ClusterConfig.getWidgetLeft(context),
                     ClusterConfig.getWidgetRight(context),

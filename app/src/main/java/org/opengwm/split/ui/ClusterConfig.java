@@ -16,6 +16,37 @@ public class ClusterConfig {
     public static final String KEY_WIDGET_LEFT = "pref_widget_left";
     public static final String KEY_WIDGET_RIGHT = "pref_widget_right";
     public static final String KEY_WIDGET_CENTER = "pref_widget_center";
+    public static final String KEY_PLAYER_THEME = "pref_player_theme";
+    public static final String KEY_PLAYER_BG = "pref_player_bg";
+    public static final String KEY_PLAYER_ALWAYS_VISIBLE = "pref_player_always_visible";
+
+    public static final int PLAYER_THEME_CYBER = 0;   // Cyber Neon
+    public static final int PLAYER_THEME_VINYL = 1;   // Classic Vinyl
+    public static final int PLAYER_THEME_GLASS = 2;   // Aero Glass
+    public static final int PLAYER_THEME_CARBON = 3;  // Carbon Sport
+    public static final int PLAYER_THEME_LUXURY = 4;  // Luxury Gold
+
+    public static final String[] PLAYER_THEME_NAMES = {
+            "Cyber Neon (Неон, сияние)",
+            "Classic Vinyl (Крутящийся винил)",
+            "Aero Glass (Матовое стекло)",
+            "Carbon Sport (Спорт карбон)",
+            "Luxury Gold (Премиум золото)"
+    };
+
+    public static final int PLAYER_BG_ART_GLOW = 0;   // Цвета обложки
+    public static final int PLAYER_BG_DARK_GLASS = 1; // Темное стекло
+    public static final int PLAYER_BG_CARBON = 2;     // Карбоновое волокно
+    public static final int PLAYER_BG_OLED = 3;       // Черный OLED
+    public static final int PLAYER_BG_RADIAL = 4;     // Студийный свет
+
+    public static final String[] PLAYER_BG_NAMES = {
+            "Цвета обложки (Dynamic Glow)",
+            "Темное стекло (Dark Glass)",
+            "Карбоновое волокно (Carbon)",
+            "Чистый черный OLED (Pure Black)",
+            "Студийный свет (Studio Radial)"
+    };
     public static final String KEY_TARGET_DISPLAY = "pref_target_display";
 
     public static final int DISPLAY_TARGET_AUTO = -1;
@@ -161,6 +192,30 @@ public class ClusterConfig {
 
     public static void setWidgetCenter(Context context, int widget) {
         getPrefs(context).edit().putInt(KEY_WIDGET_CENTER, widget).apply();
+    }
+
+    public static int getPlayerTheme(Context context) {
+        return getPrefs(context).getInt(KEY_PLAYER_THEME, PLAYER_THEME_CYBER);
+    }
+
+    public static void setPlayerTheme(Context context, int theme) {
+        getPrefs(context).edit().putInt(KEY_PLAYER_THEME, theme).apply();
+    }
+
+    public static int getPlayerBg(Context context) {
+        return getPrefs(context).getInt(KEY_PLAYER_BG, PLAYER_BG_ART_GLOW);
+    }
+
+    public static void setPlayerBg(Context context, int bg) {
+        getPrefs(context).edit().putInt(KEY_PLAYER_BG, bg).apply();
+    }
+
+    public static boolean isPlayerAlwaysVisible(Context context) {
+        return getPrefs(context).getBoolean(KEY_PLAYER_ALWAYS_VISIBLE, false);
+    }
+
+    public static void setPlayerAlwaysVisible(Context context, boolean always) {
+        getPrefs(context).edit().putBoolean(KEY_PLAYER_ALWAYS_VISIBLE, always).apply();
     }
 
     public static int getTargetDisplay(Context context) {

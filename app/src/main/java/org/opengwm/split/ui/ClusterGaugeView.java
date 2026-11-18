@@ -15,6 +15,7 @@ import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
+import org.opengwm.split.media.MediaTracker;
 import org.opengwm.split.theme.ThemeAssetLoader;
 import org.opengwm.split.vehicle.VehicleState;
 
@@ -164,13 +165,33 @@ public class ClusterGaugeView extends View {
     private final Paint innerArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint miniFuelLedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    // Dynamic Media Player Detection & Metadata
+    // Dynamic Media Player & Customization
+    private int playerTheme = ClusterConfig.PLAYER_THEME_CYBER;
+    private int playerBg = ClusterConfig.PLAYER_BG_ART_GLOW;
+    private float vinylRotation = 0f;
+    private final RectF playerArtRect = new RectF();
+    private final RectF playerPrevBtnRect = new RectF();
+    private final RectF playerPlayBtnRect = new RectF();
+    private final RectF playerNextBtnRect = new RectF();
+    private final RectF playerProgressBarRect = new RectF();
+
+    private final Paint playerCardBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerCardBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerTextTitlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerTextArtistPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerTextTimePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerProgressBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerProgressFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerControlsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint playerArtPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+
     private boolean isMusicActive = false;
     private String trackTitle = "";
     private String trackArtist = "";
     private android.media.AudioManager audioManager = null;
     private long lastMusicCheckTime = 0;
     private android.content.BroadcastReceiver mediaReceiver = null;
+    private final MediaTracker.OnMediaStateListener mediaStateListener = tracker -> postInvalidate();
 
     // Reusable Geometry & Shapes
     private final RectF arcRect = new RectF();
@@ -211,6 +232,9 @@ public class ClusterGaugeView extends View {
         widgetLeft = ClusterConfig.getWidgetLeft(getContext());
         widgetRight = ClusterConfig.getWidgetRight(getContext());
         widgetCenter = ClusterConfig.getWidgetCenter(getContext());
+        playerTheme = ClusterConfig.getPlayerTheme(getContext());
+        playerBg = ClusterConfig.getPlayerBg(getContext());
+        MediaTracker.getInstance().init(getContext());
 
         for (int i = 0; i < ClusterConfig.ELEM_COUNT; i++) {
             elementLayouts[i] = new ElementLayout();
@@ -315,14 +339,37 @@ public class ClusterGaugeView extends View {
                 float y = event.getY();
                 long now = System.currentTimeMillis();
 
-                // 1. Floating Music Card Controls (Taycan theme)
-                if (activeTheme == ClusterConfig.THEME_TAYCAN_ARC && mediaCardRect.contains(x, y)) {
-                    if (x > mediaCardRect.right - 35f) {
-                        dispatchMediaKey(android.view.KeyEvent.KEYCODE_MEDIA_NEXT);
-                    } else {
-                        toggleMediaPlayback();
+                // 1. Universal Interactive Media Player Controls
+                if (mediaCardRect.contains(x, y)) {
+                    MediaTracker tracker = MediaTracker.getInstance();
+                    ElementLayout layout = elementLayouts[ClusterConfig.ELEM_MEDIA_PLAYER];
+                    float cardX = (layout != null) ? x - viewWidth * layout.dx : x;
+                    float cardY = (layout != null) ? y - viewHeight * layout.dy : y;
+
+                    if (playerNextBtnRect.contains(cardX, cardY) || x > mediaCardRect.right - 35f * (layout != null ? layout.scale : 1f)) {
+                        tracker.skipNext();
+                        return true;
+                    } else if (playerPlayBtnRect.contains(cardX, cardY) || (x > mediaCardRect.right - 68f * (layout != null ? layout.scale : 1f) && x <= mediaCardRect.right - 35f * (layout != null ? layout.scale : 1f))) {
+                        tracker.playPause();
+                        return true;
+                    } else if (playerPrevBtnRect.contains(cardX, cardY) || (x > mediaCardRect.right - 100f * (layout != null ? layout.scale : 1f) && x <= mediaCardRect.right - 68f * (layout != null ? layout.scale : 1f))) {
+                        tracker.skipPrev();
+                        return true;
+                    } else if (playerProgressBarRect.contains(cardX, cardY) && playerProgressBarRect.width() > 0) {
+                        float prog = (cardX - playerProgressBarRect.left) / playerProgressBarRect.width();
+                        if (prog < 0f) prog = 0f;
+                        if (prog > 1f) prog = 1f;
+                        tracker.seekTo((long) (prog * tracker.getDurationMs()));
+                        return true;
+                    } else if (playerArtRect.contains(cardX, cardY) || x < mediaCardRect.left + 72f * (layout != null ? layout.scale : 1f)) {
+                        playerTheme = (playerTheme + 1) % 5;
+                        ClusterConfig.setPlayerTheme(getContext(), playerTheme);
+                        android.widget.Toast.makeText(getContext(),
+                                "Стиль плеера: " + ClusterConfig.PLAYER_THEME_NAMES[playerTheme],
+                                android.widget.Toast.LENGTH_SHORT).show();
+                        invalidate();
+                        return true;
                     }
-                    return true;
                 }
 
                 // 2. Double-tap in center region toggles HolePunch on the fly!
@@ -488,6 +535,26 @@ public class ClusterGaugeView extends View {
         invalidate();
     }
 
+    public void setPlayerTheme(int theme) {
+        this.playerTheme = theme;
+        ClusterConfig.setPlayerTheme(getContext(), theme);
+        invalidate();
+    }
+
+    public void setPlayerBg(int bg) {
+        this.playerBg = bg;
+        ClusterConfig.setPlayerBg(getContext(), bg);
+        invalidate();
+    }
+
+    public int getPlayerTheme() {
+        return playerTheme;
+    }
+
+    public int getPlayerBg() {
+        return playerBg;
+    }
+
     public void setThemeStyle(int theme) {
         this.activeTheme = theme;
         ClusterConfig.setTheme(getContext(), theme);
@@ -605,6 +672,7 @@ public class ClusterGaugeView extends View {
         super.onAttachedToWindow();
         initAudioMonitoring();
         registerMediaReceiver();
+        MediaTracker.getInstance().addListener(mediaStateListener);
         if (viewWidth <= 0 || viewHeight <= 0) {
             android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
             int w = (dm != null && dm.widthPixels > 0) ? dm.widthPixels : 1920;
@@ -619,6 +687,7 @@ public class ClusterGaugeView extends View {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         unregisterMediaReceiver();
+        MediaTracker.getInstance().removeListener(mediaStateListener);
     }
 
     private void registerMediaReceiver() {
@@ -928,6 +997,9 @@ public class ClusterGaugeView extends View {
 
         // Draw Configurable Telemetry Mini-Widgets (only on themes that need extra telemetry)
         drawMiniWidgets(canvas);
+
+        // Draw Universal Interactive Media Player card
+        drawFloatingMusicCard(canvas, w, h);
 
         if (isEditMode) {
             drawEditorOverlay(canvas, w, h);
@@ -1664,8 +1736,7 @@ public class ClusterGaugeView extends View {
         // 5. Tachometer / Power Pod Right
         drawTaycanTachoArc(canvas, effRightCx, effRightCy, effRightRadius * 0.94f, w, h);
 
-        // 6. Floating M3 Glassmorphic Music Player card
-        drawFloatingMusicCard(canvas, w, h);
+        // 6. Cockpit styling
     }
 
     private void drawCockpitBezel(Canvas canvas, int w, int h) {
@@ -1773,16 +1844,42 @@ public class ClusterGaugeView extends View {
         canvas.drawLine(w * 0.5f, top + 20f, w * 0.5f, bottom - 80f, statusPillBorderPaint);
     }
 
+    private static int withAlpha(int color, int alpha) {
+        return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
+    }
+
+    private String truncateText(String text, Paint paint, float maxWidth) {
+        if (text == null || text.isEmpty()) return "";
+        if (paint.measureText(text) <= maxWidth) return text;
+        String ell = "...";
+        float ellW = paint.measureText(ell);
+        int len = text.length();
+        while (len > 0 && (paint.measureText(text, 0, len) + ellW) > maxWidth) {
+            len--;
+        }
+        return text.substring(0, len) + ell;
+    }
+
     private void drawFloatingMusicCard(Canvas canvas, int w, int h) {
-        if (!checkIsMusicPlaying() && !isEditMode) {
+        MediaTracker tracker = MediaTracker.getInstance();
+        boolean alwaysVisible = ClusterConfig.isPlayerAlwaysVisible(getContext());
+        boolean isPlaying = tracker.isPlaying() || checkIsMusicPlaying();
+
+        if (!isPlaying && !alwaysVisible && !isEditMode) {
             return;
         }
 
+        // Animate vinyl rotation and smooth time ticker
+        if (isPlaying) {
+            vinylRotation = (vinylRotation + 1.8f) % 360f;
+            postInvalidateDelayed(33);
+        }
+
         ElementLayout layout = elementLayouts[ClusterConfig.ELEM_MEDIA_PLAYER];
-        float baseCardW = Math.min(360f, w * 0.28f);
-        float baseCardH = 54f;
+        float baseCardW = Math.min(430f, w * 0.35f);
+        float baseCardH = 78f;
         float baseCardX = w * 0.5f;
-        float baseCardY = h * 0.82f;
+        float baseCardY = h * 0.83f;
 
         float curCardX = baseCardX + w * layout.dx;
         float curCardY = baseCardY + h * layout.dy;
@@ -1797,42 +1894,454 @@ public class ClusterGaugeView extends View {
 
         RectF localCardRect = new RectF(baseCardX - baseCardW / 2f, baseCardY - baseCardH / 2f, baseCardX + baseCardW / 2f, baseCardY + baseCardH / 2f);
 
-        statusPillBgPaint.setColor(Color.parseColor("#E60D1520"));
-        canvas.drawRoundRect(localCardRect, 14f, 14f, statusPillBgPaint);
-        statusPillBorderPaint.setColor(Color.parseColor("#00E5FF"));
-        statusPillBorderPaint.setStrokeWidth(1.2f);
-        canvas.drawRoundRect(localCardRect, 14f, 14f, statusPillBorderPaint);
+        int domColor = tracker.getDominantColor();
+        int secColor = tracker.getSecondaryColor();
 
-        // Album Art thumbnail (dark cyan container)
-        RectF artRect = new RectF(localCardRect.left + 8f, baseCardY - 19f, localCardRect.left + 46f, baseCardY + 19f);
-        statusPillBgPaint.setColor(Color.parseColor("#152D42"));
-        canvas.drawRoundRect(artRect, 8f, 8f, statusPillBgPaint);
+        // 1. Draw Player Background
+        drawPlayerBackground(canvas, localCardRect, domColor, secColor);
 
-        subTextPaint.setColor(Color.parseColor("#00E5FF"));
-        subTextPaint.setTextSize(spToPx(13));
-        subTextPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText("♬", artRect.centerX(), artRect.centerY() + 5f, subTextPaint);
-
-        // Track title & artist
-        subTextPaint.setColor(Color.WHITE);
-        subTextPaint.setTextSize(spToPx(11.5f));
-        subTextPaint.setTextAlign(Paint.Align.LEFT);
-        String title = (trackTitle != null && !trackTitle.isEmpty()) ? trackTitle : "Аудиопоток";
-        String artist = (trackArtist != null && !trackArtist.isEmpty()) ? trackArtist : "Воспроизведение";
-        canvas.drawText(title, localCardRect.left + 54f, baseCardY - 4f, subTextPaint);
-
-        subTextPaint.setColor(Color.parseColor("#78909C"));
-        subTextPaint.setTextSize(spToPx(9.5f));
-        canvas.drawText(artist, localCardRect.left + 54f, baseCardY + 14f, subTextPaint);
-        subTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        // Play/Pause & Next icons
-        subTextPaint.setColor(Color.parseColor("#00E5FF"));
-        subTextPaint.setTextSize(spToPx(13));
-        canvas.drawText("❚❚", localCardRect.right - 44f, baseCardY + 5f, subTextPaint);
-        canvas.drawText("⏭", localCardRect.right - 18f, baseCardY + 5f, subTextPaint);
+        // 2. Draw Player Theme Content
+        drawPlayerThemeContent(canvas, localCardRect, tracker, domColor, secColor, isPlaying);
 
         canvas.restore();
+    }
+
+    private void drawPlayerBackground(Canvas canvas, RectF r, int domColor, int secColor) {
+        float corner = 16f;
+        switch (playerBg) {
+            case ClusterConfig.PLAYER_BG_ART_GLOW: {
+                LinearGradient grad = new LinearGradient(
+                        r.left, r.top, r.right, r.bottom,
+                        new int[]{withAlpha(domColor, 170), withAlpha(secColor, 210), Color.parseColor("#E6080F16")},
+                        new float[]{0f, 0.45f, 1f},
+                        Shader.TileMode.CLAMP
+                );
+                playerCardBgPaint.setShader(grad);
+                canvas.drawRoundRect(r, corner, corner, playerCardBgPaint);
+                playerCardBgPaint.setShader(null);
+
+                playerCardBorderPaint.setColor(withAlpha(domColor, 160));
+                playerCardBorderPaint.setStrokeWidth(1.2f);
+                canvas.drawRoundRect(r, corner, corner, playerCardBorderPaint);
+                break;
+            }
+            case ClusterConfig.PLAYER_BG_DARK_GLASS: {
+                LinearGradient glassGrad = new LinearGradient(
+                        r.left, r.top, r.left, r.bottom,
+                        new int[]{Color.parseColor("#E60F1722"), Color.parseColor("#F2070C12")},
+                        null, Shader.TileMode.CLAMP
+                );
+                playerCardBgPaint.setShader(glassGrad);
+                canvas.drawRoundRect(r, corner, corner, playerCardBgPaint);
+                playerCardBgPaint.setShader(null);
+
+                playerCardBorderPaint.setColor(Color.parseColor("#40FFFFFF"));
+                playerCardBorderPaint.setStrokeWidth(1.2f);
+                canvas.drawRoundRect(r, corner, corner, playerCardBorderPaint);
+                break;
+            }
+            case ClusterConfig.PLAYER_BG_CARBON: {
+                playerCardBgPaint.setColor(Color.parseColor("#F5101316"));
+                canvas.drawRoundRect(r, corner, corner, playerCardBgPaint);
+
+                canvas.save();
+                canvas.clipRect(r);
+                Paint carbonLine = new Paint(Paint.ANTI_ALIAS_FLAG);
+                carbonLine.setColor(Color.parseColor("#15FFFFFF"));
+                carbonLine.setStrokeWidth(1.4f);
+                for (float d = r.left - r.height(); d < r.right + r.height(); d += 7f) {
+                    canvas.drawLine(d, r.bottom, d + r.height(), r.top, carbonLine);
+                }
+                canvas.restore();
+
+                playerCardBorderPaint.setColor(Color.parseColor("#37474F"));
+                playerCardBorderPaint.setStrokeWidth(1.2f);
+                canvas.drawRoundRect(r, corner, corner, playerCardBorderPaint);
+                break;
+            }
+            case ClusterConfig.PLAYER_BG_OLED: {
+                playerCardBgPaint.setColor(Color.BLACK);
+                canvas.drawRoundRect(r, corner, corner, playerCardBgPaint);
+
+                playerCardBorderPaint.setColor(withAlpha(domColor, 200));
+                playerCardBorderPaint.setStrokeWidth(1.0f);
+                canvas.drawRoundRect(r, corner, corner, playerCardBorderPaint);
+                break;
+            }
+            case ClusterConfig.PLAYER_BG_RADIAL:
+            default: {
+                RadialGradient radGrad = new RadialGradient(
+                        r.left + 50f, r.centerY(), r.width() * 0.7f,
+                        new int[]{withAlpha(domColor, 180), Color.parseColor("#F2070C12")},
+                        new float[]{0f, 1f},
+                        Shader.TileMode.CLAMP
+                );
+                playerCardBgPaint.setShader(radGrad);
+                canvas.drawRoundRect(r, corner, corner, playerCardBgPaint);
+                playerCardBgPaint.setShader(null);
+
+                playerCardBorderPaint.setColor(withAlpha(domColor, 130));
+                playerCardBorderPaint.setStrokeWidth(1.2f);
+                canvas.drawRoundRect(r, corner, corner, playerCardBorderPaint);
+                break;
+            }
+        }
+    }
+
+    private void drawPlayerThemeContent(Canvas canvas, RectF r, MediaTracker tracker, int domColor, int secColor, boolean isPlaying) {
+        float cardX = r.left;
+        float cardY = r.top;
+        float cardW = r.width();
+        float cardH = r.height();
+
+        float artSize = 58f;
+        float artX = cardX + 10f;
+        float artY = cardY + (cardH - artSize) / 2f;
+        playerArtRect.set(artX, artY, artX + artSize, artY + artSize);
+
+        float btnW = 28f;
+        float btnGap = 4f;
+        float btnsRight = cardX + cardW - 8f;
+        playerNextBtnRect.set(btnsRight - btnW, cardY + (cardH - btnW) / 2f, btnsRight, cardY + (cardH + btnW) / 2f);
+        playerPlayBtnRect.set(playerNextBtnRect.left - btnGap - btnW, cardY + (cardH - btnW) / 2f, playerNextBtnRect.left - btnGap, cardY + (cardH + btnW) / 2f);
+        playerPrevBtnRect.set(playerPlayBtnRect.left - btnGap - btnW, cardY + (cardH - btnW) / 2f, playerPlayBtnRect.left - btnGap, cardY + (cardH + btnW) / 2f);
+
+        float textLeft = cardX + artSize + 18f;
+        float barRight = playerPrevBtnRect.left - 10f;
+        float barWidth = Math.max(50f, barRight - textLeft);
+        float barY = cardY + cardH - 15f;
+        playerProgressBarRect.set(textLeft, barY - 6f, barRight, barY + 6f);
+
+        float maxTextW = barWidth;
+        float prog = tracker.getProgress();
+
+        String title = tracker.getTrackTitle();
+        String artist = tracker.getTrackArtist();
+        String timeStr = MediaTracker.formatTime(tracker.getCurrentPositionMs()) + " / " + MediaTracker.formatTime(tracker.getDurationMs());
+
+        // -----------------------------------------------------------------
+        // THEME 1: VINYL DISK (Turntable Classic)
+        // -----------------------------------------------------------------
+        if (playerTheme == ClusterConfig.PLAYER_THEME_VINYL) {
+            float vinylCx = playerArtRect.centerX();
+            float vinylCy = playerArtRect.centerY();
+            float vinylR = artSize / 2f;
+
+            // Outer black vinyl disk
+            Paint vinylPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            vinylPaint.setStyle(Paint.Style.FILL);
+            vinylPaint.setColor(Color.parseColor("#111111"));
+            canvas.drawCircle(vinylCx, vinylCy, vinylR, vinylPaint);
+
+            // Vinyl grooves
+            vinylPaint.setStyle(Paint.Style.STROKE);
+            vinylPaint.setColor(Color.parseColor("#222222"));
+            vinylPaint.setStrokeWidth(1f);
+            canvas.drawCircle(vinylCx, vinylCy, vinylR * 0.85f, vinylPaint);
+            canvas.drawCircle(vinylCx, vinylCy, vinylR * 0.72f, vinylPaint);
+            canvas.drawCircle(vinylCx, vinylCy, vinylR * 0.60f, vinylPaint);
+
+            // Rotated vinyl center & sheen
+            canvas.save();
+            canvas.rotate(vinylRotation, vinylCx, vinylCy);
+
+            // Vinyl gloss sheen reflection
+            RectF sheenRect = new RectF(vinylCx - vinylR, vinylCy - vinylR, vinylCx + vinylR, vinylCy + vinylR);
+            vinylPaint.setStyle(Paint.Style.FILL);
+            vinylPaint.setColor(Color.parseColor("#18FFFFFF"));
+            canvas.drawArc(sheenRect, 30f, 40f, true, vinylPaint);
+            canvas.drawArc(sheenRect, 210f, 40f, true, vinylPaint);
+
+            // Center circular album art
+            Bitmap circArt = tracker.getCircularAlbumArt();
+            float labelR = vinylR * 0.44f;
+            if (circArt != null && !circArt.isRecycled()) {
+                RectF labelRect = new RectF(vinylCx - labelR, vinylCy - labelR, vinylCx + labelR, vinylCy + labelR);
+                canvas.drawBitmap(circArt, null, labelRect, playerArtPaint);
+            } else {
+                vinylPaint.setColor(Color.parseColor("#C49A45"));
+                canvas.drawCircle(vinylCx, vinylCy, labelR, vinylPaint);
+            }
+
+            // Center spindle hole
+            vinylPaint.setColor(Color.parseColor("#FFD54F"));
+            canvas.drawCircle(vinylCx, vinylCy, 3.5f, vinylPaint);
+            canvas.restore();
+
+            // Vinyl Typography
+            playerTextTitlePaint.setColor(Color.parseColor("#FFF8E1"));
+            playerTextTitlePaint.setTextSize(spToPx(11.5f));
+            playerTextTitlePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
+            canvas.drawText(truncateText(title, playerTextTitlePaint, maxTextW), textLeft, cardY + 22f, playerTextTitlePaint);
+
+            playerTextArtistPaint.setColor(Color.parseColor("#FFE082"));
+            playerTextArtistPaint.setTextSize(spToPx(9.5f));
+            playerTextArtistPaint.setTypeface(Typeface.SERIF);
+            canvas.drawText(truncateText(artist, playerTextArtistPaint, maxTextW), textLeft, cardY + 38f, playerTextArtistPaint);
+
+            playerTextTimePaint.setColor(Color.parseColor("#FFD54F"));
+            playerTextTimePaint.setTextSize(spToPx(8.5f));
+            playerTextTimePaint.setTypeface(Typeface.MONOSPACE);
+            canvas.drawText(timeStr, textLeft, cardY + 52f, playerTextTimePaint);
+
+            // Brass Needle Progress Bar
+            playerProgressBgPaint.setColor(Color.parseColor("#33FFD54F"));
+            playerProgressBgPaint.setStrokeWidth(2.5f);
+            canvas.drawLine(textLeft, barY, barRight, barY, playerProgressBgPaint);
+
+            playerProgressFillPaint.setColor(Color.parseColor("#FFC107"));
+            playerProgressFillPaint.setStrokeWidth(2.5f);
+            float fillX = textLeft + prog * barWidth;
+            canvas.drawLine(textLeft, barY, fillX, barY, playerProgressFillPaint);
+
+            // Brass thumb
+            Paint thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            thumbPaint.setColor(Color.parseColor("#FFD54F"));
+            canvas.drawCircle(fillX, barY, 4f, thumbPaint);
+
+            // Vintage transport buttons
+            drawTransportButtons(canvas, Color.parseColor("#FFD54F"), isPlaying);
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // STANDARD ARTWORK RENDERING (Themes 0, 2, 3, 4)
+        // -----------------------------------------------------------------
+        Bitmap rawArt = tracker.getAlbumArt();
+        float artCorner = (playerTheme == ClusterConfig.PLAYER_THEME_CARBON) ? 4f : (playerTheme == ClusterConfig.PLAYER_THEME_LUXURY ? 18f : 10f);
+
+        canvas.save();
+        Path clipPath = new Path();
+        clipPath.addRoundRect(playerArtRect, artCorner, artCorner, Path.Direction.CW);
+        canvas.clipPath(clipPath);
+
+        if (rawArt != null && !rawArt.isRecycled()) {
+            canvas.drawBitmap(rawArt, null, playerArtRect, playerArtPaint);
+        } else {
+            Paint placePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            placePaint.setColor(withAlpha(domColor, 70));
+            canvas.drawRect(playerArtRect, placePaint);
+            placePaint.setColor(domColor);
+            placePaint.setTextSize(spToPx(20));
+            placePaint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText("♬", playerArtRect.centerX(), playerArtRect.centerY() + 8f, placePaint);
+        }
+        canvas.restore();
+
+        // -----------------------------------------------------------------
+        // THEME 3: CARBON SPORT (Rally Red, Segmented LED Bar, Slanted)
+        // -----------------------------------------------------------------
+        if (playerTheme == ClusterConfig.PLAYER_THEME_CARBON) {
+            Paint borderP = new Paint(Paint.ANTI_ALIAS_FLAG);
+            borderP.setStyle(Paint.Style.STROKE);
+            borderP.setColor(Color.parseColor("#FF1744"));
+            borderP.setStrokeWidth(1.8f);
+            canvas.drawRoundRect(playerArtRect, artCorner, artCorner, borderP);
+
+            canvas.save();
+            canvas.skew(-0.10f, 0f);
+
+            playerTextTitlePaint.setColor(Color.WHITE);
+            playerTextTitlePaint.setTextSize(spToPx(12f));
+            playerTextTitlePaint.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD_ITALIC));
+            canvas.drawText(truncateText(title, playerTextTitlePaint, maxTextW), textLeft + 4f, cardY + 22f, playerTextTitlePaint);
+
+            playerTextArtistPaint.setColor(Color.parseColor("#FF5252"));
+            playerTextArtistPaint.setTextSize(spToPx(9.5f));
+            playerTextArtistPaint.setTypeface(Typeface.create("sans-serif-condensed", Typeface.ITALIC));
+            canvas.drawText(truncateText(artist, playerTextArtistPaint, maxTextW), textLeft + 4f, cardY + 37f, playerTextArtistPaint);
+
+            playerTextTimePaint.setColor(Color.parseColor("#E0E0E0"));
+            playerTextTimePaint.setTextSize(spToPx(8.5f));
+            playerTextTimePaint.setTypeface(Typeface.MONOSPACE);
+            canvas.drawText(timeStr, textLeft + 4f, cardY + 52f, playerTextTimePaint);
+            canvas.restore();
+
+            // Segmented Tachometer LED Progress Bar (16 Segments)
+            int totalSegs = 16;
+            int activeSegs = Math.round(prog * totalSegs);
+            float segGap = 2.5f;
+            float segW = (barWidth - (totalSegs - 1) * segGap) / totalSegs;
+
+            Paint segPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            segPaint.setStyle(Paint.Style.FILL);
+
+            for (int i = 0; i < totalSegs; i++) {
+                float sx = textLeft + i * (segW + segGap);
+                RectF sRect = new RectF(sx, barY - 3f, sx + segW, barY + 3f);
+                if (i < activeSegs) {
+                    if (i < 10) segPaint.setColor(Color.parseColor("#00E676")); // Green
+                    else if (i < 13) segPaint.setColor(Color.parseColor("#FFEA00")); // Yellow
+                    else segPaint.setColor(Color.parseColor("#FF1744")); // Red
+                } else {
+                    segPaint.setColor(Color.parseColor("#25FFFFFF"));
+                }
+                canvas.drawRoundRect(sRect, 1.5f, 1.5f, segPaint);
+            }
+
+            drawTransportButtons(canvas, Color.parseColor("#FF1744"), isPlaying);
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // THEME 4: LUXURY GOLD (Tank 500 Gold Chronograph & Diamond Thumb)
+        // -----------------------------------------------------------------
+        if (playerTheme == ClusterConfig.PLAYER_THEME_LUXURY) {
+            Paint goldBezel = new Paint(Paint.ANTI_ALIAS_FLAG);
+            goldBezel.setStyle(Paint.Style.STROKE);
+            goldBezel.setColor(Color.parseColor("#D4AF37"));
+            goldBezel.setStrokeWidth(1.5f);
+            canvas.drawRoundRect(playerArtRect, artCorner, artCorner, goldBezel);
+
+            playerTextTitlePaint.setColor(Color.parseColor("#FFFDE7"));
+            playerTextTitlePaint.setTextSize(spToPx(11.5f));
+            playerTextTitlePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD));
+            canvas.drawText(truncateText(title, playerTextTitlePaint, maxTextW), textLeft, cardY + 22f, playerTextTitlePaint);
+
+            playerTextArtistPaint.setColor(Color.parseColor("#D4AF37"));
+            playerTextArtistPaint.setTextSize(spToPx(9.5f));
+            playerTextArtistPaint.setTypeface(Typeface.SERIF);
+            canvas.drawText(truncateText(artist, playerTextArtistPaint, maxTextW), textLeft, cardY + 38f, playerTextArtistPaint);
+
+            playerTextTimePaint.setColor(Color.parseColor("#F5E0A3"));
+            playerTextTimePaint.setTextSize(spToPx(8.5f));
+            playerTextTimePaint.setTypeface(Typeface.MONOSPACE);
+            canvas.drawText(timeStr, textLeft, cardY + 52f, playerTextTimePaint);
+
+            // Double Gold Line with Diamond Thumb
+            playerProgressBgPaint.setColor(Color.parseColor("#33D4AF37"));
+            playerProgressBgPaint.setStrokeWidth(2f);
+            canvas.drawLine(textLeft, barY, barRight, barY, playerProgressBgPaint);
+
+            playerProgressFillPaint.setColor(Color.parseColor("#D4AF37"));
+            playerProgressFillPaint.setStrokeWidth(2f);
+            float fx = textLeft + prog * barWidth;
+            canvas.drawLine(textLeft, barY, fx, barY, playerProgressFillPaint);
+
+            // Diamond thumb marker
+            Path diamond = new Path();
+            diamond.moveTo(fx, barY - 4.5f);
+            diamond.lineTo(fx + 4f, barY);
+            diamond.lineTo(fx, barY + 4.5f);
+            diamond.lineTo(fx - 4f, barY);
+            diamond.close();
+            Paint diaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            diaPaint.setColor(Color.parseColor("#FFF9C4"));
+            diaPaint.setStyle(Paint.Style.FILL);
+            canvas.drawPath(diamond, diaPaint);
+
+            drawTransportButtons(canvas, Color.parseColor("#D4AF37"), isPlaying);
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // THEME 2: AERO GLASS (Clean Flat Glassmorphic Minimalism)
+        // -----------------------------------------------------------------
+        if (playerTheme == ClusterConfig.PLAYER_THEME_GLASS) {
+            Paint borderP = new Paint(Paint.ANTI_ALIAS_FLAG);
+            borderP.setStyle(Paint.Style.STROKE);
+            borderP.setColor(Color.parseColor("#30FFFFFF"));
+            borderP.setStrokeWidth(1.0f);
+            canvas.drawRoundRect(playerArtRect, artCorner, artCorner, borderP);
+
+            playerTextTitlePaint.setColor(Color.WHITE);
+            playerTextTitlePaint.setTextSize(spToPx(11.5f));
+            playerTextTitlePaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            canvas.drawText(truncateText(title, playerTextTitlePaint, maxTextW), textLeft, cardY + 22f, playerTextTitlePaint);
+
+            playerTextArtistPaint.setColor(Color.parseColor("#B0BEC5"));
+            playerTextArtistPaint.setTextSize(spToPx(9.5f));
+            playerTextArtistPaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+            canvas.drawText(truncateText(artist, playerTextArtistPaint, maxTextW), textLeft, cardY + 38f, playerTextArtistPaint);
+
+            playerTextTimePaint.setColor(Color.parseColor("#90A4AE"));
+            playerTextTimePaint.setTextSize(spToPx(8.5f));
+            playerTextTimePaint.setTypeface(Typeface.MONOSPACE);
+            canvas.drawText(timeStr, textLeft, cardY + 52f, playerTextTimePaint);
+
+            // Clean 2.5px white line
+            playerProgressBgPaint.setColor(Color.parseColor("#20FFFFFF"));
+            playerProgressBgPaint.setStrokeWidth(2.5f);
+            canvas.drawLine(textLeft, barY, barRight, barY, playerProgressBgPaint);
+
+            playerProgressFillPaint.setColor(Color.WHITE);
+            playerProgressFillPaint.setStrokeWidth(2.5f);
+            float fx = textLeft + prog * barWidth;
+            canvas.drawLine(textLeft, barY, fx, barY, playerProgressFillPaint);
+
+            Paint thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            thumbPaint.setColor(Color.WHITE);
+            canvas.drawCircle(fx, barY, 3.5f, thumbPaint);
+
+            drawTransportButtons(canvas, Color.WHITE, isPlaying);
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // THEME 0: CYBER NEON (Default Glowing Cockpit HUD)
+        // -----------------------------------------------------------------
+        Paint neonBorder = new Paint(Paint.ANTI_ALIAS_FLAG);
+        neonBorder.setStyle(Paint.Style.STROKE);
+        neonBorder.setColor(withAlpha(domColor, 220));
+        neonBorder.setStrokeWidth(1.6f);
+        canvas.drawRoundRect(playerArtRect, artCorner, artCorner, neonBorder);
+
+        playerTextTitlePaint.setColor(Color.WHITE);
+        playerTextTitlePaint.setTextSize(spToPx(12f));
+        playerTextTitlePaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        canvas.drawText(truncateText(title, playerTextTitlePaint, maxTextW), textLeft, cardY + 22f, playerTextTitlePaint);
+
+        playerTextArtistPaint.setColor(withAlpha(domColor, 230));
+        playerTextArtistPaint.setTextSize(spToPx(9.8f));
+        playerTextArtistPaint.setTypeface(Typeface.DEFAULT);
+        canvas.drawText(truncateText(artist, playerTextArtistPaint, maxTextW), textLeft, cardY + 38f, playerTextArtistPaint);
+
+        playerTextTimePaint.setColor(Color.parseColor("#B0BEC5"));
+        playerTextTimePaint.setTextSize(spToPx(8.5f));
+        playerTextTimePaint.setTypeface(Typeface.MONOSPACE);
+        canvas.drawText(timeStr, textLeft, cardY + 52f, playerTextTimePaint);
+
+        // Neon Glow Progress Bar
+        playerProgressBgPaint.setColor(Color.parseColor("#25FFFFFF"));
+        playerProgressBgPaint.setStrokeWidth(3.5f);
+        playerProgressBgPaint.setStrokeCap(Paint.Cap.ROUND);
+        canvas.drawLine(textLeft, barY, barRight, barY, playerProgressBgPaint);
+
+        playerProgressFillPaint.setColor(domColor);
+        playerProgressFillPaint.setStrokeWidth(3.5f);
+        playerProgressFillPaint.setStrokeCap(Paint.Cap.ROUND);
+        float fx = textLeft + prog * barWidth;
+        canvas.drawLine(textLeft, barY, fx, barY, playerProgressFillPaint);
+
+        // Neon Glow Thumb
+        Paint thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        thumbPaint.setColor(Color.WHITE);
+        canvas.drawCircle(fx, barY, 4.5f, thumbPaint);
+        thumbPaint.setColor(withAlpha(domColor, 120));
+        canvas.drawCircle(fx, barY, 7.5f, thumbPaint);
+
+        drawTransportButtons(canvas, domColor, isPlaying);
+    }
+
+    private void drawTransportButtons(Canvas canvas, int accentColor, boolean isPlaying) {
+        playerControlsPaint.setTextAlign(Paint.Align.CENTER);
+        playerControlsPaint.setColor(accentColor);
+        playerControlsPaint.setTextSize(spToPx(13.5f));
+
+        // Prev
+        canvas.drawText("⏮", playerPrevBtnRect.centerX(), playerPrevBtnRect.centerY() + 5f, playerControlsPaint);
+
+        // Play/Pause pill background
+        Paint btnBg = new Paint(Paint.ANTI_ALIAS_FLAG);
+        btnBg.setColor(withAlpha(accentColor, 40));
+        canvas.drawCircle(playerPlayBtnRect.centerX(), playerPlayBtnRect.centerY(), playerPlayBtnRect.width() * 0.44f, btnBg);
+
+        // Play/Pause icon
+        String playIcon = isPlaying ? "❚❚" : "▶";
+        canvas.drawText(playIcon, playerPlayBtnRect.centerX(), playerPlayBtnRect.centerY() + 5f, playerControlsPaint);
+
+        // Next
+        canvas.drawText("⏭", playerNextBtnRect.centerX(), playerNextBtnRect.centerY() + 5f, playerControlsPaint);
     }
 
     // =========================================================================
@@ -2587,8 +3096,7 @@ public class ClusterGaugeView extends View {
         subTextPaint.setFakeBoldText(true);
         canvas.restore();
 
-        // 11. Dynamic Music Player card (only drawn if music is actively playing)
-        drawFloatingMusicCard(canvas, w, h);
+        // Cyber styling complete
     }
 
     private void drawSplitTopStatusBar(Canvas canvas, int w, int h) {

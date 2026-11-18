@@ -85,6 +85,13 @@ public class MainActivity extends Activity {
     private Spinner spinnerWidgetRight;
     private Spinner spinnerWidgetCenter;
 
+    private Spinner spinnerPlayerTheme;
+    private Spinner spinnerPlayerBg;
+    private Switch switchPlayerAlways;
+    private TextView tvPlayerPermissionStatus;
+    private Button btnPlayerNotificationPermission;
+    private Button btnPlayerDemoTrack;
+
     private TextView tabMain;
     private TextView tabThemes;
     private TextView tabWidgets;
@@ -194,6 +201,7 @@ public class MainActivity extends Activity {
         setupEditorControls();
         setupSpinners();
         setupWidgetSpinners();
+        setupMediaPlayerControls();
         setupControls();
         setupTargetDisplayControls();
         setupVehicleTelemetry();
@@ -284,6 +292,13 @@ public class MainActivity extends Activity {
         spinnerWidgetRight = findViewById(R.id.spinnerWidgetRight);
         spinnerWidgetCenter = findViewById(R.id.spinnerWidgetCenter);
 
+        spinnerPlayerTheme = findViewById(R.id.spinnerPlayerTheme);
+        spinnerPlayerBg = findViewById(R.id.spinnerPlayerBg);
+        switchPlayerAlways = findViewById(R.id.switchPlayerAlways);
+        tvPlayerPermissionStatus = findViewById(R.id.tvPlayerPermissionStatus);
+        btnPlayerNotificationPermission = findViewById(R.id.btnPlayerNotificationPermission);
+        btnPlayerDemoTrack = findViewById(R.id.btnPlayerDemoTrack);
+
         switchHolePunch = findViewById(R.id.switchHolePunch);
         switchHolePunchMain = findViewById(R.id.switchHolePunchMain);
         switchSmoothing = findViewById(R.id.switchSmoothing);
@@ -366,6 +381,87 @@ public class MainActivity extends Activity {
         spinnerWidgetLeft.setOnItemSelectedListener(widgetListener);
         spinnerWidgetRight.setOnItemSelectedListener(widgetListener);
         spinnerWidgetCenter.setOnItemSelectedListener(widgetListener);
+    }
+
+    private void setupMediaPlayerControls() {
+        if (spinnerPlayerTheme == null || spinnerPlayerBg == null) return;
+
+        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_THEME_NAMES);
+        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPlayerTheme.setAdapter(themeAdapter);
+        spinnerPlayerTheme.setSelection(ClusterConfig.getPlayerTheme(this));
+
+        spinnerPlayerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (gaugePreview != null) {
+                    gaugePreview.setPlayerTheme(position);
+                }
+                ClusterConfig.setPlayerTheme(MainActivity.this, position);
+                InstrumentClusterService.applyConfig(MainActivity.this);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        ArrayAdapter<String> bgAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, ClusterConfig.PLAYER_BG_NAMES);
+        bgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPlayerBg.setAdapter(bgAdapter);
+        spinnerPlayerBg.setSelection(ClusterConfig.getPlayerBg(this));
+
+        spinnerPlayerBg.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (gaugePreview != null) {
+                    gaugePreview.setPlayerBg(position);
+                }
+                ClusterConfig.setPlayerBg(MainActivity.this, position);
+                InstrumentClusterService.applyConfig(MainActivity.this);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        if (switchPlayerAlways != null) {
+            switchPlayerAlways.setChecked(ClusterConfig.isPlayerAlwaysVisible(this));
+            switchPlayerAlways.setOnCheckedChangeListener((btn, isChecked) -> {
+                ClusterConfig.setPlayerAlwaysVisible(MainActivity.this, isChecked);
+                if (gaugePreview != null) gaugePreview.invalidate();
+                InstrumentClusterService.applyConfig(MainActivity.this);
+            });
+        }
+
+        if (btnPlayerNotificationPermission != null) {
+            btnPlayerNotificationPermission.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                } catch (Throwable t) {
+                    Toast.makeText(MainActivity.this, "Не удалось открыть настройки: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (btnPlayerDemoTrack != null) {
+            btnPlayerDemoTrack.setOnClickListener(v -> {
+                org.opengwm.split.media.MediaTracker.getInstance().loadDemoTrack();
+                if (gaugePreview != null) gaugePreview.invalidate();
+                Toast.makeText(MainActivity.this, "Демо-трек загружен: Рок-н-Ролла нет — Миша Бурый", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        updatePlayerPermissionStatus();
+    }
+
+    private void updatePlayerPermissionStatus() {
+        if (tvPlayerPermissionStatus == null) return;
+        boolean granted = org.opengwm.split.media.MediaTracker.isNotificationAccessGranted(this);
+        if (granted) {
+            tvPlayerPermissionStatus.setText("Разрешено ✓ (активно)");
+            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#8CE4A8"));
+        } else {
+            tvPlayerPermissionStatus.setText("Не разрешено (нажмите Настроить)");
+            tvPlayerPermissionStatus.setTextColor(Color.parseColor("#E57373"));
+        }
     }
 
     private void selectThemeByIndex(int index) {
@@ -852,6 +948,7 @@ public class MainActivity extends Activity {
         scanDisplays();
         updateTargetDisplayChips();
         updateButtonLabels();
+        updatePlayerPermissionStatus();
     }
 
     private void scanDisplays() {

@@ -131,4 +131,21 @@ public class TelemetryEngineTest {
         binder.handlePush("car.basic.compass.status", "[3]");
         assertEquals(3.0f, ((Number) data.f1.getValue()).floatValue(), 0.01f);
     }
+
+    @Test
+    public void testMediaTrackerTimeFormattingAndDemo() {
+        assertEquals("00:00", org.opengwm.split.media.MediaTracker.formatTime(0));
+        assertEquals("01:05", org.opengwm.split.media.MediaTracker.formatTime(65000));
+        assertEquals("03:35", org.opengwm.split.media.MediaTracker.formatTime(215000));
+
+        org.opengwm.split.media.MediaTracker tracker = org.opengwm.split.media.MediaTracker.getInstance();
+        assertNotNull("MediaTracker must be non-null", tracker);
+
+        tracker.loadDemoTrack();
+        assertEquals("Рок-н-Ролла нет", tracker.getTrackTitle());
+        assertEquals("Миша Бурый", tracker.getTrackArtist());
+        assertTrue("Demo track must be playing", tracker.isPlaying());
+        assertEquals(215000, tracker.getDurationMs());
+        assertTrue("Progress must be between 0 and 1", tracker.getProgress() > 0f && tracker.getProgress() <= 1f);
+    }
 }
