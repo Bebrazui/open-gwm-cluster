@@ -29,6 +29,7 @@ public class FdbusNativeVehicleProvider implements VehicleDataProvider {
     private volatile boolean isRunning = false;
     private carData carDataInstance;
     private cfgData cfgDataInstance;
+    private android.content.BroadcastReceiver adapterStartupReceiver = null;
 
     public static boolean isAvailable() {
         return NativeLib.isLibraryLoaded();
@@ -50,6 +51,29 @@ public class FdbusNativeVehicleProvider implements VehicleDataProvider {
         isRunning = true;
 
         AppLogger.i(TAG, "Инициализация нативного FDBus IPC клиента для GWM Tank 500...");
+
+        // Connect directly to GWM Adapter Service in ServiceManager
+        com.altaysoft.t500_split.GwmPushBinder.registerToAdapter(context);
+
+        // Listen for GWM Adapter restarts or ACC_ON events
+        if (adapterStartupReceiver == null) {
+            adapterStartupReceiver = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(Context ctx, android.content.Intent intent) {
+                    AppLogger.i(TAG, "GWM Adapter событие получено: " + (intent != null ? intent.getAction() : "null"));
+                    com.altaysoft.t500_split.GwmPushBinder.registerToAdapter(context);
+                }
+            };
+            android.content.IntentFilter filter = new android.content.IntentFilter();
+            filter.addAction("com.gwm.intent.action.ADAPTER_SERVICE_START");
+            filter.addAction("com.gwm.intent.action.ACC_ON");
+            filter.addAction("com.beantechs.adapterservice.startup");
+            try {
+                context.registerReceiver(adapterStartupReceiver, filter);
+            } catch (Throwable t) {
+                AppLogger.w(TAG, "registerReceiver adapterStartup: " + t.getMessage());
+            }
+        }
 
         boolean loaded = NativeLib.loadLibraries();
         if (!loaded) {
@@ -238,6 +262,14 @@ public class FdbusNativeVehicleProvider implements VehicleDataProvider {
             sCallbacks.remove(this.callback);
             this.callback = null;
         }
+        if (adapterStartupReceiver != null) {
+            try {
+                context.unregisterReceiver(adapterStartupReceiver);
+            } catch (Throwable ignored) {}
+            adapterStartupReceiver = null;
+        }
+        com.altaysoft.t500_split.GwmPushBinder.unregisterFromAdapter(context);
+
         if (!isRunning) {
             return;
         }

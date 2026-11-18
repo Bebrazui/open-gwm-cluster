@@ -76,4 +76,59 @@ public class TelemetryEngineTest {
         assertEquals("M9", carData.formatGear(13));
         assertEquals("D", carData.formatGear(99)); // fallback
     }
+
+    @Test
+    public void testTank500LogcatSignalsViaGwmPushBinder() {
+        carData data = carData.getInstance();
+        final AtomicReference<VehicleState> captured = new AtomicReference<>();
+
+        data.setListener(new carData.TelemetryListener() {
+            @Override
+            public void onTelemetryUpdate(VehicleState state) {
+                captured.set(state);
+            }
+        });
+
+        com.altaysoft.t500_split.GwmPushBinder binder = com.altaysoft.t500_split.GwmPushBinder.getInstance();
+
+        // 1. Idle engine speed from logcat: 806 RPM
+        binder.handlePush("car.basic.engine_speed", "806");
+        assertNotNull(captured.get());
+        assertEquals(806, captured.get().rpm);
+
+        // 2. Battery voltage: 14.86524 V
+        binder.handlePush("car.basic.battery_voltage", "14.86524");
+        assertEquals(14.86524f, captured.get().batteryVoltage, 0.001f);
+
+        // 3. Vehicle speed: 45.2 km/h
+        binder.handlePush("car.basic.vehicle_speed", "45.2");
+        assertEquals(45, captured.get().speedKmh);
+
+        // 4. Gear transitions from real user dump (4 -> 2 -> 0 -> 3):
+        binder.handlePush("car.basic.gear_status", "4");
+        assertEquals("P", captured.get().gear);
+
+        binder.handlePush("car.basic.gear_status", "2");
+        assertEquals("R", captured.get().gear);
+
+        binder.handlePush("car.basic.gear_status", "0");
+        assertEquals("N", captured.get().gear);
+
+        binder.handlePush("car.basic.gear_status", "3");
+        assertEquals("D", captured.get().gear);
+
+        // 5. Named gear (e.g. D4)
+        binder.handlePush("car.basic.gear_status", "D4");
+        assertEquals("D4", captured.get().gear);
+
+        // 6. Pitch and Roll matrices: [[1,1]] and [[0,1]]
+        binder.handlePush("car.basic.slope.status", "[[1,1]]");
+        assertEquals(1.0f, ((Number) data.d1.getValue()).floatValue(), 0.01f);
+
+        binder.handlePush("car.basic.title.status", "[[0,1]]");
+        assertEquals(0.0f, ((Number) data.e1.getValue()).floatValue(), 0.01f);
+
+        binder.handlePush("car.basic.compass.status", "[3]");
+        assertEquals(3.0f, ((Number) data.f1.getValue()).floatValue(), 0.01f);
+    }
 }

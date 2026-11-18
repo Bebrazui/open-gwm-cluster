@@ -239,31 +239,25 @@ public class TrafficRecorderReplay {
         String gear = "D" + gearVal;
         float temp = 85f + (step % 15);
 
-        // Standard GWM format pushes
-        dispatchPacket("car.speed", "{\"speed\":" + speed + "}");
-        dispatchPacket("car.engine.rpm", "{\"rpm\":" + rpm + "}");
-        dispatchPacket("car.transmission.gear", "{\"gear\":\"" + gear + "\"}");
-        dispatchPacket("car.engine.coolant_temp", "{\"coolant_temp\":" + temp + "}");
-        dispatchPacket("car.drive_mode", "{\"mode\":0}");
+        // Standard Tank 500 signals format pushes
+        dispatchPacket("car.basic.vehicle_speed", String.valueOf((int) speed));
+        dispatchPacket("car.basic.engine_speed", String.valueOf(rpm));
+        dispatchPacket("car.basic.gear_status", gear);
+        dispatchPacket("car.basic.coolant_temp", String.valueOf(temp));
+        dispatchPacket("car.basic.battery_voltage", "14.5");
 
         AppLogger.i(TAG, "Инжектирован тестовый пакет: скорость=" + (int)speed + " км/ч, об=" + rpm + ", передача=" + gear);
     }
 
     private static void dispatchPacket(String topic, String payload) {
         GwmPushBinder binder = GwmPushBinder.getInstance();
-        if (binder != null) {
-            try {
-                binder.onPush(topic, payload);
-            } catch (Throwable t) {
-                AppLogger.w(TAG, "onPush exception: " + t.getMessage());
-            }
-        } else {
-            // If binder is not initialized, create one
-            try {
-                GwmPushBinder newBinder = new GwmPushBinder();
-                newBinder.onPush(topic, payload);
-            } catch (Throwable ignored) {}
+        if (binder == null) {
+            binder = new GwmPushBinder();
         }
+        binder.handlePush(topic, payload);
+        try {
+            binder.onPush(topic, payload);
+        } catch (Throwable ignored) {}
     }
 
     private static void generateSampleTrafficFile(File file) {
@@ -277,12 +271,16 @@ public class TrafficRecorderReplay {
                     long t = baseTime + (i * 50); // 20 Hz
                     float speed = (float) (Math.sin(i * 0.05) * 60 + 60);
                     int rpm = (int) (1200 + Math.sin(i * 0.08) * 2000);
-                    int gear = 1 + (int)(speed / 20f);
-                    if (gear > 8) gear = 8;
-                    writer.write(t + "\tcar.speed\t{\"speed\":" + Math.round(speed) + "}\n");
-                    writer.write((t + 5) + "\tcar.engine.rpm\t{\"rpm\":" + rpm + "}\n");
-                    writer.write((t + 10) + "\tcar.transmission.gear\t{\"gear\":\"D" + gear + "\"}\n");
-                    writer.write((t + 15) + "\tcar.engine.coolant_temp\t{\"coolant_temp\":92}\n");
+                    int gearNum = 1 + (int)(speed / 20f);
+                    if (gearNum > 9) gearNum = 9;
+                    writer.write(t + "\tcar.basic.vehicle_speed\t" + Math.round(speed) + "\n");
+                    writer.write((t + 5) + "\tcar.basic.engine_speed\t" + rpm + "\n");
+                    writer.write((t + 10) + "\tcar.basic.gear_status\tD" + gearNum + "\n");
+                    writer.write((t + 15) + "\tcar.basic.coolant_temp\t92\n");
+                    writer.write((t + 20) + "\tcar.basic.battery_voltage\t14.6\n");
+                    writer.write((t + 25) + "\tcar.basic.slope.status\t[[1,1]]\n");
+                    writer.write((t + 30) + "\tcar.basic.title.status\t[[0,1]]\n");
+                    writer.write((t + 35) + "\tcar.basic.compass.status\t3\n");
                 }
                 writer.flush();
             }
