@@ -49,11 +49,6 @@ public class GwmPushBinder extends Binder implements IInterface {
     }
 
     /**
-     * Native implementation registered by libnative-lib.so via JNI RegisterNatives (at 0xadf14).
-     */
-    public native void onPush(String topic, String payload);
-
-    /**
      * Connects to GWM Adapter Service in ServiceManager and registers this callback.
      */
     public static synchronized boolean registerToAdapter(Context context) {
@@ -292,13 +287,8 @@ public class GwmPushBinder extends Binder implements IInterface {
                 org.opengwm.split.vehicle.TrafficRecorderReplay.record(topic, payload);
             } catch (Throwable ignored) {}
 
-            // 1. Process directly in Java
+            // Process directly in Java clean-room telemetry parser
             handlePush(topic, payload != null ? payload : "");
-
-            // 2. Also forward to native stub if loaded
-            try {
-                onPush(topic, payload != null ? payload : "");
-            } catch (Throwable ignored) {}
         }
 
         if (reply != null) {

@@ -255,9 +255,6 @@ public class TrafficRecorderReplay {
             binder = new GwmPushBinder();
         }
         binder.handlePush(topic, payload);
-        try {
-            binder.onPush(topic, payload);
-        } catch (Throwable ignored) {}
     }
 
     private static void generateSampleTrafficFile(File file) {
